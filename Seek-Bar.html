@@ -160,9 +160,11 @@
                     box-shadow 320ms ease-out;
         min-width: 480px;
       }
-      .bar[data-phase="input"]       { width: 760px; }
-      .bar[data-phase="in-progress"] { width: 820px; }
-      .bar[data-phase="output"]      { width: 900px; }
+      /* Width tuned per phase to fit content without slack. The bar's height
+         is constant; widths breathe between phases for the morph. */
+      .bar[data-phase="input"]       { width: 640px; }
+      .bar[data-phase="in-progress"] { width: 720px; }
+      .bar[data-phase="output"]      { width: 800px; }
       .bar[data-state="needs-you"]   { box-shadow:
           0 1px 0 rgba(255,255,255,0.04) inset,
           0 0 0 2px rgba(245, 88, 0, 0.45),
@@ -1306,6 +1308,8 @@
           if (btn.dataset.phaseBtn === "input") setState("idle");
           else if (btn.dataset.phaseBtn === "in-progress") setState("thinking");
           else if (btn.dataset.phaseBtn === "output") setState("completed");
+          // Hide/show the attach tray when leaving/entering Input
+          if (typeof refreshTray === "function") refreshTray();
         });
       });
       document.querySelectorAll("[data-state-btn]").forEach((btn) => {
@@ -1368,10 +1372,17 @@
         const prompt = barInput.value || "New task";
         lastPrompt = prompt;
         document.querySelector(".task-pill span").textContent = prompt.slice(0, 32);
+        // Attachments belong to the task now — clear the tray so they don't
+        // leak into the next prompt.
+        attachedFlow = null;
+        attachedPrompt = null;
+        attachedDocs.length = 0;
+        followupContext = null;
         document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
         document.querySelector('[data-phase-btn="in-progress"]').classList.add("active");
         bar.dataset.phase = "in-progress";
         setState("thinking");
+        refreshTray(); // hides the tray now that we're out of Input
         setTimeout(() => setState("taking-action"), 3500);
         setTimeout(() => {
           document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
@@ -1519,7 +1530,10 @@
 
       function refreshTray() {
         const hasAny = attachedFlow || attachedPrompt || attachedDocs.length > 0 || followupContext;
-        attachTray.dataset.on = hasAny ? "true" : "false";
+        // Tray only visible during Input phase — once a task is sent the
+        // attachments belong to the running task, not the next prompt.
+        const showTray = hasAny && bar.dataset.phase === "input";
+        attachTray.dataset.on = showTray ? "true" : "false";
         // Anchor the tray to the bar's left + bottom edges
         const barRect = bar.getBoundingClientRect();
         attachTray.style.left = (barRect.left) + "px";
