@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek — Decision Trail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+
+        --color-info:         #0975D7;
+        --color-info-bg:      #E7F1FB;
+        --color-success:      #1E9B6A;
+        --color-success-bg:   #E1F2EA;
+        --color-warn:         #946800;
+        --color-warn-bg:      #FBF1D6;
+        --color-danger:       #C7372F;
+        --color-danger-bg:    #FBE7E5;
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px;
+        border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        cursor: pointer;
+        background: transparent; border: none;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 32px; padding: 0 10px;
+        background: transparent; border: none;
+        color: var(--color-ink-700);
+        font-size: 13px; font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 5px;
+        text-decoration: none;
+      }
+      .back-link:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Sidebar base */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more { display: none; }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item { justify-content: center; }
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+      .switcher { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin: 0 8px 8px; border-radius: var(--r-md); cursor: pointer; }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+      .nav-list-top, .nav-list-bottom { padding: 6px 8px 4px; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover:not([data-active="true"]) { background: var(--color-side-hover); color: #FFFFFF; }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wf-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--color-side-active); color: #fff; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--color-side-stroke); }
+      .ent-mark { width: 28px; height: 28px; border-radius: 6px; background: #2A2940; color: #FFFFFF; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--color-side-stroke); }
+      .avatar { width: 28px; height: 28px; border-radius: var(--r-pill); background: linear-gradient(135deg, #525066, #1F1F32); color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+      /* ─── Page header ──────────────────────────────────── */
+      .page-head {
+        padding: 24px 8px 18px;
+      }
+      .ph-title-row {
+        display: flex; align-items: center; gap: 12px;
+      }
+      .title-back-btn {
+        width: 36px; height: 36px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 8px;
+        color: var(--color-ink-700);
+        cursor: pointer;
+        text-decoration: none;
+        flex-shrink: 0;
+        transition: background 120ms, color 120ms;
+      }
+      .title-back-btn:hover {
+        background: var(--color-surface-2);
+        color: var(--color-ink-900);
+      }
+      .ph-title {
+        font-size: 24px; font-weight: 700;
+        color: var(--color-ink-900);
+        letter-spacing: -0.015em;
+      }
+      .status-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 10px;
+        background: var(--color-success-bg);
+        color: var(--color-success);
+        border-radius: var(--r-pill);
+        font-size: 12px; font-weight: 600;
+      }
+      .status-chip .pip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+      .ph-actions {
+        margin-left: auto;
+        display: flex; gap: 8px;
+      }
+      .ph-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 34px; padding: 0 14px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        color: var(--color-ink-800);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+      }
+      .ph-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .ph-btn.primary {
+        background: var(--color-fire-400);
+        border-color: var(--color-fire-400);
+        color: #fff;
+      }
+      .ph-btn.primary:hover { background: var(--color-fire-300); border-color: var(--color-fire-300); }
+
+      .ph-meta {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--color-ink-600);
+        display: flex; gap: 10px; align-items: center;
+      }
+      .ph-meta .dot { color: var(--color-ink-300); }
+
+      /* Summary strip */
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin: 0 8px 22px;
+      }
+      .summary-cell {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        padding: 14px 16px;
+      }
+      .summary-cell-label {
+        font-size: 11px; font-weight: 700;
+        color: var(--color-ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .summary-cell-value {
+        margin-top: 6px;
+        font-size: 20px; font-weight: 700;
+        color: var(--color-ink-900);
+        line-height: 1.2;
+      }
+      .summary-cell-value .accent {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-ink-600);
+        margin-left: 4px;
+      }
+
+      /* ─── Section: Flow canvas ───────────────────────── */
+      .section-title {
+        display: flex; align-items: baseline; gap: 8px;
+        padding: 0 8px 10px;
+      }
+      .section-title h3 {
+        font-size: 13px; font-weight: 700;
+        color: var(--color-ink-900);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .section-title .hint {
+        font-size: 12px;
+        color: var(--color-ink-500);
+      }
+
+      .flow-canvas {
+        position: relative;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        margin: 0 8px 24px;
+        height: 280px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        /* dotted dot pattern background */
+        background-image: radial-gradient(rgba(31,31,50,0.06) 1px, transparent 1px);
+        background-size: 16px 16px;
+      }
+      .flow-inner {
+        position: relative;
+        height: 100%;
+        min-width: 1480px;
+      }
+
+      .node {
+        position: absolute;
+        min-width: 140px;
+        height: 56px;
+        background: var(--color-surface);
+        border: 1.5px solid var(--color-divider);
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex; align-items: center; gap: 10px;
+        font-size: 13px; font-weight: 500;
+        color: var(--color-ink-900);
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(31,31,50,0.04);
+        transition: border-color 140ms, box-shadow 140ms, transform 140ms;
+        z-index: 2;
+      }
+      .node:hover {
+        border-color: var(--color-ink-700);
+        box-shadow: 0 6px 14px rgba(31,31,50,0.08);
+        transform: translateY(-1px);
+      }
+      .node[data-active="true"] {
+        border-color: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(239, 95, 0, 0.12);
+      }
+      .node-icon {
+        width: 26px; height: 26px;
+        flex-shrink: 0;
+        border-radius: 6px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--color-surface-2);
+        color: var(--color-ink-700);
+      }
+      .node-text {
+        line-height: 1.25;
+        display: flex; flex-direction: column;
+      }
+      .node-text .nstep { font-size: 10px; font-weight: 600; color: var(--color-ink-500); }
+      .node-text .nlabel { font-weight: 600; color: var(--color-ink-900); }
+
+      .node[data-type="start"], .node[data-type="end"] {
+        background: var(--color-ink-900);
+        color: #fff;
+        border-color: var(--color-ink-900);
+        min-width: 110px;
+      }
+      .node[data-type="start"] .nstep,
+      .node[data-type="end"]   .nstep { color: rgba(255,255,255,0.55); }
+      .node[data-type="start"] .nlabel,
+      .node[data-type="end"]   .nlabel { color: #fff; }
+      .node[data-type="start"] .node-icon,
+      .node[data-type="end"]   .node-icon {
+        background: rgba(255,255,255,0.10);
+        color: #fff;
+      }
+      .node[data-type="decision"] {
+        background: var(--color-warn-bg);
+        border-color: var(--color-warn);
+        color: var(--color-warn);
+      }
+      .node[data-type="decision"] .node-icon {
+        background: rgba(148, 104, 0, 0.14);
+        color: var(--color-warn);
+      }
+      .node[data-type="decision"] .nlabel { color: var(--color-warn); }
+      .node[data-type="paused"] {
+        background: var(--color-warn-bg);
+        border-color: var(--color-warn);
+      }
+      .node[data-type="paused"] .nlabel { color: var(--color-warn); }
+
+      .flow-svg {
+        position: absolute; inset: 0;
+        z-index: 1;
+        width: 100%; height: 100%;
+        pointer-events: none;
+      }
+      .flow-svg path {
+        fill: none;
+        stroke: var(--color-ink-300);
+        stroke-width: 1.5;
+      }
+      .flow-svg .branch-label {
+        font-size: 10px;
+        font-weight: 600;
+        fill: var(--color-ink-500);
+      }
+      .flow-svg path.paused-edge {
+        stroke: var(--color-warn);
+        stroke-dasharray: 4 4;
+      }
+
+      /* ─── Section: Steps table ──────────────────────── */
+      .steps-wrap {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+        margin: 0 8px 56px;
+      }
+      .step-row {
+        display: grid;
+        grid-template-columns: 32px 60px 1fr 220px 130px;
+        gap: 14px;
+        padding: 14px 16px;
+        align-items: center;
+        border-bottom: 1px solid var(--color-divider);
+        font-size: 13px;
+        color: var(--color-ink-900);
+        cursor: pointer;
+        transition: background 120ms;
+      }
+      .step-row:last-child { border-bottom: none; }
+      .step-row.head {
+        background: var(--color-surface-2);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink-600);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: default;
+      }
+      .step-row:not(.head):hover { background: rgba(31,31,50,0.025); }
+      .step-row[data-active="true"] { background: var(--color-fire-50); }
+
+      .step-num {
+        font-variant-numeric: tabular-nums;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink-500);
+        text-align: center;
+      }
+      .step-time {
+        font-variant-numeric: tabular-nums;
+        color: var(--color-ink-600);
+        font-size: 12px;
+      }
+      .step-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .step-action {
+        font-weight: 600;
+        color: var(--color-ink-900);
+        line-height: 1.4;
+      }
+      .step-thought {
+        font-size: 12px;
+        color: var(--color-ink-600);
+        line-height: 1.4;
+        font-style: italic;
+      }
+      /* Key results — plain text, no color/chip treatment */
+      .step-key-result {
+        font-size: 13px;
+        color: var(--color-ink-900);
+        line-height: 1.4;
+      }
+
+      /* Screen recording — dummy video thumbnail */
+      .step-recording {
+        position: relative;
+        width: 120px; height: 68px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--color-divider);
+        cursor: pointer;
+        background: var(--color-ink-900);
+        transition: box-shadow 140ms, transform 140ms;
+      }
+      .step-recording:hover {
+        box-shadow: 0 6px 14px rgba(31,31,50,0.16);
+        transform: translateY(-1px);
+      }
+      .step-recording-frame {
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, #525066, #1F1F32);
+      }
+      .step-recording.app-salesforce .step-recording-frame { background: linear-gradient(135deg, #00A1E0, #003E7F); }
+      .step-recording.app-stripe     .step-recording-frame { background: linear-gradient(135deg, #635BFF, #4639CC); }
+      .step-recording.app-slack      .step-recording-frame { background: linear-gradient(135deg, #4A154B, #2D0B30); }
+      .step-recording.app-zendesk    .step-recording-frame { background: linear-gradient(135deg, #03363D, #013740); }
+
+      /* Mock screenshot inside the video frame */
+      .step-recording-mock {
+        position: absolute;
+        inset: 6px 6px 14px;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 3px;
+        overflow: hidden;
+        display: flex; flex-direction: column;
+      }
+      .step-recording-mock-bar {
+        height: 7px;
+        background: rgba(31, 31, 50, 0.08);
+        border-bottom: 1px solid rgba(31, 31, 50, 0.06);
+      }
+      .step-recording-mock-body {
+        flex: 1;
+        background:
+          linear-gradient(to right, rgba(31,31,50,0.10) 0%, rgba(31,31,50,0.10) 30%, transparent 30%) 4px 5px / auto 2px no-repeat,
+          linear-gradient(to right, rgba(31,31,50,0.08) 0%, rgba(31,31,50,0.08) 60%, transparent 60%) 4px 11px / auto 2px no-repeat,
+          linear-gradient(to right, rgba(31,31,50,0.08) 0%, rgba(31,31,50,0.08) 45%, transparent 45%) 4px 17px / auto 2px no-repeat,
+          linear-gradient(to right, rgba(31,31,50,0.08) 0%, rgba(31,31,50,0.08) 70%, transparent 70%) 4px 23px / auto 2px no-repeat;
+      }
+
+      /* Play button overlay */
+      .step-recording-play {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 2;
+      }
+      .step-recording-play-circle {
+        width: 26px; height: 26px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.30);
+        transition: transform 140ms;
+      }
+      .step-recording:hover .step-recording-play-circle { transform: scale(1.08); background: #fff; }
+      .step-recording-play-circle i { color: var(--color-ink-900); margin-left: 1px; }
+
+      /* Duration label */
+      .step-recording-duration {
+        position: absolute;
+        bottom: 4px; right: 4px;
+        z-index: 3;
+        background: rgba(0, 0, 0, 0.70);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 600;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+          <span class="ml-2 text-[13px]" style="color: var(--color-ink-500)">Decision trail</span>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[1280px] mx-auto px-8">
+            <!-- Page header -->
+            <div class="page-head">
+              <div class="ph-title-row">
+                <a class="title-back-btn" href="Seek-Desktop-Phase-3.html" title="Back to Insights" aria-label="Back to Insights">
+                  <i data-lucide="arrow-left" class="w-[16px] h-[16px]"></i>
+                </a>
+                <h1 class="ph-title" id="ph-title">Update Salesforce opportunities</h1>
+                <span class="status-chip">
+                  <span class="pip"></span>
+                  Completed
+                </span>
+                <div class="ph-actions">
+                  <button class="ph-btn">
+                    <i data-lucide="share-2" class="w-[14px] h-[14px]"></i>
+                    Share
+                  </button>
+                  <button class="ph-btn primary">
+                    <i data-lucide="rotate-cw" class="w-[14px] h-[14px]"></i>
+                    Re-run
+                  </button>
+                </div>
+              </div>
+              <div class="ph-meta">
+                <span>Sep 30, 2025 · 2:34 PM</span>
+                <span class="dot">·</span>
+                <span>1m 47s</span>
+                <span class="dot">·</span>
+                <span>14 actions</span>
+                <span class="dot">·</span>
+                <span>Browser mode</span>
+              </div>
+            </div>
+
+            <!-- Summary strip -->
+            <div class="summary">
+              <div class="summary-cell">
+                <div class="summary-cell-label">Records updated</div>
+                <div class="summary-cell-value">12<span class="accent">/ 12</span></div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-cell-label">Paused for review</div>
+                <div class="summary-cell-value">1<span class="accent">approved</span></div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-cell-label">Time saved</div>
+                <div class="summary-cell-value">~45<span class="accent">min</span></div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-cell-label">Apps used</div>
+                <div class="summary-cell-value">2<span class="accent">SFDC + Slack</span></div>
+              </div>
+            </div>
+
+            <!-- Flow canvas -->
+            <div class="section-title">
+              <h3>Flow</h3>
+              <span class="hint">Click a node to jump to that step</span>
+            </div>
+            <div class="flow-canvas">
+              <div class="flow-inner" id="flow-inner">
+                <svg class="flow-svg" id="flow-svg"></svg>
+                <!-- Nodes injected by JS -->
+              </div>
+            </div>
+
+            <!-- Steps table -->
+            <div class="section-title">
+              <h3>Step-by-step</h3>
+              <span class="hint">14 actions · click any row to inspect</span>
+            </div>
+            <div class="steps-wrap" id="steps-wrap">
+              <div class="step-row head">
+                <span>#</span>
+                <span>Time</span>
+                <span>Action &amp; thought</span>
+                <span>Key results</span>
+                <span>Screen recording</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "" });
+    </script>
+    <script>
+      // ─── Flow nodes ────────────────────────────────────────────
+      const NODES = [
+        { id: "n1",  type: "start",    label: "User prompt",         icon: "user",         x: 30,    y: 70, stepRange: [1, 1]   },
+        { id: "n2",  type: "action",   label: "Open Salesforce",     icon: "log-in",       x: 200,   y: 70, stepRange: [2, 3]   },
+        { id: "n3",  type: "action",   label: "Filter 12 records",   icon: "filter",       x: 380,   y: 70, stepRange: [4, 5]   },
+        { id: "n4",  type: "action",   label: "Loop · update each",  icon: "repeat",       x: 560,   y: 70, stepRange: [6, 8]   },
+        { id: "n5",  type: "decision", label: "Value > $100k?",      icon: "git-branch",   x: 740,   y: 70, stepRange: [9, 9]   },
+        { id: "n6",  type: "paused",   label: "Pause for review",    icon: "pause",        x: 920,   y: 20, stepRange: [10, 10], branch: "yes" },
+        { id: "n7",  type: "action",   label: "Update + save",       icon: "save",         x: 920,   y: 120, stepRange: [11, 12], branch: "no" },
+        { id: "n8",  type: "action",   label: "Notify Sales Ops",    icon: "send",         x: 1120,  y: 70, stepRange: [13, 13] },
+        { id: "n9",  type: "end",      label: "Complete",            icon: "check",        x: 1300,  y: 70, stepRange: [14, 14] },
+      ];
+
+      const EDGES = [
+        ["n1", "n2"],
+        ["n2", "n3"],
+        ["n3", "n4"],
+        ["n4", "n5"],
+        ["n5", "n6", "Yes"],
+        ["n5", "n7", "No"],
+        ["n6", "n8"],
+        ["n7", "n8"],
+        ["n8", "n9"],
+      ];
+
+      // ─── Steps ─────────────────────────────────────────────────
+      const STEPS = [
+        { n: 1,  t: "0:00", action: "Parsed task",                thought: "Identifying scope: 12 records, target stage Closed Won.", keyResult: "Scope · 12 records, Closed Won",     app: "system",     duration: "0:01" },
+        { n: 2,  t: "0:02", action: "Opened Salesforce",          thought: "Need an authenticated session before navigating.",        keyResult: "Session authenticated",              app: "salesforce", duration: "0:03" },
+        { n: 3,  t: "0:05", action: "Navigated to Opportunities", thought: "Opps live under the main nav.",                           keyResult: "Opportunities list view loaded",     app: "salesforce", duration: "0:02" },
+        { n: 4,  t: "0:08", action: "Applied filter",             thought: "Stage = Proposal/Quote, Close = This Quarter.",            keyResult: "12 matching records found",          app: "salesforce", duration: "0:03" },
+        { n: 5,  t: "0:11", action: "Selected all matching",      thought: "Iterating in order of opportunity owner.",                keyResult: "12 of 12 selected",                  app: "salesforce", duration: "0:02" },
+        { n: 6,  t: "0:18", action: "Updated Acme Corp Deal",     thought: "Stage → Closed Won, Probability → 100%.",                  keyResult: "Saved · $48,500 moved to Closed Won", app: "salesforce", duration: "0:09" },
+        { n: 7,  t: "0:27", action: "Updated Beam Co. Renewal",   thought: "Same change pattern as prior record.",                     keyResult: "Saved · $22,000 moved to Closed Won", app: "salesforce", duration: "0:10" },
+        { n: 8,  t: "0:37", action: "Opened Cira Logistics",      thought: "Next record in queue.",                                    keyResult: "Record opened · $112,400",            app: "salesforce", duration: "0:04" },
+        { n: 9,  t: "0:41", action: "Flagged high-value record",  thought: "Value > $100k threshold. Pausing per guard rail.",         keyResult: "Paused for review",                  app: "system",     duration: "0:13" },
+        { n: 10, t: "0:54", action: "User approved",              thought: "Sandeep confirmed — proceeding with the update.",          keyResult: "Approval recorded",                  app: "system",     duration: "0:07" },
+        { n: 11, t: "1:01", action: "Updated Cira Logistics",     thought: "Same pattern as prior records.",                           keyResult: "Saved · $112,400 moved to Closed Won",app: "salesforce", duration: "0:33" },
+        { n: 12, t: "1:34", action: "Completed remaining 9 saves",thought: "No further guard-rail triggers.",                          keyResult: "9 records saved",                    app: "salesforce", duration: "0:08" },
+        { n: 13, t: "1:42", action: "Posted summary to Slack",    thought: "Output destination per task instructions.",                keyResult: "Posted to #revops · 12 records summary", app: "slack",  duration: "0:05" },
+        { n: 14, t: "1:47", action: "Task complete",              thought: "12 of 12 records moved to Closed Won.",                    keyResult: "Run summary recorded",               app: "system",     duration: "0:01" },
+      ];
+
+      // ─── Render nodes ──────────────────────────────────────────
+      const flowInner = document.getElementById("flow-inner");
+      const flowSvg   = document.getElementById("flow-svg");
+
+      function renderNodes() {
+        NODES.forEach((n) => {
+          const el = document.createElement("div");
+          el.className = "node";
+          el.style.left = n.x + "px";
+          el.style.top  = n.y + "px";
+          el.dataset.id = n.id;
+          el.dataset.type = n.type;
+          el.dataset.step = n.stepRange[0];
+          el.innerHTML = `
+            <span class="node-icon"><i data-lucide="${n.icon}" class="w-[14px] h-[14px]"></i></span>
+            <span class="node-text">
+              <span class="nstep">Step ${n.stepRange[0]}${n.stepRange[1] !== n.stepRange[0] ? "–" + n.stepRange[1] : ""}</span>
+              <span class="nlabel">${n.label}</span>
+            </span>
+          `;
+          el.addEventListener("click", () => {
+            setActiveStep(n.stepRange[0], { scrollIntoView: true });
+          });
+          flowInner.appendChild(el);
+        });
+        lucide.createIcons();
+      }
+
+      // ─── Render edges (SVG paths) ──────────────────────────────
+      function nodeRect(id) {
+        const n = NODES.find((x) => x.id === id);
+        // Approximate width based on label length; we know nodes are ~150px on average
+        const w = (n.type === "start" || n.type === "end") ? 110 : 152;
+        const h = 56;
+        return { x: n.x, y: n.y, w, h, cx: n.x + w/2, cy: n.y + h/2, right: n.x + w, bottom: n.y + h };
+      }
+
+      function renderEdges() {
+        // Set SVG dims to match flow-inner
+        flowSvg.setAttribute("viewBox", "0 0 1480 280");
+        flowSvg.setAttribute("preserveAspectRatio", "none");
+        flowSvg.style.width = "1480px";
+        flowSvg.style.height = "280px";
+
+        const paths = [];
+        EDGES.forEach(([fromId, toId, branchLabel]) => {
+          const from = nodeRect(fromId);
+          const to   = nodeRect(toId);
+          // Curve from right of `from` to left of `to`
+          const x1 = from.right;
+          const y1 = from.cy;
+          const x2 = to.x;
+          const y2 = to.cy;
+          const dx = (x2 - x1) * 0.5;
+          const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+          const cls = (toId === "n6") ? "paused-edge" : "";
+          paths.push(`<path d="${d}" class="${cls}"/>`);
+          if (branchLabel) {
+            const lx = (x1 + x2) / 2;
+            const ly = (y1 + y2) / 2 - 6;
+            paths.push(`<text x="${lx}" y="${ly}" text-anchor="middle" class="branch-label">${branchLabel}</text>`);
+          }
+        });
+        // Arrowheads at the end of each line (simple triangle via marker)
+        flowSvg.innerHTML = `
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#C4C4C4"/>
+            </marker>
+          </defs>
+        ` + paths.map((p) => p.replace('<path ', '<path marker-end="url(#arrow)" ')).join("");
+      }
+
+      // ─── Render steps ──────────────────────────────────────────
+      const stepsWrap = document.getElementById("steps-wrap");
+
+      function renderSteps() {
+        STEPS.forEach((s) => {
+          const row = document.createElement("div");
+          row.className = "step-row";
+          row.dataset.step = s.n;
+          row.innerHTML = `
+            <span class="step-num">${s.n}</span>
+            <span class="step-time">${s.t}</span>
+            <span class="step-body">
+              <span class="step-action">${s.action}</span>
+              <span class="step-thought">${s.thought}</span>
+            </span>
+            <span class="step-key-result">${s.keyResult}</span>
+            <div class="step-recording app-${s.app}" role="button" aria-label="Play screen recording">
+              <div class="step-recording-frame"></div>
+              <div class="step-recording-mock">
+                <div class="step-recording-mock-bar"></div>
+                <div class="step-recording-mock-body"></div>
+              </div>
+              <div class="step-recording-play">
+                <span class="step-recording-play-circle">
+                  <i data-lucide="play" class="w-[12px] h-[12px]" fill="currentColor"></i>
+                </span>
+              </div>
+              <span class="step-recording-duration">${s.duration}</span>
+            </div>
+          `;
+          row.addEventListener("click", () => setActiveStep(s.n, { scrollToNode: true }));
+          stepsWrap.appendChild(row);
+        });
+        lucide.createIcons();
+      }
+
+      // ─── Active-step sync between node + table ─────────────────
+      function setActiveStep(n, opts = {}) {
+        document.querySelectorAll(".step-row").forEach((r) => {
+          r.dataset.active = (parseInt(r.dataset.step) === n) ? "true" : "false";
+        });
+        document.querySelectorAll(".node").forEach((el) => {
+          const node = NODES.find((x) => x.id === el.dataset.id);
+          const inRange = node && n >= node.stepRange[0] && n <= node.stepRange[1];
+          el.dataset.active = inRange ? "true" : "false";
+        });
+        if (opts.scrollIntoView) {
+          const row = document.querySelector(`.step-row[data-step="${n}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        if (opts.scrollToNode) {
+          const node = NODES.find((node) => n >= node.stepRange[0] && n <= node.stepRange[1]);
+          if (node) {
+            const canvas = document.querySelector(".flow-canvas");
+            canvas.scrollTo({ left: Math.max(0, node.x - 200), behavior: "smooth" });
+          }
+        }
+      }
+
+      // ─── Read task name from URL ───────────────────────────────
+      const params = new URLSearchParams(window.location.search);
+      const taskName = params.get("task");
+      if (taskName) {
+        document.getElementById("ph-title").textContent = decodeURIComponent(taskName);
+      }
+
+      // ─── Init ──────────────────────────────────────────────────
+      window.addEventListener("load", () => {
+        renderNodes();
+        renderEdges();
+        renderSteps();
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek — Prompt Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+        --color-fire-500:     #C74900;
+
+        --color-info:         #0975D7;
+        --color-info-bg:      #E7F1FB;
+        --color-success:      #1E9B6A;
+        --color-warn:         #946800;
+        --color-pin:          #C49100;
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px;
+        border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        cursor: pointer;
+        background: transparent; border: none;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Sidebar — base (rendered by seek-sidebar.js) */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more { display: none; }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item { justify-content: center; }
+
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+
+      .switcher {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; margin: 0 8px 8px;
+        border-radius: var(--r-md); cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+
+      .nav-list-top, .nav-list-bottom { padding: 6px 8px 4px; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover:not([data-active="true"]) { background: var(--color-side-hover); color: #FFFFFF; }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      .wf-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        background: var(--color-side-active);
+        color: #fff; font-weight: 700; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0; border: 1px solid var(--color-side-stroke);
+      }
+      .ent-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #2A2940; color: #FFFFFF;
+        font-weight: 700; font-size: 13px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0; border: 1px solid var(--color-side-stroke);
+      }
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* ─── Library page ─────────────────────────────────────── */
+      .lib-header {
+        padding: 32px 8px 24px;
+      }
+      .lib-title {
+        font-size: 26px; font-weight: 700;
+        color: var(--color-ink-900);
+        letter-spacing: -0.015em;
+      }
+      .lib-sub {
+        font-size: 14px;
+        color: var(--color-ink-600);
+        margin-top: 6px;
+        max-width: 64ch;
+      }
+
+      .lib-toolbar {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 8px 20px;
+        flex-wrap: wrap;
+      }
+      .lib-search {
+        position: relative;
+        width: 320px;
+      }
+      .lib-search input {
+        width: 100%;
+        height: 36px;
+        padding: 0 12px 0 36px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        outline: none;
+        font-family: inherit;
+      }
+      .lib-search input:focus { border-color: var(--color-ink-700); }
+      .lib-search input::placeholder { color: var(--color-ink-500); }
+      .lib-search .si {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--color-ink-500);
+      }
+
+      .lib-filter-chip {
+        height: 32px; padding: 0 14px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        border-radius: 999px;
+        color: var(--color-ink-700);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .lib-filter-chip:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .lib-filter-chip.active {
+        background: var(--color-ink-900);
+        color: #fff;
+        border-color: var(--color-ink-900);
+      }
+      .lib-filter-chip .count {
+        font-size: 11px;
+        font-weight: 600;
+        opacity: 0.75;
+      }
+
+      .lib-new-btn {
+        margin-left: auto;
+        height: 36px;
+        padding: 0 14px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        color: var(--color-ink-900);
+        font-size: 13px; font-weight: 600;
+        cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .lib-new-btn:hover { background: var(--color-surface-2); }
+
+      /* Grid */
+      .lib-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        padding: 0 8px 64px;
+      }
+
+      .prompt-card {
+        position: relative;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 12px;
+        padding: 18px 18px 14px;
+        text-decoration: none;
+        color: inherit;
+        display: flex; flex-direction: column;
+        gap: 10px;
+        cursor: pointer;
+        transition: border-color 140ms, box-shadow 200ms, transform 200ms;
+      }
+      .prompt-card:hover {
+        border-color: var(--color-ink-700);
+        box-shadow: 0 8px 22px rgba(31,31,50,0.08);
+        transform: translateY(-1px);
+      }
+
+      .prompt-card-head {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 8px;
+      }
+      .prompt-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        background: var(--color-surface-2);
+        color: var(--color-ink-700);
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+      .prompt-actions {
+        display: flex; gap: 2px;
+        opacity: 0;
+        transition: opacity 140ms;
+      }
+      .prompt-card:hover .prompt-actions { opacity: 1; }
+      .prompt-card.pinned .prompt-actions { opacity: 1; }
+      .prompt-action-btn {
+        width: 28px; height: 28px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--color-ink-500);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .prompt-action-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .prompt-action-btn.pinned {
+        color: var(--color-pin);
+        opacity: 1;
+      }
+
+      .prompt-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-ink-900);
+        line-height: 1.35;
+      }
+      .prompt-desc {
+        font-size: 13px;
+        color: var(--color-ink-600);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .prompt-tags {
+        display: flex; flex-wrap: wrap; gap: 4px;
+        margin-top: 2px;
+      }
+      .prompt-tag {
+        height: 20px;
+        padding: 0 8px;
+        background: var(--color-surface-2);
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-ink-700);
+        display: inline-flex; align-items: center;
+      }
+
+      .prompt-meta {
+        display: flex; align-items: center; gap: 8px;
+        padding-top: 10px;
+        margin-top: auto;
+        border-top: 1px solid var(--color-divider);
+        font-size: 11px;
+        color: var(--color-ink-500);
+      }
+      .prompt-author {
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .prompt-author-avatar {
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff;
+        font-size: 9px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .prompt-uses {
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Empty state */
+      .lib-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 64px 0;
+        color: var(--color-ink-500);
+        font-size: 14px;
+      }
+      .lib-empty strong { color: var(--color-ink-900); display: block; margin-bottom: 4px; font-size: 15px; }
+
+      /* ─── New / Edit prompt modal ─────────────────────────── */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(31, 31, 50, 0.40);
+        backdrop-filter: blur(2px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease-out;
+      }
+      .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+      .modal {
+        background: var(--color-surface);
+        border-radius: 8px;
+        box-shadow: 0 20px 60px rgba(31,31,50,0.20), 0 4px 12px rgba(31,31,50,0.08);
+        width: 580px;
+        max-width: calc(100vw - 48px);
+        max-height: calc(100vh - 96px);
+        display: flex; flex-direction: column;
+        transform: translateY(8px);
+        transition: transform 180ms ease-out;
+      }
+      .modal-backdrop.open .modal { transform: translateY(0); }
+      .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .modal-title { font-size: 16px; font-weight: 700; color: var(--color-ink-900); }
+      .modal-close {
+        width: 28px; height: 28px; border-radius: 4px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-600);
+        background: transparent; border: none; cursor: pointer;
+      }
+      .modal-close:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .modal-body { padding: 18px 20px; overflow-y: auto; }
+      .modal-footer {
+        display: flex; align-items: center; justify-content: flex-end;
+        gap: 10px; padding: 14px 20px;
+        border-top: 1px solid var(--color-divider);
+        background: var(--color-surface-2);
+      }
+      .field-label {
+        font-size: 11px; font-weight: 700;
+        color: var(--color-ink-600);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+        display: block;
+      }
+      .field-input, .field-textarea {
+        width: 100%;
+        padding: 9px 12px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--color-ink-900);
+        font-family: inherit;
+        outline: none;
+      }
+      .field-input:focus, .field-textarea:focus { border-color: var(--color-ink-700); }
+      .field-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+      .field-row { margin-bottom: 16px; }
+      .field-row:last-child { margin-bottom: 0; }
+
+      .btn-primary {
+        height: 34px;
+        padding: 0 16px;
+        border-radius: 6px;
+        background: var(--color-fire-400);
+        color: #fff;
+        font-size: 13px; font-weight: 600;
+        border: none; cursor: pointer;
+      }
+      .btn-primary:hover { background: var(--color-fire-300); }
+      .btn-primary:disabled { background: var(--color-ink-400); cursor: not-allowed; }
+      .btn-secondary {
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-800);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+      }
+      .btn-secondary:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(16px);
+        background: var(--color-ink-900);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms, transform 180ms;
+        z-index: 500;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <!-- Sidebar (rendered by seek-sidebar.js) -->
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <!-- Right column -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[1120px] mx-auto px-8">
+            <!-- Header -->
+            <div class="lib-header">
+              <h1 class="lib-title">Prompt Library</h1>
+              <p class="lib-sub">
+                Reusable task instructions. Pick one to run as-is, or fork it into something new.
+              </p>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="lib-toolbar">
+              <div class="lib-search">
+                <i data-lucide="search" class="si w-[14px] h-[14px]"></i>
+                <input id="prompt-search" placeholder="Search by title, tag, or app…" autocomplete="off" />
+              </div>
+              <button class="lib-filter-chip active" data-filter="all">All <span class="count" id="cnt-all"></span></button>
+              <button class="lib-filter-chip" data-filter="pinned">
+                <i data-lucide="star" class="w-[12px] h-[12px]"></i>
+                Pinned <span class="count" id="cnt-pinned"></span>
+              </button>
+              <button class="lib-filter-chip" data-filter="mine">Mine <span class="count" id="cnt-mine"></span></button>
+              <button class="lib-filter-chip" data-filter="team">Team <span class="count" id="cnt-team"></span></button>
+              <button class="lib-new-btn" id="new-prompt-btn">
+                <i data-lucide="plus" class="w-[14px] h-[14px]"></i>
+                New prompt
+              </button>
+            </div>
+
+            <!-- Grid -->
+            <div class="lib-grid" id="prompt-grid"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- New / Edit prompt modal -->
+    <div class="modal-backdrop" id="prompt-modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="modal-title" id="prompt-modal-title">New prompt</div>
+          <button class="modal-close" id="prompt-modal-close" aria-label="Close">
+            <i data-lucide="x" class="w-[16px] h-[16px]"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="field-row">
+            <label class="field-label" for="pm-title">Title</label>
+            <input class="field-input" id="pm-title" placeholder='Like "Weekly pipeline review"' />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="pm-text">Prompt text</label>
+            <textarea class="field-textarea" id="pm-text" rows="5" placeholder="Describe the task Seek should perform. Be specific about apps, scope, and any guard rails."></textarea>
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="pm-tags">Tags <span style="font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--color-ink-500);">(comma-separated)</span></label>
+            <input class="field-input" id="pm-tags" placeholder="Sales, Salesforce, Weekly" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="pm-cancel">Cancel</button>
+          <button class="btn-primary" id="pm-save" disabled>Save prompt</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "prompt-library" });
+    </script>
+    <script>
+      // ─── Prompt data ────────────────────────────────────────────
+      const PROMPTS = [
+        {
+          id: 1, icon: "bar-chart-3",
+          title: "Weekly Pipeline Review",
+          text: "Pull this week's open opportunities from Salesforce. Group by stage and owner. Email a digest to sales leadership with stalled deals flagged.",
+          tags: ["Sales", "Salesforce"],
+          author: { name: "Sarah Chen", initials: "SC" },
+          uses: 47, mine: false, team: true, pinned: true,
+        },
+        {
+          id: 2, icon: "circle-check-big",
+          title: "Quarter Close Checklist",
+          text: "For each Q4 deal at Proposal stage: verify contract uploaded, check signature status in DocuSign, and flag stalled deals to the assigned AE.",
+          tags: ["Sales", "DocuSign", "Salesforce"],
+          author: { name: "Mark Johnson", initials: "MJ" },
+          uses: 23, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 3, icon: "inbox",
+          title: "Triage VIP Support Tickets",
+          text: "Find Zendesk tickets from accounts with ARR > $100k pending response > 2h. Assign to senior reps and notify in #vip-support Slack.",
+          tags: ["Support", "Zendesk", "Slack"],
+          author: { name: "Priya Rao", initials: "PR" },
+          uses: 89, mine: false, team: true, pinned: true,
+        },
+        {
+          id: 4, icon: "activity",
+          title: "Customer Health Audit",
+          text: "Recalculate health score for accounts up for renewal in next 90 days. Flag any below threshold to the assigned CSMs.",
+          tags: ["CS", "Salesforce", "Renewals"],
+          author: { name: "Sandeep Sundaram", initials: "SS" },
+          uses: 12, mine: true, team: false, pinned: false,
+        },
+        {
+          id: 5, icon: "user-plus",
+          title: "New Hire Onboarding",
+          text: "For new hires starting this week: provision Okta + Workday accounts, send welcome packet, schedule manager intro, and create a Slack channel.",
+          tags: ["HR", "Okta", "Workday"],
+          author: { name: "Dana Lee", initials: "DL" },
+          uses: 31, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 6, icon: "rotate-ccw",
+          title: "Refund Validation",
+          text: "For Stripe refund requests > $500: verify customer history, check policy compliance, process refund, and notify customer + finance team.",
+          tags: ["Finance", "Stripe"],
+          author: { name: "Alex Kim", initials: "AK" },
+          uses: 18, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 7, icon: "scale",
+          title: "Stripe Payout Reconciliation",
+          text: "Compare yesterday's Stripe payouts against the General Ledger. Flag any mismatches greater than $50 to the finance team in #finance-ops.",
+          tags: ["Finance", "Stripe", "Daily"],
+          author: { name: "Sandeep Sundaram", initials: "SS" },
+          uses: 64, mine: true, team: false, pinned: true,
+        },
+        {
+          id: 8, icon: "shield-check",
+          title: "Monthly Compliance Report",
+          text: "Pull all access changes from Okta and Salesforce for the month. Compile audit report and email to legal team by EOD on the 1st.",
+          tags: ["Legal", "Okta", "Monthly"],
+          author: { name: "Jordan Park", initials: "JP" },
+          uses: 8, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 9, icon: "mail",
+          title: "Renewal Campaign Outreach",
+          text: "For accounts with renewals in 60 days, send personalized check-in emails from the account owner. Update the SFDC opportunity with engagement.",
+          tags: ["Sales", "Outreach", "Salesforce"],
+          author: { name: "Sarah Chen", initials: "SC" },
+          uses: 27, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 10, icon: "users",
+          title: "Marketing Lead Routing",
+          text: "Push qualified inbound leads from HubSpot to Salesforce. Assign correct owner based on territory + lead score. Notify rep in Slack.",
+          tags: ["Marketing", "HubSpot", "Salesforce"],
+          author: { name: "Priya Rao", initials: "PR" },
+          uses: 41, mine: false, team: true, pinned: false,
+        },
+        {
+          id: 11, icon: "siren",
+          title: "On-Call Handoff Summary",
+          text: "Compile incident summary from PagerDuty and Linear. Post a structured handoff message to #oncall-handoff Slack at the end of each shift.",
+          tags: ["Engineering", "PagerDuty", "Linear"],
+          author: { name: "Sandeep Sundaram", initials: "SS" },
+          uses: 15, mine: true, team: false, pinned: false,
+        },
+        {
+          id: 12, icon: "receipt",
+          title: "Expense Report Audit",
+          text: "Find expense reports with line items over $1,000 missing a receipt attachment. Email submitters with a reminder and 48-hour deadline.",
+          tags: ["Finance", "Expensify"],
+          author: { name: "Alex Kim", initials: "AK" },
+          uses: 21, mine: false, team: true, pinned: false,
+        },
+      ];
+
+      // ─── Render ────────────────────────────────────────────────
+      let currentFilter = "all";
+      let currentQuery  = "";
+
+      const grid     = document.getElementById("prompt-grid");
+      const searchEl = document.getElementById("prompt-search");
+
+      function filteredPrompts() {
+        const q = currentQuery.toLowerCase();
+        return PROMPTS.filter((p) => {
+          if (currentFilter === "pinned" && !p.pinned) return false;
+          if (currentFilter === "mine"   && !p.mine)   return false;
+          if (currentFilter === "team"   && !p.team)   return false;
+          if (q) {
+            const hay = (p.title + " " + p.text + " " + p.tags.join(" ")).toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      function render() {
+        const items = filteredPrompts();
+        if (!items.length) {
+          grid.innerHTML = `
+            <div class="lib-empty">
+              <strong>No prompts match this filter</strong>
+              Try a different filter or create a new prompt.
+            </div>
+          `;
+          return;
+        }
+        grid.innerHTML = items.map((p) => `
+          <a class="prompt-card${p.pinned ? ' pinned' : ''}"
+             href="Seek-Desktop-Phase-1.html?task=${encodeURIComponent(p.text)}"
+             data-id="${p.id}">
+            <div class="prompt-card-head">
+              <div class="prompt-icon">
+                <i data-lucide="${p.icon}" class="w-[16px] h-[16px]"></i>
+              </div>
+              <div class="prompt-actions">
+                <button class="prompt-action-btn ${p.pinned ? 'pinned' : ''}" data-action="pin" data-id="${p.id}" title="${p.pinned ? 'Unpin' : 'Pin'}" aria-label="${p.pinned ? 'Unpin' : 'Pin'}">
+                  <i data-lucide="star" class="w-[14px] h-[14px]" ${p.pinned ? 'fill="currentColor"' : ''}></i>
+                </button>
+                ${p.mine ? `
+                <button class="prompt-action-btn" data-action="edit" data-id="${p.id}" title="Edit" aria-label="Edit">
+                  <i data-lucide="pencil" class="w-[14px] h-[14px]"></i>
+                </button>` : ""}
+              </div>
+            </div>
+            <h3 class="prompt-title">${escapeHTML(p.title)}</h3>
+            <p class="prompt-desc">${escapeHTML(p.text)}</p>
+            <div class="prompt-tags">
+              ${p.tags.map((t) => `<span class="prompt-tag">${escapeHTML(t)}</span>`).join("")}
+            </div>
+            <div class="prompt-meta">
+              <div class="prompt-author">
+                <span class="prompt-author-avatar">${p.author.initials}</span>
+                <span>${escapeHTML(p.author.name)}</span>
+              </div>
+              <span class="prompt-uses">${p.uses} ${p.uses === 1 ? "use" : "uses"}</span>
+            </div>
+          </a>
+        `).join("");
+        lucide.createIcons();
+
+        // Stop card-click propagation on action buttons; wire them
+        grid.querySelectorAll("[data-action]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id);
+            const p  = PROMPTS.find((x) => x.id === id);
+            if (!p) return;
+            if (btn.dataset.action === "pin") {
+              p.pinned = !p.pinned;
+              showToast(p.pinned ? "Pinned to library" : "Unpinned");
+              render();
+              updateCounts();
+            } else if (btn.dataset.action === "edit") {
+              openPromptModal(p);
+            }
+          });
+        });
+      }
+
+      function updateCounts() {
+        document.getElementById("cnt-all").textContent    = PROMPTS.length;
+        document.getElementById("cnt-pinned").textContent = PROMPTS.filter((p) => p.pinned).length;
+        document.getElementById("cnt-mine").textContent   = PROMPTS.filter((p) => p.mine).length;
+        document.getElementById("cnt-team").textContent   = PROMPTS.filter((p) => p.team).length;
+      }
+
+      function escapeHTML(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+      }
+
+      // ─── Filter chips ──────────────────────────────────────────
+      document.querySelectorAll("[data-filter]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll("[data-filter]").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          currentFilter = chip.dataset.filter;
+          render();
+        });
+      });
+
+      searchEl.addEventListener("input", (e) => {
+        currentQuery = e.target.value.trim();
+        render();
+      });
+
+      // ─── New / Edit modal ─────────────────────────────────────
+      const pmBackdrop = document.getElementById("prompt-modal-backdrop");
+      const pmTitle    = document.getElementById("prompt-modal-title");
+      const pmTitleIn  = document.getElementById("pm-title");
+      const pmText     = document.getElementById("pm-text");
+      const pmTags     = document.getElementById("pm-tags");
+      const pmSave     = document.getElementById("pm-save");
+      const pmCancel   = document.getElementById("pm-cancel");
+      const pmClose    = document.getElementById("prompt-modal-close");
+      let editingId = null;
+
+      function openPromptModal(p) {
+        editingId = p ? p.id : null;
+        pmTitle.textContent = p ? "Edit prompt" : "New prompt";
+        pmTitleIn.value     = p ? p.title : "";
+        pmText.value        = p ? p.text  : "";
+        pmTags.value        = p ? p.tags.join(", ") : "";
+        validatePmForm();
+        pmBackdrop.classList.add("open");
+        setTimeout(() => pmTitleIn.focus(), 80);
+      }
+      function closePromptModal() { pmBackdrop.classList.remove("open"); }
+
+      function validatePmForm() {
+        pmSave.disabled = !(pmTitleIn.value.trim() && pmText.value.trim());
+      }
+      pmTitleIn.addEventListener("input", validatePmForm);
+      pmText.addEventListener("input", validatePmForm);
+
+      document.getElementById("new-prompt-btn").addEventListener("click", () => openPromptModal(null));
+      pmCancel.addEventListener("click", closePromptModal);
+      pmClose.addEventListener("click", closePromptModal);
+      pmBackdrop.addEventListener("click", (e) => { if (e.target === pmBackdrop) closePromptModal(); });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && pmBackdrop.classList.contains("open")) closePromptModal();
+      });
+
+      pmSave.addEventListener("click", () => {
+        const title = pmTitleIn.value.trim();
+        const text  = pmText.value.trim();
+        const tags  = pmTags.value.split(",").map((t) => t.trim()).filter(Boolean);
+        if (!title || !text) return;
+
+        if (editingId) {
+          const p = PROMPTS.find((x) => x.id === editingId);
+          if (p) { p.title = title; p.text = text; p.tags = tags.length ? tags : p.tags; }
+          showToast("Prompt updated");
+        } else {
+          PROMPTS.unshift({
+            id: Date.now(),
+            icon: "sparkles",
+            title, text,
+            tags: tags.length ? tags : ["Custom"],
+            author: { name: "Sandeep Sundaram", initials: "SS" },
+            uses: 0, mine: true, team: false, pinned: false,
+          });
+          showToast("Saved to your library");
+        }
+        closePromptModal();
+        render();
+        updateCounts();
+      });
+
+      // ─── Toast ─────────────────────────────────────────────────
+      const toastEl = document.getElementById("toast");
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(window._toastT);
+        window._toastT = setTimeout(() => toastEl.classList.remove("show"), 1800);
+      }
+
+      // ─── Init ──────────────────────────────────────────────────
+      window.addEventListener("load", () => {
+        updateCounts();
+        render();
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek — Scheduled Tasks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+
+        --color-info:         #0975D7;
+        --color-info-bg:      #E7F1FB;
+        --color-success:      #1E9B6A;
+        --color-success-bg:   #E1F2EA;
+        --color-warn:         #946800;
+        --color-warn-bg:      #FBF1D6;
+        --color-danger:       #C7372F;
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px;
+        border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        cursor: pointer;
+        background: transparent; border: none;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Sidebar base — rendered by seek-sidebar.js */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more { display: none; }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item { justify-content: center; }
+
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+
+      .switcher {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; margin: 0 8px 8px;
+        border-radius: var(--r-md); cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+
+      .nav-list-top, .nav-list-bottom { padding: 6px 8px 4px; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover:not([data-active="true"]) { background: var(--color-side-hover); color: #FFFFFF; }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      .wf-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        background: var(--color-side-active);
+        color: #fff; font-weight: 700; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0; border: 1px solid var(--color-side-stroke);
+      }
+      .ent-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #2A2940; color: #FFFFFF;
+        font-weight: 700; font-size: 13px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0; border: 1px solid var(--color-side-stroke);
+      }
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* ─── Page chrome ────────────────────────────────────── */
+      .page-header {
+        padding: 32px 8px 24px;
+      }
+      .page-title {
+        font-size: 26px; font-weight: 700;
+        color: var(--color-ink-900);
+        letter-spacing: -0.015em;
+      }
+      .page-sub {
+        font-size: 14px;
+        color: var(--color-ink-600);
+        margin-top: 6px;
+        max-width: 64ch;
+      }
+
+      .page-toolbar {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 8px 16px;
+        flex-wrap: wrap;
+      }
+
+      .filter-chip {
+        height: 32px; padding: 0 14px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        border-radius: 999px;
+        color: var(--color-ink-700);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .filter-chip:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .filter-chip.active {
+        background: var(--color-ink-900);
+        color: #fff;
+        border-color: var(--color-ink-900);
+      }
+      .filter-chip .count {
+        font-size: 11px;
+        font-weight: 600;
+        opacity: 0.75;
+      }
+
+      .new-btn {
+        margin-left: auto;
+        height: 36px;
+        padding: 0 14px;
+        background: var(--color-fire-400);
+        border: none;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .new-btn:hover { background: var(--color-fire-300); }
+
+      .search-wrap {
+        position: relative;
+        width: 280px;
+      }
+      .search-wrap input {
+        width: 100%;
+        height: 36px;
+        padding: 0 12px 0 36px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        outline: none; font-family: inherit;
+      }
+      .search-wrap input:focus { border-color: var(--color-ink-700); }
+      .search-wrap input::placeholder { color: var(--color-ink-500); }
+      .search-wrap .si {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--color-ink-500);
+      }
+
+      /* ─── Schedules table ──────────────────────────────── */
+      .sched-table {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+        margin: 0 8px 64px;
+      }
+      .sched-row {
+        display: grid;
+        grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.9fr 60px;
+        gap: 14px;
+        padding: 14px 16px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .sched-row:last-child { border-bottom: none; }
+      .sched-row.head {
+        background: var(--color-surface-2);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink-600);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .sched-row:not(.head):hover { background: rgba(31, 31, 50, 0.025); }
+
+      .sched-name {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sched-name .glyph {
+        width: 22px; height: 22px;
+        background: var(--color-surface-2);
+        border-radius: 5px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        margin-right: 8px;
+        vertical-align: -5px;
+      }
+
+      .sched-schedule {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--color-ink-700);
+      }
+      .sched-schedule .sk { color: var(--color-ink-500); }
+
+      .sched-time {
+        color: var(--color-ink-700);
+        font-variant-numeric: tabular-nums;
+      }
+      .sched-time.muted { color: var(--color-ink-500); }
+
+      .sched-status {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .sched-status .pip {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .sched-status[data-state="active"]  { color: var(--color-success); }
+      .sched-status[data-state="active"]  .pip { background: var(--color-success); }
+      .sched-status[data-state="paused"]  { color: var(--color-warn); }
+      .sched-status[data-state="paused"]  .pip { background: var(--color-warn); }
+      .sched-status[data-state="failed"]  { color: var(--color-danger); }
+      .sched-status[data-state="failed"]  .pip { background: var(--color-danger); }
+
+      .row-menu-wrap { position: relative; justify-self: end; }
+      .row-menu-btn {
+        width: 28px; height: 28px;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        color: var(--color-ink-600);
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .row-menu-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      .row-menu {
+        position: absolute;
+        right: 0;
+        top: 32px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        box-shadow: 0 12px 32px rgba(31,31,50,0.16);
+        padding: 4px;
+        z-index: 50;
+        min-width: 180px;
+        display: none;
+      }
+      .row-menu.open { display: block; }
+      .row-menu-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .row-menu-item:hover { background: var(--color-surface-2); }
+      .row-menu-item.danger { color: var(--color-danger); }
+      .row-menu-item.danger:hover { background: rgba(199, 55, 47, 0.06); }
+      .row-menu-divider { height: 1px; background: var(--color-divider); margin: 4px 0; }
+
+      .empty-state {
+        text-align: center;
+        padding: 64px 0;
+        color: var(--color-ink-500);
+        font-size: 14px;
+      }
+      .empty-state strong { color: var(--color-ink-900); display: block; margin-bottom: 4px; font-size: 15px; }
+
+      /* ─── Modal (new/edit) ─────────────────────────────── */
+      .modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(31, 31, 50, 0.40);
+        backdrop-filter: blur(2px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 200;
+        opacity: 0; pointer-events: none;
+        transition: opacity 180ms ease-out;
+      }
+      .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+      .modal {
+        background: var(--color-surface);
+        border-radius: 8px;
+        box-shadow: 0 20px 60px rgba(31,31,50,0.20), 0 4px 12px rgba(31,31,50,0.08);
+        width: 580px; max-width: calc(100vw - 48px);
+        max-height: calc(100vh - 96px);
+        display: flex; flex-direction: column;
+        transform: translateY(8px);
+        transition: transform 180ms ease-out;
+      }
+      .modal-backdrop.open .modal { transform: translateY(0); }
+      .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .modal-title { font-size: 16px; font-weight: 700; }
+      .modal-close {
+        width: 28px; height: 28px; border-radius: 4px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-600);
+        background: transparent; border: none; cursor: pointer;
+      }
+      .modal-close:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .modal-body { padding: 18px 20px; overflow-y: auto; }
+      .modal-footer {
+        display: flex; align-items: center; justify-content: flex-end;
+        gap: 10px; padding: 14px 20px;
+        border-top: 1px solid var(--color-divider);
+        background: var(--color-surface-2);
+      }
+
+      .field-label {
+        font-size: 11px; font-weight: 700;
+        color: var(--color-ink-600);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+        display: block;
+      }
+      .field-input, .field-textarea, .field-select {
+        width: 100%;
+        padding: 9px 12px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--color-ink-900);
+        font-family: inherit;
+        outline: none;
+      }
+      .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--color-ink-700); }
+      .field-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+      .field-row { margin-bottom: 16px; }
+      .field-row:last-child { margin-bottom: 0; }
+      .field-row-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      }
+
+      .btn-primary {
+        height: 34px; padding: 0 16px;
+        border-radius: 6px;
+        background: var(--color-fire-400);
+        color: #fff;
+        font-size: 13px; font-weight: 600;
+        border: none; cursor: pointer;
+      }
+      .btn-primary:hover { background: var(--color-fire-300); }
+      .btn-primary:disabled { background: var(--color-ink-400); cursor: not-allowed; }
+      .btn-secondary {
+        height: 34px; padding: 0 14px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-800);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+      }
+      .btn-secondary:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 24px; left: 50%;
+        transform: translateX(-50%) translateY(16px);
+        background: var(--color-ink-900); color: #fff;
+        padding: 10px 14px; border-radius: 6px;
+        font-size: 13px;
+        opacity: 0; pointer-events: none;
+        transition: opacity 180ms, transform 180ms;
+        z-index: 500;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[1120px] mx-auto px-8">
+            <div class="page-header">
+              <h1 class="page-title">Scheduled tasks</h1>
+              <p class="page-sub">
+                Tasks that run automatically on a schedule. Pause, edit, or delete any of them. Each run shows up in Recent when it finishes.
+              </p>
+            </div>
+
+            <div class="page-toolbar">
+              <div class="search-wrap">
+                <i data-lucide="search" class="si w-[14px] h-[14px]"></i>
+                <input id="sched-search" placeholder="Search by task name or schedule…" autocomplete="off" />
+              </div>
+              <button class="filter-chip active" data-filter="all">All <span class="count" id="cnt-all"></span></button>
+              <button class="filter-chip" data-filter="recurring">Recurring <span class="count" id="cnt-rec"></span></button>
+              <button class="filter-chip" data-filter="once">One-time <span class="count" id="cnt-once"></span></button>
+              <button class="filter-chip" data-filter="paused">Paused <span class="count" id="cnt-paused"></span></button>
+              <button class="new-btn" id="new-sched-btn">
+                <i data-lucide="plus" class="w-[14px] h-[14px]"></i>
+                New scheduled task
+              </button>
+            </div>
+
+            <div class="sched-table" id="sched-table"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- New / Edit schedule modal -->
+    <div class="modal-backdrop" id="sched-modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="modal-title" id="sched-modal-title">New scheduled task</div>
+          <button class="modal-close" id="sched-modal-close" aria-label="Close">
+            <i data-lucide="x" class="w-[16px] h-[16px]"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="field-row">
+            <label class="field-label" for="sm-name">Task name</label>
+            <input class="field-input" id="sm-name" placeholder='Like "Weekly pipeline review"' />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="sm-prompt">What Seek should do</label>
+            <textarea class="field-textarea" id="sm-prompt" rows="3" placeholder="Describe the task. Be specific about apps, scope, and any guard rails."></textarea>
+          </div>
+          <div class="field-row field-row-grid">
+            <div>
+              <label class="field-label" for="sm-repeat">Repeat</label>
+              <select class="field-select" id="sm-repeat">
+                <option value="once">Once</option>
+                <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays</option>
+                <option value="weekly" selected>Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label" for="sm-time">At</label>
+              <select class="field-select" id="sm-time">
+                <option>6:00 AM</option>
+                <option>7:00 AM</option>
+                <option>8:00 AM</option>
+                <option selected>9:00 AM</option>
+                <option>10:00 AM</option>
+                <option>12:00 PM</option>
+                <option>2:00 PM</option>
+                <option>4:00 PM</option>
+                <option>6:00 PM</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row" id="sm-weekday-row">
+            <label class="field-label" for="sm-weekday">On</label>
+            <select class="field-select" id="sm-weekday">
+              <option selected>Monday</option>
+              <option>Tuesday</option>
+              <option>Wednesday</option>
+              <option>Thursday</option>
+              <option>Friday</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="sm-cancel">Cancel</button>
+          <button class="btn-primary" id="sm-save" disabled>Schedule task</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "scheduled" });
+    </script>
+    <script>
+      // ─── Data ──────────────────────────────────────────────────
+      const SCHEDULES = [
+        { id: 1, name: "Weekly Pipeline Review",        icon: "bar-chart-3",     repeat: "weekly",   schedule: "Every Monday · 9:00 AM",  next: "Mon, Nov 24",    last: "Last Mon",     state: "active" },
+        { id: 2, name: "Stripe Payout Reconciliation",  icon: "scale",           repeat: "daily",    schedule: "Every day · 6:00 AM",     next: "Tomorrow 6:00", last: "Today 6:00",   state: "active" },
+        { id: 3, name: "Pull MRR Breakdown",             icon: "trending-up",     repeat: "once",     schedule: "Once · Nov 28 · 9:00 AM", next: "Fri, Nov 28",    last: "—",            state: "active" },
+        { id: 4, name: "Triage VIP Zendesk Queue",      icon: "inbox",           repeat: "weekdays", schedule: "Weekdays · 9:00 AM",     next: "Mon, Nov 24",    last: "Fri, Nov 21",  state: "active" },
+        { id: 5, name: "Send Q4 Renewal Reminders",      icon: "mail",            repeat: "weekly",   schedule: "Every Monday · 7:00 AM",  next: "Mon, Nov 24",    last: "Mon, Nov 17",  state: "active" },
+        { id: 6, name: "Customer Health Audit",          icon: "activity",        repeat: "weekly",   schedule: "Every Friday · 4:00 PM",  next: "Fri, Nov 28",    last: "Fri, Nov 21",  state: "active" },
+        { id: 7, name: "Monthly Compliance Report",      icon: "shield-check",    repeat: "monthly",  schedule: "Monthly · 1st · 8:00 AM", next: "Dec 1",          last: "Nov 1",        state: "active" },
+        { id: 8, name: "Q-end Close Checklist",          icon: "circle-check-big",repeat: "monthly",  schedule: "Quarterly · last day",    next: "Dec 31",         last: "Sep 30",       state: "paused" },
+        { id: 9, name: "Onboard New Hires Weekly",       icon: "user-plus",       repeat: "weekly",   schedule: "Every Monday · 8:00 AM",  next: "Mon, Nov 24",    last: "Mon, Nov 17",  state: "active" },
+        { id: 10,name: "Marketing Lead Routing",         icon: "users",           repeat: "daily",    schedule: "Every day · hourly",      next: "Today 4:00 PM", last: "Today 3:00",   state: "failed" },
+      ];
+
+      function repeatKind(repeat) {
+        return repeat === "once" ? "once" : "recurring";
+      }
+
+      // ─── Render ────────────────────────────────────────────────
+      let currentFilter = "all";
+      let currentQuery  = "";
+
+      const table = document.getElementById("sched-table");
+
+      function filtered() {
+        const q = currentQuery.toLowerCase();
+        return SCHEDULES.filter((s) => {
+          if (currentFilter === "recurring" && repeatKind(s.repeat) !== "recurring") return false;
+          if (currentFilter === "once"      && repeatKind(s.repeat) !== "once")      return false;
+          if (currentFilter === "paused"    && s.state !== "paused")                  return false;
+          if (q) {
+            const hay = (s.name + " " + s.schedule).toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      function statusLabel(state) {
+        if (state === "active") return "Active";
+        if (state === "paused") return "Paused";
+        if (state === "failed") return "Failed";
+        return state;
+      }
+
+      function render() {
+        const items = filtered();
+        const head = `
+          <div class="sched-row head">
+            <span>Task</span>
+            <span>Schedule</span>
+            <span>Next run</span>
+            <span>Last run</span>
+            <span>Status</span>
+            <span></span>
+          </div>
+        `;
+        if (!items.length) {
+          table.innerHTML = head + `
+            <div class="empty-state">
+              <strong>No scheduled tasks match this filter</strong>
+              Try a different filter or schedule a new task.
+            </div>
+          `;
+          return;
+        }
+        table.innerHTML = head + items.map((s) => `
+          <div class="sched-row" data-id="${s.id}">
+            <span class="sched-name">
+              <span class="glyph"><i data-lucide="${s.icon}" class="w-[12px] h-[12px]"></i></span>
+              ${escapeHTML(s.name)}
+            </span>
+            <span class="sched-schedule">
+              <i data-lucide="${s.repeat === 'once' ? 'calendar' : 'repeat'}" class="sk w-[13px] h-[13px]"></i>
+              ${escapeHTML(s.schedule)}
+            </span>
+            <span class="sched-time${s.state === 'paused' ? ' muted' : ''}">${escapeHTML(s.next)}</span>
+            <span class="sched-time muted">${escapeHTML(s.last)}</span>
+            <span class="sched-status" data-state="${s.state}">
+              <span class="pip"></span>
+              ${statusLabel(s.state)}
+            </span>
+            <span class="row-menu-wrap">
+              <button class="row-menu-btn" data-menu="${s.id}" aria-label="More actions">
+                <i data-lucide="more-horizontal" class="w-[16px] h-[16px]"></i>
+              </button>
+              <div class="row-menu" data-menu-content="${s.id}">
+                <div class="row-menu-item" data-action="run" data-id="${s.id}">
+                  <i data-lucide="play" class="w-[14px] h-[14px]"></i>
+                  Run now
+                </div>
+                <div class="row-menu-item" data-action="toggle" data-id="${s.id}">
+                  <i data-lucide="${s.state === 'paused' ? 'play' : 'pause'}" class="w-[14px] h-[14px]"></i>
+                  ${s.state === 'paused' ? 'Resume schedule' : 'Pause schedule'}
+                </div>
+                <div class="row-menu-item" data-action="edit" data-id="${s.id}">
+                  <i data-lucide="pencil" class="w-[14px] h-[14px]"></i>
+                  Edit
+                </div>
+                <div class="row-menu-divider"></div>
+                <div class="row-menu-item danger" data-action="delete" data-id="${s.id}">
+                  <i data-lucide="trash-2" class="w-[14px] h-[14px]"></i>
+                  Delete schedule
+                </div>
+              </div>
+            </span>
+          </div>
+        `).join("");
+        lucide.createIcons();
+
+        // Row menu wiring
+        table.querySelectorAll("[data-menu]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.menu;
+            document.querySelectorAll(".row-menu").forEach((m) => {
+              if (m.dataset.menuContent === id) m.classList.toggle("open");
+              else m.classList.remove("open");
+            });
+          });
+        });
+        table.querySelectorAll("[data-action]").forEach((item) => {
+          item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = parseInt(item.dataset.id);
+            const s = SCHEDULES.find((x) => x.id === id);
+            if (!s) return;
+            document.querySelectorAll(".row-menu").forEach((m) => m.classList.remove("open"));
+            const a = item.dataset.action;
+            if (a === "run") {
+              window.location.href = "Seek-Desktop-Phase-1-Working.html?task=" + encodeURIComponent(s.name);
+            } else if (a === "toggle") {
+              s.state = s.state === "paused" ? "active" : "paused";
+              showToast(s.state === "paused" ? "Schedule paused" : "Schedule resumed");
+              render();
+              updateCounts();
+            } else if (a === "edit") {
+              openSchedModal(s);
+            } else if (a === "delete") {
+              const idx = SCHEDULES.findIndex((x) => x.id === id);
+              if (idx >= 0) SCHEDULES.splice(idx, 1);
+              showToast("Schedule deleted");
+              render();
+              updateCounts();
+            }
+          });
+        });
+      }
+
+      // Close any open menu on outside click
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".row-menu.open").forEach((m) => m.classList.remove("open"));
+      });
+
+      function updateCounts() {
+        document.getElementById("cnt-all").textContent    = SCHEDULES.length;
+        document.getElementById("cnt-rec").textContent    = SCHEDULES.filter((s) => repeatKind(s.repeat) === "recurring").length;
+        document.getElementById("cnt-once").textContent   = SCHEDULES.filter((s) => repeatKind(s.repeat) === "once").length;
+        document.getElementById("cnt-paused").textContent = SCHEDULES.filter((s) => s.state === "paused").length;
+      }
+
+      function escapeHTML(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+      }
+
+      // ─── Filter / search wiring ────────────────────────────────
+      document.querySelectorAll("[data-filter]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll("[data-filter]").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          currentFilter = chip.dataset.filter;
+          render();
+        });
+      });
+      document.getElementById("sched-search").addEventListener("input", (e) => {
+        currentQuery = e.target.value.trim();
+        render();
+      });
+
+      // ─── Modal ─────────────────────────────────────────────────
+      const smBd     = document.getElementById("sched-modal-backdrop");
+      const smTitle  = document.getElementById("sched-modal-title");
+      const smName   = document.getElementById("sm-name");
+      const smPrompt = document.getElementById("sm-prompt");
+      const smRepeat = document.getElementById("sm-repeat");
+      const smTime   = document.getElementById("sm-time");
+      const smWdRow  = document.getElementById("sm-weekday-row");
+      const smWd     = document.getElementById("sm-weekday");
+      const smSave   = document.getElementById("sm-save");
+      const smCancel = document.getElementById("sm-cancel");
+      const smClose  = document.getElementById("sched-modal-close");
+      let editingId  = null;
+
+      function updateWdVisibility() {
+        smWdRow.style.display = (smRepeat.value === "weekly") ? "" : "none";
+      }
+      smRepeat.addEventListener("change", updateWdVisibility);
+
+      function openSchedModal(s) {
+        editingId = s ? s.id : null;
+        smTitle.textContent = s ? "Edit scheduled task" : "New scheduled task";
+        smName.value   = s ? s.name : "";
+        smPrompt.value = "";
+        smRepeat.value = s ? s.repeat : "weekly";
+        // crude: leave time + weekday as defaults
+        updateWdVisibility();
+        validate();
+        smBd.classList.add("open");
+        setTimeout(() => smName.focus(), 80);
+      }
+      function closeSchedModal() { smBd.classList.remove("open"); }
+
+      function validate() {
+        smSave.disabled = !(smName.value.trim() && smPrompt.value.trim());
+      }
+      smName.addEventListener("input", validate);
+      smPrompt.addEventListener("input", validate);
+
+      document.getElementById("new-sched-btn").addEventListener("click", () => openSchedModal(null));
+      smCancel.addEventListener("click", closeSchedModal);
+      smClose.addEventListener("click", closeSchedModal);
+      smBd.addEventListener("click", (e) => { if (e.target === smBd) closeSchedModal(); });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && smBd.classList.contains("open")) closeSchedModal();
+      });
+
+      function buildScheduleLabel(repeat, time, weekday) {
+        if (repeat === "once")     return `Once · ${weekday || "tomorrow"} · ${time}`;
+        if (repeat === "daily")    return `Every day · ${time}`;
+        if (repeat === "weekdays") return `Weekdays · ${time}`;
+        if (repeat === "weekly")   return `Every ${weekday} · ${time}`;
+        if (repeat === "monthly")  return `Monthly · 1st · ${time}`;
+        return time;
+      }
+
+      smSave.addEventListener("click", () => {
+        const name   = smName.value.trim();
+        const prompt = smPrompt.value.trim();
+        if (!name || !prompt) return;
+        const repeat = smRepeat.value;
+        const time   = smTime.value;
+        const wd     = smWd.value;
+        const schedule = buildScheduleLabel(repeat, time, wd);
+
+        if (editingId) {
+          const s = SCHEDULES.find((x) => x.id === editingId);
+          if (s) { s.name = name; s.repeat = repeat; s.schedule = schedule; }
+          showToast("Schedule updated");
+        } else {
+          SCHEDULES.unshift({
+            id: Date.now(),
+            name, icon: "sparkles",
+            repeat, schedule,
+            next: "Mon, Nov 24", last: "—",
+            state: "active",
+          });
+          showToast(`Scheduled · ${schedule}`);
+        }
+        closeSchedModal();
+        render();
+        updateCounts();
+      });
+
+      // ─── Toast ─────────────────────────────────────────────────
+      const toastEl = document.getElementById("toast");
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(window._toastT);
+        window._toastT = setTimeout(() => toastEl.classList.remove("show"), 1800);
+      }
+
+      // ─── Init ──────────────────────────────────────────────────
+      window.addEventListener("load", () => {
+        updateCounts();
+        render();
+        updateWdVisibility();
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek · Task history</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+        --color-fire-50:      #FFF8F5;
+        --color-fire-400:     #EF5F00;
+        --color-success:      #21AD73;
+        --color-success-bg:   rgba(33, 173, 115, 0.10);
+        --color-warning:      #E0A400;
+        --color-warning-bg:   rgba(224, 164, 0, 0.12);
+        --color-critical:     #B3141D;
+        --color-critical-bg:  rgba(179, 20, 29, 0.10);
+        --color-info:         #0975D7;
+        --color-info-bg:      rgba(9, 117, 215, 0.08);
+        --r-sm: 4px; --r-md: 8px; --r-pill: 999px;
+      }
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; background: transparent; border: none; }
+      a { color: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      .topbar {
+        height: 56px; background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px; border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700); cursor: pointer;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      aside.sidebar {
+        width: 240px; background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .nav-badge,
+      aside.sidebar[data-collapsed="true"] .avatar-more { display: none; }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item,
+      aside.sidebar[data-collapsed="true"] #sidebar-toggle-bottom { justify-content: center; }
+
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+      .switcher {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; margin: 0 8px 8px;
+        border-radius: var(--r-md); cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+      .nav-list { padding: 8px; flex: 1; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+        text-decoration: none;
+      }
+      .nav-item:hover:not([data-active="true"]) { background: var(--color-side-hover); color: #FFFFFF; }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50); font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-size: 10px; font-weight: 700;
+        padding: 1px 7px; border-radius: 999px;
+        line-height: 16px; min-width: 18px; text-align: center;
+      }
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #sidebar-toggle-bottom {
+        display: flex; align-items: center; gap: 12px;
+        height: 36px; margin: 4px 8px 8px; padding: 0 12px;
+        border-radius: var(--r-md); color: var(--color-side-muted);
+        font-size: 13px; font-weight: 500; cursor: pointer;
+        width: calc(100% - 16px); text-align: left;
+      }
+      #sidebar-toggle-bottom:hover { background: var(--color-side-hover); color: #FFFFFF; }
+      #sidebar-toggle-bottom .icon { width: 16px; height: 16px; flex-shrink: 0; }
+      .wf-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        background: var(--color-side-active);
+        border: 1px solid var(--color-side-stroke);
+        color: #fff; font-weight: 700; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .ent-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #2A2940; border: 1px solid var(--color-side-stroke);
+        color: #FFFFFF; font-weight: 700; font-size: 13px;
+        display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+
+      /* ─── Page content ───────────────────────────────────────── */
+      .page-head {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 16px; margin-bottom: 24px;
+      }
+      .page-head h1 { font-size: 28px; font-weight: 700; color: var(--color-ink-900); }
+      .page-head .sub { font-size: 13px; color: var(--color-ink-600); margin-top: 4px; }
+
+      .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+      .filter-chip {
+        height: 28px; padding: 0 12px; border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-700);
+        font-size: 12px; font-weight: 500; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .filter-chip:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .filter-chip.active {
+        background: var(--color-ink-900); color: #fff;
+        border-color: var(--color-ink-900);
+      }
+      .filter-chip .count {
+        background: rgba(255,255,255,0.18); color: inherit;
+        padding: 0 6px; border-radius: 8px; font-size: 11px; font-weight: 600;
+      }
+      .filter-chip:not(.active) .count {
+        background: var(--color-surface-2); color: var(--color-ink-500);
+      }
+      .search-wrap { flex: 1; max-width: 360px; position: relative; }
+      .search-input {
+        width: 100%; height: 28px;
+        padding: 0 12px 0 32px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 12px; color: var(--color-ink-900);
+        outline: none; font-family: inherit;
+      }
+      .search-input::placeholder { color: var(--color-ink-500); }
+      .search-input:focus { border-color: var(--color-ink-700); }
+      .search-icon {
+        position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+        color: var(--color-ink-500);
+      }
+
+      .tasks-table {
+        width: 100%; background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden; border-collapse: collapse;
+      }
+      .tasks-table thead { background: var(--color-surface-2); }
+      .tasks-table th {
+        text-align: left; font-size: 11px; font-weight: 600;
+        color: var(--color-ink-500); text-transform: uppercase;
+        letter-spacing: 0.06em; padding: 10px 16px;
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .tasks-table td {
+        padding: 12px 16px; font-size: 13px;
+        color: var(--color-ink-800);
+        border-bottom: 1px solid var(--color-divider);
+        vertical-align: middle;
+      }
+      .tasks-table tbody tr:last-child td { border-bottom: none; }
+      .tasks-table tbody tr { cursor: pointer; transition: background 100ms; }
+      .tasks-table tbody tr:hover { background: var(--color-surface-2); }
+
+      .status-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 2px 10px; border-radius: var(--r-pill);
+        font-size: 12px; font-weight: 600; line-height: 18px;
+      }
+      .status-pill .pip { width: 6px; height: 6px; border-radius: 50%; }
+      .status-pill.completed { background: var(--color-success-bg); color: var(--color-success); }
+      .status-pill.completed .pip { background: var(--color-success); }
+      .status-pill.paused    { background: var(--color-warning-bg); color: var(--color-warning); }
+      .status-pill.paused .pip { background: var(--color-warning); }
+      .status-pill.failed    { background: var(--color-critical-bg); color: var(--color-critical); }
+      .status-pill.failed .pip { background: var(--color-critical); }
+      .status-pill.running   { background: rgba(239, 95, 0, 0.10); color: var(--color-fire-400); }
+      .status-pill.running .pip { background: var(--color-fire-400); animation: pip-pulse 1.4s ease-in-out infinite; }
+      .status-pill.stopped   { background: var(--color-surface-2); color: var(--color-ink-600); }
+      .status-pill.stopped .pip { background: var(--color-ink-500); }
+      @keyframes pip-pulse {
+        0%,100% { opacity: 1; transform: scale(1); }
+        50%     { opacity: 0.5; transform: scale(0.75); }
+      }
+
+      .app-cell { display: inline-flex; align-items: center; gap: 8px; }
+      .app-glyph {
+        width: 22px; height: 22px; border-radius: 5px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 9px; font-weight: 700;
+        color: var(--color-ink-700);
+        background: var(--color-surface-2);
+        border: 1px solid var(--color-divider);
+      }
+      .tasks-table .task-title { color: var(--color-ink-900); font-weight: 500; }
+      .col-task     { min-width: 320px; }
+      .col-app      { width: 150px; }
+      .col-started  { width: 110px; }
+      .col-duration { width: 100px; }
+      .col-steps    { width: 80px; }
+      .col-status   { width: 140px; text-align: right; }
+
+      .toast {
+        position: fixed;
+        bottom: 24px; left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--color-ink-900); color: #fff;
+        padding: 10px 16px; border-radius: var(--r-md);
+        font-size: 13px; font-weight: 500;
+        opacity: 0; transition: opacity 200ms, transform 200ms;
+        pointer-events: none; z-index: 100;
+        box-shadow: 0 8px 24px rgba(31,31,50,0.20);
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[1180px] mx-auto px-8 pt-10 pb-12">
+            <div class="page-head">
+              <div>
+                <h1>Task history</h1>
+                <p class="sub">Every task Seek has run for you, newest first.</p>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <button class="filter-chip active" data-filter="all">All <span class="count">12</span></button>
+              <button class="filter-chip" data-filter="completed">Completed <span class="count">8</span></button>
+              <button class="filter-chip" data-filter="paused">Paused <span class="count">1</span></button>
+              <button class="filter-chip" data-filter="failed">Failed <span class="count">2</span></button>
+              <button class="filter-chip" data-filter="stopped">Stopped <span class="count">1</span></button>
+              <div class="flex-1"></div>
+              <div class="search-wrap">
+                <i data-lucide="search" class="w-[14px] h-[14px] search-icon"></i>
+                <input class="search-input" placeholder="Search tasks…" id="search-input" />
+              </div>
+            </div>
+
+            <table class="tasks-table" id="tasks-table">
+              <thead>
+                <tr>
+                  <th class="col-task">Task</th>
+                  <th class="col-app">App</th>
+                  <th class="col-started">Started</th>
+                  <th class="col-duration">Duration</th>
+                  <th class="col-steps">Steps</th>
+                  <th class="col-status">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tasks-tbody"></tbody>
+            </table>
+
+            <div class="h-20"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const TASKS = [
+        { id: 1, status: "completed", task: 'Update 12 opportunities to "Closed Won"', app: "Salesforce", started: "just now", duration: "1m 47s", steps: 7 },
+        { id: 2, status: "running",   task: "Triage today's Zendesk tickets by severity", app: "Zendesk", started: "4m ago", duration: "0m 32s", steps: 2 },
+        { id: 3, status: "paused",    task: "Reconcile yesterday's Stripe payouts with the ledger", app: "Stripe", started: "12m ago", duration: "2m 14s", steps: 4 },
+        { id: 4, status: "completed", task: "Pull onboarding status for new hires this week", app: "Workday", started: "1h ago", duration: "0m 58s", steps: 3 },
+        { id: 5, status: "completed", task: "Export this week's pipeline report", app: "HubSpot", started: "3h ago", duration: "1m 12s", steps: 4 },
+        { id: 6, status: "completed", task: "Add 3 new users to Okta and assign Workday access", app: "Okta", started: "5h ago", duration: "1m 03s", steps: 3 },
+        { id: 7, status: "failed",    task: "Send welcome emails to new hires", app: "Outreach", started: "yesterday", duration: "0m 41s", steps: 2 },
+        { id: 8, status: "completed", task: "Update CRM with this week's leads", app: "Salesforce", started: "yesterday", duration: "5m 12s", steps: 8 },
+        { id: 9, status: "stopped",   task: "Sync Slack channels to CRM contacts", app: "HubSpot", started: "2d ago", duration: "0m 14s", steps: 1 },
+        { id: 10, status: "completed", task: "Refund chargeback for invoice #INV-4421", app: "Stripe", started: "2d ago", duration: "0m 38s", steps: 4 },
+        { id: 11, status: "failed",    task: "Generate quarterly board report", app: "Notion", started: "3d ago", duration: "0m 22s", steps: 1 },
+        { id: 12, status: "completed", task: "Update account health scores", app: "Salesforce", started: "1w ago", duration: "8m 41s", steps: 9 },
+      ];
+      const APP_GLYPHS = {
+        Salesforce: "SF", Zendesk: "ZD", Stripe: "S", Workday: "W",
+        HubSpot: "HS", Okta: "O", Outreach: "OR", Notion: "N",
+      };
+      const STATUS_LABEL = {
+        completed: "Completed", running: "Running", paused: "Paused",
+        failed: "Failed", stopped: "Stopped",
+      };
+
+      function renderTasks(filter = "all", query = "") {
+        const tbody = document.getElementById("tasks-tbody");
+        const q = query.toLowerCase().trim();
+        const filtered = TASKS.filter((t) => {
+          if (filter !== "all" && t.status !== filter) return false;
+          if (q && !t.task.toLowerCase().includes(q) && !t.app.toLowerCase().includes(q)) return false;
+          return true;
+        });
+        tbody.innerHTML = filtered.map((t) => `
+          <tr data-id="${t.id}">
+            <td class="col-task"><span class="task-title">${t.task}</span></td>
+            <td class="col-app">
+              <span class="app-cell">
+                <span class="app-glyph">${APP_GLYPHS[t.app] || "?"}</span>
+                <span style="color: var(--color-ink-700)">${t.app}</span>
+              </span>
+            </td>
+            <td class="col-started" style="color: var(--color-ink-600)">${t.started}</td>
+            <td class="col-duration" style="color: var(--color-ink-600)">${t.duration}</td>
+            <td class="col-steps" style="color: var(--color-ink-600)">${t.steps}</td>
+            <td class="col-status">
+              <span class="status-pill ${t.status}"><span class="pip"></span>${STATUS_LABEL[t.status]}</span>
+            </td>
+          </tr>
+        `).join("");
+        lucide.createIcons();
+        tbody.querySelectorAll("tr").forEach((tr) => {
+          tr.addEventListener("click", () => {
+            const id = parseInt(tr.dataset.id);
+            const t = TASKS.find((x) => x.id === id);
+            const name = t ? (t.task || t.name || "") : "";
+            window.location.href = "Seek-Desktop-Phase-L2.html?task=" + encodeURIComponent(name);
+          });
+        });
+      }
+
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          renderTasks(chip.dataset.filter, document.getElementById("search-input").value);
+        });
+      });
+      document.getElementById("search-input").addEventListener("input", (e) => {
+        const activeFilter = document.querySelector(".filter-chip.active").dataset.filter;
+        renderTasks(activeFilter, e.target.value);
+      });
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(window._toastT);
+        window._toastT = setTimeout(() => t.classList.remove("show"), 2000);
+      }
+
+      lucide.createIcons();
+      renderTasks("all", "");
+    </script>
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "" });
+    </script>
+  </body>
+</html>

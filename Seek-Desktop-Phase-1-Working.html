@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek — Running</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        /* Canvas + top bar (light, warm-tinted) */
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        /* Ink */
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        /* Dark sidebar */
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        /* Whatfix Fire */
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+        --color-fire-500:     #C74900;
+
+        /* Status */
+        --color-info:         #0975D7;
+        --color-info-bg:      #E7F1FB;
+        --color-success:      #1E9B6A;
+        --color-success-bg:   #E1F2EA;
+        --color-warn:         #946800;
+        --color-warn-bg:      #FBF1D6;
+        --color-danger:       #C7372F;
+        --color-danger-bg:    #FBE7E5;
+
+        /* Navi Secondary scale (user bubble fill = Secondary-100) */
+        --color-secondary-100: #F5F5F7;
+
+        /* Scale */
+        --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+        --space-5: 20px; --space-6: 24px; --space-8: 32px;
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px; border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700); cursor: pointer;
+        background: transparent; border: none;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Sidebar */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more { display: none; }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item,
+      aside.sidebar[data-collapsed="true"] #sidebar-toggle-bottom { justify-content: center; }
+
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+
+      .switcher {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; margin: 0 8px 8px;
+        border-radius: var(--r-md); cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+
+      .nav-list { padding: 8px; flex: 1; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover:not([data-active="true"]) { background: var(--color-side-hover); color: #FFFFFF; }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-size: 10px; font-weight: 700;
+        padding: 1px 7px; border-radius: 999px;
+        line-height: 16px; min-width: 18px; text-align: center;
+      }
+
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      #sidebar-toggle-bottom {
+        display: flex; align-items: center; gap: 12px;
+        height: 36px; margin: 4px 8px 8px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-muted);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer; background: transparent; border: none;
+        width: calc(100% - 16px); text-align: left;
+      }
+      #sidebar-toggle-bottom:hover { background: var(--color-side-hover); color: #FFFFFF; }
+      #sidebar-toggle-bottom .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+      .wf-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        background: var(--color-side-active);
+        color: #fff; font-weight: 700; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--color-side-stroke);
+      }
+      .ent-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #2A2940; color: #FFFFFF;
+        font-weight: 700; font-size: 13px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--color-side-stroke);
+      }
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* ─── Thread ─── */
+      .thread-wrap {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 32px 32px 24px;
+      }
+
+      /* Right-aligned user message bubble (Secondary-300 fill) */
+      .user-row {
+        display: flex;
+        justify-content: flex-end;
+        padding: 8px 0 20px;
+      }
+      .user-bubble {
+        max-width: 78%;
+        background: var(--color-secondary-100);
+        color: var(--color-ink-900);
+        padding: 12px 16px;
+        border-radius: 14px;
+        border-top-right-radius: 4px;
+        font-size: 15px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      /* Left-aligned Seek block — no label, no avatar, plain on canvas */
+      .seek-row { padding: 0 0 20px; }
+
+      /* ─── Activity panel (collapsible) ─── */
+      .activity {
+        margin: 4px 0 18px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .activity-head {
+        display: flex; align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .activity-head:hover { background: var(--color-surface-2); }
+      .activity-chev {
+        color: var(--color-ink-500);
+        transition: transform 160ms ease-out;
+      }
+      .activity[data-open="true"] .activity-chev { transform: rotate(90deg); }
+      .activity-title { font-size: 13px; font-weight: 600; color: var(--color-ink-900); }
+      .activity-sub   { font-size: 12px; color: var(--color-ink-500); margin-left: auto; }
+
+      .activity-body {
+        display: none;
+        padding: 4px 0 12px;
+        border-top: 1px solid var(--color-divider);
+      }
+      .activity[data-open="true"] .activity-body { display: block; }
+
+      .act-event {
+        display: grid;
+        grid-template-columns: 56px 22px 1fr;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 8px 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--color-ink-800);
+      }
+      .act-event .t {
+        color: var(--color-ink-500);
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        padding-top: 1px;
+      }
+      .act-event .ic {
+        color: var(--color-ink-500);
+        display: inline-flex; align-items: center; justify-content: center;
+        padding-top: 1px;
+      }
+      .act-event .ic.done { color: var(--color-success); }
+      .act-event .ic.run  { color: var(--color-info); }
+      .act-event .ic.note { color: var(--color-ink-500); }
+      .act-event .ic.warn { color: var(--color-warn); }
+      .act-event strong { color: var(--color-ink-900); font-weight: 600; }
+      .act-event .annot {
+        font-size: 12px;
+        color: var(--color-info);
+        background: var(--color-info-bg);
+        display: inline-block;
+        padding: 1px 7px;
+        border-radius: 4px;
+        margin-left: 6px;
+        font-weight: 600;
+        vertical-align: 1px;
+      }
+
+      .spinner-blue {
+        width: 14px; height: 14px;
+        border: 1.6px solid rgba(9, 117, 215, 0.22);
+        border-top-color: var(--color-info);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        display: inline-block;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ─── Plan (task list) ─── */
+      .plan-wrap { margin-top: 6px; }
+      .plan-head {
+        display: flex; align-items: baseline; gap: 10px;
+        margin-bottom: 8px;
+      }
+      .plan-label {
+        font-size: 12px; font-weight: 700;
+        color: var(--color-ink-600);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .plan-revised {
+        font-size: 11px;
+        color: var(--color-info);
+        background: var(--color-info-bg);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .plan-progress {
+        font-size: 12px;
+        color: var(--color-ink-500);
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .plan-list {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .plan-item {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--color-ink-900);
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .plan-item:last-child { border-bottom: none; }
+
+      .plan-check {
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 1.5px solid var(--color-ink-300);
+        flex-shrink: 0;
+      }
+      .plan-item[data-state="done"] .plan-check {
+        background: var(--color-success);
+        border-color: var(--color-success);
+        color: #fff;
+      }
+      .plan-item[data-state="done"] .plan-text {
+        color: var(--color-ink-500);
+        text-decoration: line-through;
+        text-decoration-color: var(--color-ink-400);
+        text-decoration-thickness: 1px;
+      }
+      .plan-item[data-state="running"] {
+        background: rgba(9, 117, 215, 0.04);
+      }
+      .plan-item[data-state="running"] .plan-check {
+        border-color: transparent;
+        background: transparent;
+      }
+      .plan-item[data-state="running"] .plan-text {
+        color: var(--color-ink-900);
+        font-weight: 600;
+      }
+      .plan-item[data-state="queued"] .plan-text {
+        color: var(--color-ink-600);
+      }
+      .plan-item[data-state="needs-input"] {
+        background: var(--color-fire-50);
+      }
+      .plan-item[data-state="needs-input"] .plan-check {
+        background: var(--color-fire-400);
+        border-color: var(--color-fire-400);
+        color: #fff;
+      }
+      .plan-sub {
+        font-size: 12px;
+        color: var(--color-ink-500);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ─── Live status strip (above composer) — minimal chip-led ─── */
+      .live-strip {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        margin-bottom: 8px;
+      }
+
+      .status-chip {
+        display: inline-flex; align-items: center;
+        gap: 7px;
+        height: 26px;
+        padding: 0 11px 0 9px;
+        border-radius: var(--r-pill);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+        background: var(--color-info-bg);
+        color: var(--color-info);
+        flex-shrink: 0;
+      }
+      .status-chip[data-tone="paused"]    { background: var(--color-warn-bg);    color: var(--color-warn); }
+      .status-chip[data-tone="stopped"]   { background: var(--color-danger-bg);  color: var(--color-danger); }
+      .status-chip[data-tone="completed"] { background: var(--color-success-bg); color: var(--color-success); }
+
+      .chip-spinner {
+        width: 12px; height: 12px;
+        border: 1.5px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        opacity: 0.95;
+      }
+
+      /* Go to tab — tertiary, non-blue */
+      .goto-btn {
+        height: 32px;
+        padding: 0 10px;
+        background: transparent;
+        border: none;
+        color: var(--color-ink-800);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+      .goto-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Pause / Resume — secondary outlined with icon + label */
+      .ctrl-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 32px;
+        padding: 0 12px 0 10px;
+        border-radius: 6px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-900);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .ctrl-pill:hover { background: var(--color-surface-2); }
+
+      /* ─── Queue (follow-up instructions, max 7) ─── */
+      .queue-section {
+        margin-bottom: 8px;
+      }
+      .queue-head {
+        display: flex; align-items: center; gap: 8px;
+        padding: 0 4px 8px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--color-ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        user-select: none;
+      }
+      .queue-counter {
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-ink-500);
+        font-weight: 600;
+      }
+      .queue-counter[data-full="true"] {
+        color: var(--color-warn);
+      }
+      .queue-list {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .queue-item {
+        display: grid;
+        grid-template-columns: 24px 1fr auto;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 10px 10px 10px 8px;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        line-height: 1.45;
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .queue-item:last-child { border-bottom: none; }
+      .queue-item:hover { background: var(--color-bg); }
+      .queue-item-num {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink-500);
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        padding-top: 2px;
+      }
+      .queue-item-text {
+        word-break: break-word;
+        white-space: pre-wrap;
+        padding: 2px 0;
+        border: 1px solid transparent;
+        border-radius: 4px;
+      }
+      .queue-item-text:focus,
+      .queue-item-text[contenteditable="true"] {
+        outline: none;
+        border-color: var(--color-fire-400);
+        background: var(--color-surface);
+        padding: 2px 8px;
+        margin: 0 -8px;
+        box-shadow: 0 0 0 3px rgba(239, 95, 0, 0.10);
+      }
+      .queue-item-actions {
+        display: flex; gap: 2px;
+        opacity: 0;
+        transition: opacity 120ms;
+      }
+      .queue-item:hover .queue-item-actions,
+      .queue-item:focus-within .queue-item-actions {
+        opacity: 1;
+      }
+      .queue-action-btn {
+        width: 26px; height: 26px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--color-ink-600);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .queue-action-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .queue-action-btn.danger:hover { color: var(--color-danger); }
+
+      /* When composer is locked at max queue */
+      .composer.locked { opacity: 0.6; pointer-events: none; }
+      .queue-full-hint {
+        font-size: 11px;
+        color: var(--color-warn);
+        margin-top: 4px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+      }
+      .queue-full-hint[data-on="true"] { display: inline-flex; }
+
+      /* ─── Composer ─── */
+      .composer {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        box-shadow: 0 2px 4px rgba(31,31,50,0.04);
+        transition: border-color 120ms, box-shadow 120ms;
+      }
+      .composer:focus-within {
+        border-color: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(239, 95, 0, 0.12);
+      }
+      .composer textarea {
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--color-ink-900);
+        background: transparent;
+        border: none; outline: none; resize: none;
+        width: 100%;
+        line-height: 1.5;
+      }
+      .composer textarea::placeholder { color: var(--color-ink-500); }
+
+      .composer-action-btn {
+        width: 30px; height: 30px; border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-600);
+        cursor: pointer; background: transparent; border: none;
+      }
+      .composer-action-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      .btn-primary {
+        width: 32px; height: 32px;
+        border-radius: var(--r-md);
+        background: var(--color-fire-400);
+        color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; border: none;
+        transition: background 120ms, transform 120ms;
+        flex-shrink: 0;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--color-fire-300);
+        transform: translateY(-1px);
+      }
+      .btn-primary:disabled {
+        background: var(--color-ink-400);
+        color: #FFFFFF;
+        cursor: not-allowed;
+      }
+
+      .disclaimer { font-size: 11px; color: var(--color-ink-500); line-height: 1.5; }
+
+      /* Sticky bottom shell */
+      .bottom-dock {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(252,251,250,0) 0, var(--color-bg) 16px);
+        padding: 24px 32px 16px;
+      }
+      .bottom-inner { max-width: 760px; margin: 0 auto; }
+
+      /* Dev state switcher (tiny, top-right of canvas) */
+      .dev-states {
+        position: absolute;
+        top: 12px; right: 16px;
+        display: flex; gap: 4px;
+        font-size: 10px;
+        z-index: 10;
+      }
+      .dev-states button {
+        height: 22px; padding: 0 8px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 4px;
+        color: var(--color-ink-600);
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .dev-states button[data-on="true"] {
+        background: var(--color-ink-900);
+        color: #fff;
+        border-color: var(--color-ink-900);
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <!-- ─────────── SIDEBAR (rendered by seek-sidebar.js) ─────────── -->
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <!-- ─────────── RIGHT COLUMN ─────────── -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+          <div class="ml-2 flex items-center gap-2 text-[13px]">
+            <span style="color: var(--color-ink-500)">Task</span>
+            <span style="color: var(--color-ink-300)">/</span>
+            <span style="color: var(--color-ink-900); font-weight: 600;" id="task-breadcrumb">Update Salesforce opportunities</span>
+          </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto relative" id="canvas">
+          <!-- Dev-only state switcher -->
+          <div class="dev-states">
+            <button data-state="thinking" data-on="true">Thinking</button>
+            <button data-state="taking_action">Taking action</button>
+            <button data-state="paused">Paused</button>
+            <button data-state="stopped">Stopped</button>
+            <button data-state="completed">Completed</button>
+          </div>
+
+          <!-- Thread -->
+          <div class="thread-wrap" id="thread">
+            <!-- User message: right-aligned bubble, Secondary-300 fill -->
+            <div class="user-row">
+              <div class="user-bubble" id="user-msg">Update opportunity stage in Salesforce for 12 records. Move them to Closed Won. Pause before each save and notify Sales Ops in Slack when done.</div>
+            </div>
+
+            <!-- Seek response: left-aligned, no label, on white canvas -->
+            <div class="seek-row">
+              <!-- Activity panel (collapsed by default) -->
+              <div class="activity" id="activity" data-open="false">
+                <div class="activity-head" id="activity-toggle">
+                  <i data-lucide="chevron-right" class="activity-chev w-[14px] h-[14px]"></i>
+                  <span class="activity-title">Activity</span>
+                  <span class="activity-sub" id="activity-sub">14 events · still running</span>
+                </div>
+                <div class="activity-body" id="activity-body"></div>
+              </div>
+
+              <!-- Plan / task list -->
+              <div class="plan-wrap">
+                <div class="plan-head">
+                  <span class="plan-label">Plan</span>
+                  <span class="plan-revised" id="plan-revised" hidden>Revised · 1 step added</span>
+                  <span class="plan-progress" id="plan-progress">3 of 6 done</span>
+                </div>
+                <div class="plan-list" id="plan-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticky bottom dock: live status + composer -->
+          <div class="bottom-dock">
+            <div class="bottom-inner">
+              <!-- Live status strip: minimal chip + Go to tab + Pause/Resume -->
+              <div class="live-strip" id="live-strip">
+                <span class="status-chip" id="status-chip" data-tone="info">
+                  <span class="chip-spinner" id="chip-spinner"></span>
+                  <span id="chip-text">Thinking</span>
+                </span>
+                <div class="flex-1"></div>
+                <button class="goto-btn" id="goto-tab-btn" title="Open the Seek tab in Browser">Go to tab</button>
+                <button class="ctrl-pill" id="ctrl-btn" title="Pause" aria-label="Pause">
+                  <i data-lucide="pause" class="w-[14px] h-[14px]" id="ctrl-icon"></i>
+                  <span id="ctrl-label">Pause</span>
+                </button>
+              </div>
+
+              <!-- Queue: follow-up instructions Seek will run after the current step -->
+              <div class="queue-section" id="queue-section" hidden>
+                <div class="queue-head">
+                  <span>Up next</span>
+                  <span class="queue-counter" id="queue-counter">0 / 7</span>
+                </div>
+                <div class="queue-list" id="queue-list"></div>
+              </div>
+
+              <!-- Composer (smaller — for mid-run feedback / queueing) -->
+              <div class="composer p-3" id="composer">
+                <textarea
+                  id="prompt-input"
+                  rows="1"
+                  placeholder="Add a follow-up instruction…"
+                ></textarea>
+                <div class="flex items-center gap-2 mt-1">
+                  <button class="composer-action-btn" title="Attach" aria-label="Attach">
+                    <i data-lucide="paperclip" class="w-[16px] h-[16px]"></i>
+                  </button>
+                  <div class="flex-1"></div>
+                  <button id="send-btn" class="btn-primary" disabled title="Add to queue · ⌘↵" aria-label="Add to queue">
+                    <i data-lucide="arrow-up" class="w-[16px] h-[16px]"></i>
+                  </button>
+                </div>
+              </div>
+
+              <p class="disclaimer mt-2" id="disclaimer">
+                Seek will run queued instructions in order after the current step. Pause or stop anytime.
+              </p>
+              <span class="queue-full-hint" id="queue-full-hint">
+                <i data-lucide="alert-triangle" class="w-[12px] h-[12px]"></i>
+                Queue is full (7 / 7). Delete or wait for items to clear before adding more.
+              </span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "" });
+    </script>
+    <script>
+      // ─── Data: activity log + plan ─────────────────────────────
+      const ACTIVITY = [
+        { t: "0:00", state: "done", html: 'Read the request — <strong>12 records → Closed Won</strong>' },
+        { t: "0:02", state: "done", html: 'Opened Salesforce in a Seek AI tab' },
+        { t: "0:05", state: "done", html: 'Navigated to Opportunities · list view' },
+        { t: "0:08", state: "note", html: 'Filtered: <strong>Stage = Proposal/Quote</strong>, <strong>Close date this quarter</strong>' },
+        { t: "0:11", state: "done", html: 'Matched <strong>12 opportunities</strong> across 3 owners' },
+        { t: "0:15", state: "note", html: 'Plan revised <span class="annot">1 step added</span> — also needs probability update' },
+        { t: "0:18", state: "done", html: 'Opened record 1 of 12 — <strong>Acme Corp Deal · $48,500</strong>' },
+        { t: "0:22", state: "done", html: 'Changed Stage → Closed Won, Probability → 100%' },
+        { t: "0:24", state: "done", html: 'Saved record 1' },
+        { t: "0:27", state: "done", html: 'Opened record 2 — <strong>Beam Co. Renewal · $22,000</strong>' },
+        { t: "0:33", state: "done", html: 'Saved record 2' },
+        { t: "0:37", state: "done", html: 'Opened record 3 — <strong>Cira Logistics · $112,400</strong>' },
+        { t: "0:41", state: "warn", html: 'High-impact value — <strong>$112,400</strong>. <span class="annot">Pausing for review</span>' },
+        { t: "0:47", state: "run",  html: 'Updating Stage → Closed Won, Probability → 100%' },
+      ];
+
+      const PLAN = [
+        { id: 1, state: "done",    text: "Open Salesforce → Opportunities list" },
+        { id: 2, state: "done",    text: "Filter: 12 Q3 records at Proposal/Quote stage" },
+        { id: 3, state: "done",    text: "Update probability to 100% for each (added)", revised: true },
+        { id: 4, state: "running", text: "Change stage to Closed Won and save (3 of 12)", sub: "3 / 12" },
+        { id: 5, state: "queued",  text: "Verify each save in audit log" },
+        { id: 6, state: "queued",  text: "Notify Sales Ops in #revops Slack" },
+      ];
+
+      // ─── Render activity ─────────────────────────────
+      const STATE_ICON = {
+        done: "check",
+        run:  null,                // we'll render a spinner
+        note: "git-branch",
+        warn: "pause",
+      };
+      function renderActivity() {
+        const body = document.getElementById("activity-body");
+        body.innerHTML = ACTIVITY.map((e) => {
+          const ic = STATE_ICON[e.state];
+          const iconHTML = e.state === "run"
+            ? '<span class="spinner-blue"></span>'
+            : `<i data-lucide="${ic}" class="w-[14px] h-[14px]"></i>`;
+          return `
+            <div class="act-event">
+              <span class="t">${e.t}</span>
+              <span class="ic ${e.state}">${iconHTML}</span>
+              <span>${e.html}</span>
+            </div>
+          `;
+        }).join("");
+        lucide.createIcons();
+        document.getElementById("activity-sub").textContent = `${ACTIVITY.length} events · still running`;
+      }
+
+      // ─── Render plan ─────────────────────────────
+      function renderPlan() {
+        const list = document.getElementById("plan-list");
+        let anyRevised = false;
+        list.innerHTML = PLAN.map((p) => {
+          if (p.revised) anyRevised = true;
+          let checkInner = "";
+          if (p.state === "done") checkInner = '<i data-lucide="check" class="w-[12px] h-[12px]"></i>';
+          else if (p.state === "running") checkInner = '<span class="spinner-blue"></span>';
+          else if (p.state === "needs-input") checkInner = '<i data-lucide="pause" class="w-[12px] h-[12px]"></i>';
+          return `
+            <div class="plan-item" data-state="${p.state}">
+              <span class="plan-check">${checkInner}</span>
+              <span class="plan-text">${p.text}</span>
+              ${p.sub ? `<span class="plan-sub">${p.sub}</span>` : `<span></span>`}
+            </div>
+          `;
+        }).join("");
+        document.getElementById("plan-revised").hidden = !anyRevised;
+        const doneCount = PLAN.filter((p) => p.state === "done").length;
+        document.getElementById("plan-progress").textContent = `${doneCount} of ${PLAN.length} done`;
+        lucide.createIcons();
+      }
+
+      // ─── Activity toggle ─────────────────────────────
+      const activity = document.getElementById("activity");
+      document.getElementById("activity-toggle").addEventListener("click", () => {
+        const open = activity.dataset.open === "true";
+        activity.dataset.open = open ? "false" : "true";
+      });
+
+      // ─── Composer + Queue (mid-run follow-ups, max 7) ────────────
+      const MAX_QUEUE = 7;
+      const queue = [
+        { id: "q_seed_1", text: "Also include APAC region accounts" },
+        { id: "q_seed_2", text: "Once saves are done, post a CSV summary to #revops Slack" },
+      ];
+
+      const promptInput   = document.getElementById("prompt-input");
+      const sendBtn       = document.getElementById("send-btn");
+      const composer      = document.getElementById("composer");
+      const queueSection  = document.getElementById("queue-section");
+      const queueList     = document.getElementById("queue-list");
+      const queueCounter  = document.getElementById("queue-counter");
+      const queueFullHint = document.getElementById("queue-full-hint");
+
+      function refreshComposer() {
+        const text  = promptInput.value.trim();
+        const atMax = queue.length >= MAX_QUEUE;
+        sendBtn.disabled = !text || atMax;
+        composer.classList.toggle("locked", atMax);
+        queueFullHint.dataset.on = atMax ? "true" : "false";
+        if (atMax) {
+          promptInput.placeholder = "Queue is full — delete an item to add more";
+        } else {
+          promptInput.placeholder = "Add a follow-up instruction…";
+        }
+      }
+
+      function renderQueue() {
+        const atMax = queue.length >= MAX_QUEUE;
+        queueCounter.textContent = `${queue.length} / ${MAX_QUEUE}`;
+        queueCounter.dataset.full = atMax ? "true" : "false";
+
+        if (queue.length === 0) {
+          queueSection.hidden = true;
+          refreshComposer();
+          return;
+        }
+        queueSection.hidden = false;
+
+        queueList.innerHTML = queue.map((item, i) => `
+          <div class="queue-item" data-id="${item.id}">
+            <span class="queue-item-num">${i + 1}</span>
+            <div class="queue-item-text" data-id="${item.id}">${escapeHTML(item.text)}</div>
+            <div class="queue-item-actions">
+              <button class="queue-action-btn" data-action="edit" data-id="${item.id}" title="Edit" aria-label="Edit">
+                <i data-lucide="pencil" class="w-[14px] h-[14px]"></i>
+              </button>
+              <button class="queue-action-btn danger" data-action="delete" data-id="${item.id}" title="Delete" aria-label="Delete">
+                <i data-lucide="x" class="w-[14px] h-[14px]"></i>
+              </button>
+            </div>
+          </div>
+        `).join("");
+        lucide.createIcons();
+
+        // Action wiring
+        queueList.querySelectorAll("[data-action]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.id;
+            if (btn.dataset.action === "delete") {
+              const idx = queue.findIndex((q) => q.id === id);
+              if (idx >= 0) {
+                queue.splice(idx, 1);
+                renderQueue();
+              }
+            } else if (btn.dataset.action === "edit") {
+              const textEl = queueList.querySelector(`.queue-item-text[data-id="${id}"]`);
+              startEdit(textEl);
+            }
+          });
+        });
+
+        // Click-to-edit on the text itself
+        queueList.querySelectorAll(".queue-item-text").forEach((el) => {
+          el.addEventListener("click", () => startEdit(el));
+        });
+
+        refreshComposer();
+      }
+
+      function startEdit(el) {
+        if (el.contentEditable === "true") return;
+        el.contentEditable = "true";
+        el.focus();
+        // Move cursor to end
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        const onBlur = () => commitEdit(el);
+        const onKey  = (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            el.blur();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            // Restore original text and blur
+            const id = el.dataset.id;
+            const item = queue.find((q) => q.id === id);
+            if (item) el.textContent = item.text;
+            el.removeEventListener("blur", onBlur);
+            el.contentEditable = "false";
+            el.blur();
+          }
+        };
+        el.addEventListener("blur", onBlur, { once: true });
+        el.addEventListener("keydown", onKey);
+      }
+
+      function commitEdit(el) {
+        el.contentEditable = "false";
+        const id = el.dataset.id;
+        const idx = queue.findIndex((q) => q.id === id);
+        if (idx < 0) return;
+        const newText = el.innerText.trim();
+        if (!newText) {
+          queue.splice(idx, 1);  // empty after edit → delete
+        } else {
+          queue[idx].text = newText;
+        }
+        renderQueue();
+      }
+
+      function escapeHTML(s) {
+        return s.replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+      }
+
+      function addToQueue() {
+        const text = promptInput.value.trim();
+        if (!text || queue.length >= MAX_QUEUE) return;
+        queue.push({ id: "q_" + Date.now(), text });
+        promptInput.value = "";
+        promptInput.style.height = "auto";
+        renderQueue();
+        promptInput.focus();
+      }
+
+      promptInput.addEventListener("input", () => {
+        promptInput.style.height = "auto";
+        promptInput.style.height = Math.min(promptInput.scrollHeight, 140) + "px";
+        refreshComposer();
+      });
+      promptInput.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          addToQueue();
+        }
+      });
+      sendBtn.addEventListener("click", addToQueue);
+
+      renderQueue();
+
+      // ─── Live-strip state machine (5 states) ─────────────────
+      const liveStrip   = document.getElementById("live-strip");
+      const statusChip  = document.getElementById("status-chip");
+      const chipText    = document.getElementById("chip-text");
+      const chipSpinner = document.getElementById("chip-spinner");
+      const ctrlBtn     = document.getElementById("ctrl-btn");
+      const ctrlLabel   = document.getElementById("ctrl-label");
+      const gotoBtn     = document.getElementById("goto-tab-btn");
+
+      const STATES = {
+        thinking: {
+          tone: "info", text: "Thinking", spinner: true,
+          showControls: true, ctrlIcon: "pause", ctrlLabel: "Pause", tick: true,
+        },
+        taking_action: {
+          tone: "info", text: "Taking action", spinner: true,
+          showControls: true, ctrlIcon: "pause", ctrlLabel: "Pause", tick: true,
+        },
+        paused: {
+          tone: "paused", text: "Task paused", spinner: false,
+          showControls: true, ctrlIcon: "play", ctrlLabel: "Resume", tick: false,
+        },
+        stopped: {
+          tone: "stopped", text: "Task stopped", spinner: false,
+          showControls: false, tick: false,
+        },
+        completed: {
+          tone: "completed", text: "Task completed", spinner: false,
+          showControls: false, tick: false,
+        },
+      };
+
+      let currentState = "thinking";
+      let elapsed = 47;
+      let tickHandle = null;
+
+      function fmt(s) {
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return `${m}:${r.toString().padStart(2, "0")}`;
+      }
+
+      function setState(name) {
+        currentState = name;
+        const s = STATES[name];
+
+        // Chip
+        statusChip.dataset.tone = s.tone;
+        chipText.textContent = s.text;
+        chipSpinner.style.display = s.spinner ? "" : "none";
+
+        // Controls visibility
+        ctrlBtn.style.display = s.showControls ? "" : "none";
+        gotoBtn.style.display = s.showControls ? "" : "none";
+
+        if (s.showControls) {
+          ctrlLabel.textContent = s.ctrlLabel;
+          ctrlBtn.setAttribute("title", s.ctrlLabel);
+          ctrlBtn.setAttribute("aria-label", s.ctrlLabel);
+          const newIcon = document.createElement("i");
+          newIcon.setAttribute("data-lucide", s.ctrlIcon);
+          newIcon.className = "w-[14px] h-[14px]";
+          newIcon.id = "ctrl-icon";
+          document.getElementById("ctrl-icon").replaceWith(newIcon);
+        }
+
+        // Dev switcher
+        document.querySelectorAll(".dev-states button").forEach((b) => {
+          b.dataset.on = (b.dataset.state === name) ? "true" : "false";
+        });
+
+        // Elapsed-time ticker
+        if (s.tick) {
+          if (!tickHandle) tickHandle = setInterval(() => { elapsed += 1; }, 1000);
+        } else {
+          if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+        }
+
+        lucide.createIcons();
+      }
+
+      // Dev state switcher
+      document.querySelectorAll(".dev-states button").forEach((b) => {
+        b.addEventListener("click", () => setState(b.dataset.state));
+      });
+
+      // Control toggles Running ↔ Paused
+      ctrlBtn.addEventListener("click", () => {
+        if (currentState === "paused") setState("taking_action");
+        else setState("paused");
+      });
+
+      gotoBtn.addEventListener("click", () => {
+        window.open("Seek-Desktop-Phase-2.html?task=" + encodeURIComponent(document.getElementById("user-msg").textContent), "_blank");
+      });
+
+      // ─── Init ─────────────────────────────
+      window.addEventListener("load", () => {
+        // Pre-fill user message from URL param if present
+        const params = new URLSearchParams(window.location.search);
+        const taskParam = params.get("task");
+        if (taskParam) {
+          document.getElementById("user-msg").textContent = decodeURIComponent(taskParam);
+          // Use a short version for the breadcrumb
+          const short = decodeURIComponent(taskParam).split(" ").slice(0, 5).join(" ");
+          document.getElementById("task-breadcrumb").textContent = short + (decodeURIComponent(taskParam).split(" ").length > 5 ? "…" : "");
+        }
+        renderActivity();
+        renderPlan();
+        setState("taking_action");
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

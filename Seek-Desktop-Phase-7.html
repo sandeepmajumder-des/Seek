@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek — Desktop Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        --color-surface:      #FEFDFC;
+        --color-divider:      #E8E6E1;
+
+        --color-fire-400:     #EF5F00;
+        --color-fire-300:     #E45913;
+
+        --color-info:         #0975D7;
+        --color-info-bg:      #E7F1FB;
+        --color-success:      #1E9B6A;
+
+        /* HUD palette — dark, for the education modal */
+        --color-hud-bg:       #1A1A2A;
+        --color-hud-elev:     #2A2940;
+        --color-hud-stroke:   rgba(255, 255, 255, 0.08);
+        --color-hud-text:     #ECECF3;
+        --color-hud-muted:    #8C899F;
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 999px;
+      }
+
+      html, body {
+        background: #0F0F1A;
+        color: var(--color-ink-900);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+
+      /* ─── Mock desktop (the user's app being driven) ─── */
+      .mock-desktop {
+        position: fixed;
+        inset: 0;
+        background: #F5F5F7;
+        overflow: hidden;
+      }
+      .mock-window {
+        position: absolute;
+        inset: 14px 14px 14px 14px;
+        background: #FFFFFF;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+        overflow: hidden;
+        display: flex; flex-direction: column;
+      }
+      .mock-titlebar {
+        height: 36px;
+        background: #1A4985;
+        display: flex; align-items: center;
+        padding: 0 14px;
+        gap: 12px;
+      }
+      .mock-tl-dots { display: flex; gap: 6px; }
+      .mock-tl-dots span {
+        width: 11px; height: 11px; border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+      }
+      .mock-tl-title {
+        color: rgba(255,255,255,0.92);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .mock-app-bar {
+        height: 44px;
+        background: #014486;
+        color: #fff;
+        display: flex; align-items: center;
+        padding: 0 18px;
+        gap: 20px;
+        font-size: 13px;
+      }
+      .mock-app-bar .crm-logo {
+        width: 26px; height: 22px;
+        background: linear-gradient(135deg, #00A1E0, #FFE26C);
+        border-radius: 3px;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .mock-app-bar .crm-logo::after {
+        content: "";
+        position: absolute; left: 4px; top: 6px; width: 14px; height: 2px;
+        background: rgba(255,255,255,0.7); border-radius: 1px;
+      }
+      .mock-app-bar a {
+        color: rgba(255,255,255,0.85);
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .mock-app-bar a.active {
+        color: #fff;
+        font-weight: 600;
+        border-bottom: 3px solid #FFE26C;
+        padding-bottom: 11px;
+      }
+
+      .mock-content {
+        flex: 1;
+        background: #F4F6F9;
+        overflow: hidden;
+        position: relative;
+      }
+      .mock-page-head {
+        padding: 18px 22px 12px;
+        background: #fff;
+        border-bottom: 1px solid #E5E7EB;
+      }
+      .mock-page-title { font-size: 20px; font-weight: 600; color: #181818; }
+      .mock-page-sub   { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+      .mock-table {
+        margin: 16px 22px;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .mock-row {
+        display: grid;
+        grid-template-columns: 36px 1.6fr 1fr 1fr 0.8fr 0.8fr;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #181818;
+        border-bottom: 1px solid #E5E7EB;
+        align-items: center;
+      }
+      .mock-row:last-child { border-bottom: none; }
+      .mock-row.head {
+        background: #F9FAFB;
+        font-weight: 600;
+        font-size: 11px;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .mock-row .stage {
+        display: inline-flex; align-items: center;
+        height: 22px; padding: 0 10px;
+        background: #DBEAFE;
+        color: #1E40AF;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+      }
+      .mock-row.row-active {
+        background: rgba(239, 95, 0, 0.05);
+        animation: row-highlight 2.2s ease-in-out infinite;
+      }
+      .mock-row.row-active .stage {
+        background: rgba(239, 95, 0, 0.15);
+        color: var(--color-fire-400);
+      }
+      @keyframes row-highlight {
+        0%, 100% { background: rgba(239, 95, 0, 0.05); }
+        50%      { background: rgba(239, 95, 0, 0.12); }
+      }
+      .mock-checkbox {
+        width: 14px; height: 14px;
+        border: 1.5px solid #D1D5DB;
+        border-radius: 2px;
+        display: inline-block;
+      }
+      .mock-row.row-done .mock-checkbox {
+        background: var(--color-success);
+        border-color: var(--color-success);
+      }
+      .mock-row.row-done .stage {
+        background: rgba(30, 155, 106, 0.14);
+        color: var(--color-success);
+      }
+
+      /* Fake automation cursor */
+      .ghost-cursor {
+        position: absolute;
+        width: 18px; height: 18px;
+        pointer-events: none;
+        z-index: 50;
+        animation: cursor-move 5s ease-in-out infinite;
+      }
+      .ghost-cursor::before {
+        content: "";
+        position: absolute; left: -3px; top: -3px;
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        background: rgba(239, 95, 0, 0.20);
+        animation: cursor-pulse 1.4s ease-out infinite;
+      }
+      @keyframes cursor-move {
+        0%, 100% { transform: translate(540px, 320px); }
+        50%      { transform: translate(660px, 320px); }
+      }
+      @keyframes cursor-pulse {
+        0%   { opacity: 0.6; transform: scale(1); }
+        100% { opacity: 0;   transform: scale(2); }
+      }
+
+      /* Dimming overlay — thicker for the full-screen takeover */
+      .dim-overlay {
+        position: fixed; inset: 0;
+        background: rgba(15, 15, 26, 0.55);
+        pointer-events: none;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 400ms ease-out;
+      }
+      body[data-mode="engaged"] .dim-overlay { opacity: 1; }
+
+      /* ─── Edge glow — matches Phase 2 (browser-mode Mini Bar) ─── */
+      .edge-glow {
+        position: fixed; inset: 0;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 400ms ease-out;
+      }
+      .edge-glow::before {
+        content: "";
+        position: absolute; inset: 0;
+        box-shadow: inset 0 0 0 0 rgba(250, 138, 31, 0);
+      }
+      body[data-mode="engaged"] .edge-glow::before {
+        animation: edge-glow-breathe 1.4s ease-in-out infinite;
+      }
+      @keyframes edge-glow-breathe {
+        0%, 100% { box-shadow: inset 0 0 80px 22px rgba(250, 138, 31, 0.65); }
+        50%      { box-shadow: inset 0 0 48px 14px rgba(250, 138, 31, 0.30); }
+      }
+      body[data-mode="engaged"] .edge-glow { opacity: 1; }
+
+      /* ─── Mock macOS Dock ─── */
+      .dock {
+        position: fixed;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.35);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 18px;
+        z-index: 150;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+      }
+      .dock-app {
+        width: 46px; height: 46px;
+        border-radius: 10px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #fff;
+        font-size: 18px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        position: relative;
+      }
+      .dock-divider {
+        width: 1px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.5);
+        margin: 0 2px;
+      }
+      .dock-app.app-finder   { background: linear-gradient(135deg, #4FC3F7, #1976D2); }
+      .dock-app.app-mail     { background: linear-gradient(135deg, #6CB6FF, #2962FF); }
+      .dock-app.app-safari   { background: linear-gradient(135deg, #80DEEA, #00838F); }
+      .dock-app.app-calendar { background: #FFFFFF; color: #E53935; }
+      .dock-app.app-notes    { background: linear-gradient(135deg, #FFE082, #FFC107); color: #6D4C00; }
+      .dock-app.app-slack    { background: #4A154B; }
+      .dock-app.app-sf       { background: linear-gradient(135deg, #00A1E0, #003E7F); }
+      .dock-app.app-trash    { background: linear-gradient(135deg, #E0E0E0, #9E9E9E); color: #424242; }
+
+      /* ─── Mini Seek Bar (display-only, above the dock) ─── */
+      .minibar {
+        position: fixed;
+        bottom: 84px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        width: 540px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 8px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.32), 0 4px 12px rgba(0,0,0,0.18);
+        padding: 12px 16px;
+        z-index: 180;
+        display: flex; align-items: center; gap: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 400ms ease-out, transform 400ms ease-out;
+      }
+      body[data-mode="engaged"] .minibar {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* Seek geometric logo — matches Phase 2 browser-mode Mini Bar */
+      .seek-logo {
+        width: 28px; height: 28px;
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        animation: logo-breathe 2.4s ease-in-out infinite;
+      }
+      .seek-logo svg { width: 28px; height: 28px; display: block; }
+      @keyframes logo-breathe {
+        0%, 100% { transform: translateY(0)  scale(1)    rotate(0deg);    }
+        50%      { transform: translateY(-1px) scale(1.06) rotate(-1.5deg); }
+      }
+
+      .mb-body {
+        display: flex; flex-direction: column;
+        flex: 1; min-width: 0;
+        line-height: 1.35;
+      }
+      .mb-title {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-ink-900);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .mb-spinner {
+        width: 11px; height: 11px;
+        border: 1.5px solid var(--color-info);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        flex-shrink: 0;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .mb-action {
+        font-size: 12px;
+        color: var(--color-ink-600);
+        margin-top: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .mb-meta {
+        font-size: 11px;
+        color: var(--color-ink-500);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+
+      /* ─── Esc-to-stop hint (tiny, bottom-right corner) ─── */
+      .esc-hint {
+        position: fixed;
+        bottom: 32px;
+        right: 22px;
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(15, 15, 26, 0.65);
+        backdrop-filter: blur(8px);
+        color: var(--color-hud-text);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        z-index: 170;
+        opacity: 0;
+        transition: opacity 400ms ease-out;
+      }
+      body[data-mode="engaged"] .esc-hint { opacity: 1; }
+      .esc-hint kbd {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 16px; min-width: 16px; padding: 0 4px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      /* ─── First-run education — minimal white, visual ─── */
+      .warn-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(15, 15, 26, 0.55);
+        backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 300;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 240ms ease-out;
+      }
+      body[data-mode="education"] .warn-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .warn-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 16px;
+        width: 440px;
+        max-width: calc(100vw - 48px);
+        padding: 32px 28px 22px;
+        color: var(--color-ink-900);
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.40);
+        text-align: center;
+        transform: translateY(12px);
+        transition: transform 240ms ease-out;
+      }
+      body[data-mode="education"] .warn-card { transform: translateY(0); }
+
+      /* Seek logo at the top — animated */
+      .warn-mark {
+        width: 48px; height: 48px;
+        display: inline-flex; align-items: center; justify-content: center;
+        margin: 0 auto 18px;
+        animation: logo-breathe 2.4s ease-in-out infinite;
+      }
+      .warn-mark svg { width: 48px; height: 48px; display: block; }
+
+      .warn-title {
+        font-size: 22px; font-weight: 700;
+        color: var(--color-ink-900);
+        line-height: 1.25;
+        margin-bottom: 22px;
+        letter-spacing: -0.015em;
+      }
+
+      .warn-tiles {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 22px;
+      }
+      .warn-tile {
+        background: #FAF8F4;
+        border: 1px solid var(--color-divider);
+        border-radius: 10px;
+        padding: 16px 6px;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 10px;
+        min-height: 92px;
+      }
+      .warn-tile-glyph {
+        height: 28px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-fire-400);
+      }
+      .warn-tile-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-ink-900);
+        line-height: 1.3;
+        text-align: center;
+      }
+      .warn-esc-key {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 26px; min-width: 34px;
+        padding: 0 9px;
+        background: #FFFFFF;
+        border: 1px solid var(--color-divider);
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-ink-800);
+      }
+
+      .warn-btn {
+        width: 100%;
+        height: 42px;
+        background: var(--color-fire-400);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 120ms;
+      }
+      .warn-btn:hover { background: var(--color-fire-300); }
+      .warn-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 14px;
+        font-size: 11px;
+        color: var(--color-ink-500);
+      }
+      .warn-footer .dont-show {
+        background: transparent;
+        border: none;
+        color: var(--color-ink-500);
+        cursor: pointer;
+        font-size: 11px;
+        font-family: inherit;
+        padding: 0;
+      }
+      .warn-footer .dont-show:hover { color: var(--color-ink-900); text-decoration: underline; text-underline-offset: 2px; }
+
+      /* Dev: reset education count */
+      .dev-reset {
+        position: fixed;
+        bottom: 8px; left: 12px;
+        font-size: 10px;
+        color: rgba(255,255,255,0.4);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        z-index: 400;
+      }
+      .dev-reset:hover { color: rgba(255,255,255,0.8); text-decoration: underline; }
+    </style>
+  </head>
+  <body data-mode="loading">
+    <!-- ─── Mock desktop (Salesforce being driven) ─── -->
+    <div class="mock-desktop">
+      <div class="mock-window">
+        <div class="mock-titlebar">
+          <div class="mock-tl-dots"><span></span><span></span><span></span></div>
+          <span class="mock-tl-title">Salesforce — Acme Inc.</span>
+        </div>
+        <div class="mock-app-bar">
+          <div class="crm-logo"></div>
+          <a>Home</a>
+          <a>Accounts</a>
+          <a class="active">Opportunities</a>
+          <a>Leads</a>
+          <a>Reports</a>
+          <a>Dashboards</a>
+        </div>
+        <div class="mock-content">
+          <div class="mock-page-head">
+            <div class="mock-page-title">Opportunities</div>
+            <div class="mock-page-sub">12 results · Filter: Stage = Proposal/Quote · Close = This Quarter</div>
+          </div>
+          <div class="mock-table">
+            <div class="mock-row head">
+              <span></span>
+              <span>Opportunity Name</span>
+              <span>Account</span>
+              <span>Stage</span>
+              <span>Amount</span>
+              <span>Close Date</span>
+            </div>
+            <div class="mock-row row-done">
+              <span class="mock-checkbox"></span>
+              <span>Q3 Renewal · Tier 1</span>
+              <span>Acme Corp</span>
+              <span><span class="stage">Closed Won</span></span>
+              <span>$48,500</span>
+              <span>Sep 30</span>
+            </div>
+            <div class="mock-row row-done">
+              <span class="mock-checkbox"></span>
+              <span>Renewal · Standard</span>
+              <span>Beam Co.</span>
+              <span><span class="stage">Closed Won</span></span>
+              <span>$22,000</span>
+              <span>Sep 28</span>
+            </div>
+            <div class="mock-row row-active" id="active-row">
+              <span class="mock-checkbox"></span>
+              <span>Logistics Expansion</span>
+              <span>Cira Logistics</span>
+              <span><span class="stage">Proposal/Quote</span></span>
+              <span>$112,400</span>
+              <span>Sep 30</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-checkbox"></span>
+              <span>Q3 Renewal · Mid</span>
+              <span>Delphi Systems</span>
+              <span><span class="stage">Proposal/Quote</span></span>
+              <span>$34,200</span>
+              <span>Sep 30</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-checkbox"></span>
+              <span>Upsell · Premium</span>
+              <span>Echo Labs</span>
+              <span><span class="stage">Proposal/Quote</span></span>
+              <span>$58,000</span>
+              <span>Sep 29</span>
+            </div>
+            <div class="mock-row">
+              <span class="mock-checkbox"></span>
+              <span>Renewal · Custom</span>
+              <span>Fern Networks</span>
+              <span><span class="stage">Proposal/Quote</span></span>
+              <span>$71,000</span>
+              <span>Sep 30</span>
+            </div>
+          </div>
+          <i data-lucide="mouse-pointer-2" class="ghost-cursor" style="color: var(--color-fire-400);"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dimming overlay — appears only when Seek is engaged -->
+    <div class="dim-overlay"></div>
+
+    <!-- Edge glow — orange recording-style border, appears when Seek is engaged -->
+    <div class="edge-glow"></div>
+
+    <!-- ─── Mock macOS Dock ─── -->
+    <div class="dock">
+      <div class="dock-app app-finder"><i data-lucide="folder" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-safari"><i data-lucide="compass" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-mail"><i data-lucide="mail" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-calendar"><i data-lucide="calendar" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-notes"><i data-lucide="sticky-note" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-slack"><i data-lucide="hash" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-app app-sf"><i data-lucide="cloud" class="w-[20px] h-[20px]"></i></div>
+      <div class="dock-divider"></div>
+      <div class="dock-app app-trash"><i data-lucide="trash-2" class="w-[20px] h-[20px]"></i></div>
+    </div>
+
+    <!-- ─── Mini Seek Bar (display-only, no CTAs) ─── -->
+    <div class="minibar" id="minibar">
+      <div class="seek-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3.9021 9.59375L22.5938 9.59375V0.247902L3.9021 0.247902V9.59375Z" fill="#F55800"/>
+          <path d="M13.25 18.9417L13.25 0.25L3.90415 0.25L3.90415 18.9417H13.25Z" fill="#FBA450"/>
+          <path d="M31.9375 28.2875V0.25L22.5917 0.25V28.2875H31.9375Z" fill="#F55800"/>
+          <path d="M3.90625 0.25L13.2522 0.250001V9.59593H3.90625L3.90625 0.25Z" fill="#F58923"/>
+          <path d="M13.25 18.9375H22.5955V28.2834H13.25V18.9375Z" fill="#F58923"/>
+          <path d="M22.5938 18.9375H31.9397V28.2834H22.5938V18.9375Z" fill="#C63D22"/>
+          <path d="M9.70489 31.8303H0.359375V22.4844H9.70489V31.8303Z" fill="#F55800"/>
+        </svg>
+      </div>
+      <div class="mb-body">
+        <div class="mb-title">
+          <span class="mb-spinner"></span>
+          <span id="mb-title-text">Driving Salesforce</span>
+        </div>
+        <div class="mb-action" id="mb-action-text">
+          Updating Cira Logistics opportunity · Record 3 of 12
+        </div>
+      </div>
+      <div class="mb-meta" id="mb-meta">0:47</div>
+    </div>
+
+    <!-- Esc-to-stop hint -->
+    <div class="esc-hint">
+      <kbd>Esc</kbd>
+      <span>to stop Seek and take back control</span>
+    </div>
+
+    <!-- ─── First-run education modal (white, minimal, visual) ─── -->
+    <div class="warn-backdrop">
+      <div class="warn-card" role="dialog" aria-modal="true">
+        <div class="warn-mark">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3.9021 9.59375L22.5938 9.59375V0.247902L3.9021 0.247902V9.59375Z" fill="#F55800"/>
+            <path d="M13.25 18.9417L13.25 0.25L3.90415 0.25L3.90415 18.9417H13.25Z" fill="#FBA450"/>
+            <path d="M31.9375 28.2875V0.25L22.5917 0.25V28.2875H31.9375Z" fill="#F55800"/>
+            <path d="M3.90625 0.25L13.2522 0.250001V9.59593H3.90625L3.90625 0.25Z" fill="#F58923"/>
+            <path d="M13.25 18.9375H22.5955V28.2834H13.25V18.9375Z" fill="#F58923"/>
+            <path d="M22.5938 18.9375H31.9397V28.2834H22.5938V18.9375Z" fill="#C63D22"/>
+            <path d="M9.70489 31.8303H0.359375V22.4844H9.70489V31.8303Z" fill="#F55800"/>
+          </svg>
+        </div>
+
+        <h2 class="warn-title">Seek will drive your computer</h2>
+
+        <div class="warn-tiles">
+          <div class="warn-tile">
+            <span class="warn-tile-glyph"><i data-lucide="hand" class="w-[24px] h-[24px]"></i></span>
+            <span class="warn-tile-label">Hands off</span>
+          </div>
+          <div class="warn-tile">
+            <span class="warn-tile-glyph"><i data-lucide="eye" class="w-[24px] h-[24px]"></i></span>
+            <span class="warn-tile-label">Watch the<br/>Mini Bar</span>
+          </div>
+          <div class="warn-tile">
+            <span class="warn-tile-glyph"><kbd class="warn-esc-key">Esc</kbd></span>
+            <span class="warn-tile-label">to stop</span>
+          </div>
+        </div>
+
+        <button class="warn-btn" id="warn-go">Start task</button>
+
+        <div class="warn-footer">
+          <span id="warn-progress">1 of 3</span>
+          <button class="dont-show" id="warn-skip">Don't show again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dev: reset education seen-count -->
+    <button class="dev-reset" id="dev-reset" title="Reset first-run education">Reset education</button>
+
+    <script>
+      lucide.createIcons();
+
+      const SEEN_KEY = "seek.desktopEducationSeen";
+      const SEEN_MAX = 3;
+      const body = document.body;
+
+      function readSeen() {
+        try { return parseInt(localStorage.getItem(SEEN_KEY) || "0"); } catch (e) { return 0; }
+      }
+      function writeSeen(n) {
+        try { localStorage.setItem(SEEN_KEY, String(n)); } catch (e) {}
+      }
+
+      function engageSeek() {
+        body.dataset.mode = "engaged";
+        startTimer();
+      }
+
+      function bootMode() {
+        const seen = readSeen();
+        if (seen >= SEEN_MAX) {
+          engageSeek();
+        } else {
+          document.getElementById("warn-progress").textContent =
+            `Safety brief · ${seen + 1} of ${SEEN_MAX}`;
+          body.dataset.mode = "education";
+        }
+      }
+
+      document.getElementById("warn-go").addEventListener("click", () => {
+        const seen = readSeen();
+        writeSeen(seen + 1);
+        engageSeek();
+      });
+
+      document.getElementById("warn-skip").addEventListener("click", () => {
+        writeSeen(SEEN_MAX);
+        engageSeek();
+      });
+
+      // Esc → stop and route back to chat thread with stopped state
+      window.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (body.dataset.mode !== "engaged") return;
+        e.preventDefault();
+        window.location.href = "Seek-Desktop-Phase-1-Working.html?task=" +
+          encodeURIComponent("Update opportunity stage in Salesforce for 12 records") +
+          "&state=stopped";
+      });
+
+      // Elapsed-time ticker (drives the mini bar's meta)
+      let elapsed = 47;
+      let tickHandle = null;
+      function fmt(s) {
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return `${m}:${r.toString().padStart(2, "0")}`;
+      }
+      function startTimer() {
+        if (tickHandle) return;
+        tickHandle = setInterval(() => {
+          elapsed += 1;
+          document.getElementById("mb-meta").textContent = fmt(elapsed);
+        }, 1000);
+      }
+
+      // Cycle through a few action strings to suggest Seek is doing things
+      const ACTIONS = [
+        "Updating Cira Logistics opportunity · Record 3 of 12",
+        "Saving Cira Logistics → Closed Won",
+        "Opening Delphi Systems opportunity · Record 4 of 12",
+        "Updating Delphi Systems → Closed Won",
+        "Opening Echo Labs opportunity · Record 5 of 12",
+      ];
+      let actionIdx = 0;
+      setInterval(() => {
+        if (body.dataset.mode !== "engaged") return;
+        actionIdx = (actionIdx + 1) % ACTIONS.length;
+        document.getElementById("mb-action-text").textContent = ACTIONS[actionIdx];
+      }, 3000);
+
+      // Dev: reset count
+      document.getElementById("dev-reset").addEventListener("click", () => {
+        writeSeen(0);
+        location.reload();
+      });
+
+      // Boot
+      bootMode();
+    </script>
+  </body>
+</html>

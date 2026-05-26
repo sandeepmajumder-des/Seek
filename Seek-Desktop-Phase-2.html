@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek · Phase 2 · Mini Bar in tab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        /* Chrome */
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        /* Ink */
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        /* Whatfix Fire */
+        --color-fire-400:     #EF5F00;
+
+        /* Seek in-flight */
+        --color-seek-orange:  #FA8A1F;
+        --color-seek-grad-1:  #454565;
+        --color-seek-grad-2:  #2B2B40;
+
+        /* Status */
+        --color-success:      #21AD73;
+        --color-warning:      #E0A400;
+        --color-critical:     #B3141D;
+        --color-info:         #0975D7;
+        --color-info-hover:   #075DAD;
+        --color-info-bg:      rgba(9, 117, 215, 0.08);
+
+        /* Navi Secondary scale (sidebar / mini bar surfaces) */
+        --color-side-active:  #3D3C52;   /* Secondary-800 */
+        --color-side-stroke:  #525066;   /* Secondary-700 */
+        --color-side-900:     #2E2E42;   /* Secondary-900 — secondary CTA outline + text */
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: #DEDCD6; height: 100%; }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; color: var(--color-ink-900); }
+
+      /* ─── Mock browser window chrome ───────────────────────── */
+      .browser-window {
+        background: #ECEAE5;
+        border-radius: 12px 12px 0 0;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(31,31,50,0.12);
+      }
+      .browser-bar {
+        background: #ECEAE5;
+        padding: 10px 14px 0;
+      }
+      .traffic {
+        display: flex; gap: 6px; align-items: center; padding-bottom: 8px;
+      }
+      .traffic .dot {
+        width: 12px; height: 12px; border-radius: 50%;
+      }
+      .traffic .red { background: #FF5F57; }
+      .traffic .yellow { background: #FEBC2E; }
+      .traffic .green { background: #28C840; }
+
+      .tab-strip {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 36px;
+      }
+      .tab {
+        height: 32px;
+        padding: 0 12px;
+        background: #DEDCD6;
+        color: var(--color-ink-700);
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 8px 8px 0 0;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tab .favicon {
+        width: 14px; height: 14px;
+        border-radius: 3px;
+        background: #C4C4C4;
+        flex-shrink: 0;
+      }
+      .tab.active {
+        background: var(--color-surface);
+        color: var(--color-ink-900);
+      }
+      .tab .close {
+        width: 14px; height: 14px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-500);
+        margin-left: 2px;
+      }
+
+      /* Seek AI tab group — orange-tinted group label */
+      .tab-group-wrap {
+        display: inline-flex;
+        align-items: flex-end;
+        padding: 0 4px 0 0;
+        border-radius: 8px 8px 0 0;
+        background: rgba(239, 95, 0, 0.10);
+        position: relative;
+      }
+      .tab-group-label {
+        position: absolute;
+        top: -16px;
+        left: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--color-fire-400);
+        letter-spacing: 0.04em;
+        background: rgba(239, 95, 0, 0.10);
+        padding: 2px 8px;
+        border-radius: 4px 4px 0 0;
+      }
+
+      .tab.seek-active {
+        background: var(--color-surface);
+        color: var(--color-ink-900);
+        font-weight: 600;
+      }
+      .tab .seek-favicon {
+        width: 14px; height: 14px;
+        border-radius: 3px;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+      }
+      /* Animated Seek favicon halo */
+      .running .tab .seek-favicon::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 5px;
+        border: 1.5px solid var(--color-seek-orange);
+        opacity: 0;
+        animation: favicon-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes favicon-pulse {
+        0%, 100% { opacity: 0.25; transform: scale(0.95); }
+        50%      { opacity: 0.85; transform: scale(1.10); }
+      }
+
+      .nav-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px;
+        background: var(--color-surface);
+        border-top: 1px solid #DEDCD6;
+      }
+      .nav-icon-btn {
+        width: 28px; height: 28px; border-radius: 6px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-600);
+        cursor: pointer;
+      }
+      .nav-icon-btn:hover { background: var(--color-surface-2); }
+      .url-bar {
+        flex: 1;
+        height: 32px;
+        background: var(--color-surface-2);
+        border-radius: 16px;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--color-ink-700);
+        font-weight: 500;
+      }
+      .url-bar .lock {
+        color: var(--color-ink-500);
+      }
+      .url-bar .url { color: var(--color-ink-900); }
+      .url-bar .path { color: var(--color-ink-500); }
+
+      /* ─── Viewport (where Seek is operating) ───────────────── */
+      .viewport-wrap {
+        position: relative;
+        background: var(--color-surface);
+        border-top: 0.5px solid var(--color-divider);
+        height: calc(100vh - 130px);
+        overflow: hidden;
+      }
+      /* Orange edge-glow — sits inside viewport border via inset shadow */
+      .viewport-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: 0;
+        box-shadow: inset 0 0 0 0 rgba(250, 138, 31, 0);
+        transition: box-shadow 200ms ease-out;
+        z-index: 10;
+      }
+
+      .running .viewport-wrap::before {
+        animation: edge-glow-breathe 1.4s ease-in-out infinite;
+      }
+      @keyframes edge-glow-breathe {
+        0%, 100% { box-shadow: inset 0 0 18px 4px rgba(250, 138, 31, 0.55); }
+        50%      { box-shadow: inset 0 0 8px  2px rgba(250, 138, 31, 0.20); }
+      }
+      .paused .viewport-wrap::before {
+        box-shadow: inset 0 0 12px 3px rgba(250, 138, 31, 0.30);
+      }
+      .needs-input .viewport-wrap::before {
+        animation: edge-glow-breathe 1.4s ease-in-out infinite;
+        outline: 3px solid rgba(9, 117, 215, 0.30);
+        outline-offset: -3px;
+      }
+      .needs-input .viewport-wrap {
+        position: relative;
+      }
+      .completed .viewport-wrap::before {
+        box-shadow: inset 0 0 18px 4px rgba(33, 173, 115, 0.55);
+        animation: complete-fade 1.6s ease-out forwards;
+      }
+      @keyframes complete-fade {
+        0%   { box-shadow: inset 0 0 18px 4px rgba(33, 173, 115, 0.55); }
+        100% { box-shadow: inset 0 0 0 0 rgba(33, 173, 115, 0); }
+      }
+      .failed .viewport-wrap::before {
+        box-shadow: inset 0 0 14px 3px rgba(179, 20, 29, 0.55);
+      }
+
+      /* ─── Mock SaaS page content ──────────────────────────── */
+      .page-canvas {
+        height: 100%;
+        overflow-y: auto;
+        padding: 32px 48px;
+      }
+      .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+      .page-crumb { font-size: 12px; color: var(--color-ink-500); }
+      .page-crumb a { color: var(--color-ink-600); }
+      .page-title { font-size: 22px; font-weight: 700; color: var(--color-ink-900); }
+      .page-meta { font-size: 13px; color: var(--color-ink-600); margin-bottom: 20px; }
+
+      .panel {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        padding: 20px;
+        margin-bottom: 16px;
+        position: relative;
+      }
+      .panel h3 { font-size: 13px; font-weight: 600; color: var(--color-ink-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+      .field-row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-divider); }
+      .field-row:last-child { border-bottom: none; }
+      .field-label { font-size: 13px; color: var(--color-ink-600); }
+      .field-value { font-size: 13px; color: var(--color-ink-900); font-weight: 500; }
+      .field-value.editing {
+        background: rgba(250, 138, 31, 0.12);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(250, 138, 31, 0.4);
+        display: inline-block;
+        margin-left: -6px;
+      }
+      .field-value.editing::after {
+        content: "▍";
+        margin-left: 2px;
+        color: var(--color-seek-orange);
+        animation: caret 0.8s steps(2) infinite;
+      }
+      @keyframes caret { 50% { opacity: 0; } }
+
+      .stage-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--r-pill); font-size: 12px; font-weight: 600; }
+      .stage-badge.proposal { background: rgba(9,117,215,0.10); color: var(--color-info); }
+      .stage-badge.closed   { background: rgba(33,173,115,0.10); color: var(--color-success); }
+
+      .salesforce-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #00A1E0; color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 11px;
+        flex-shrink: 0;
+      }
+
+      /* ─── Mini Seek Bar ───────────────────────────────────── */
+      .mini-bar-wrap {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+      }
+      .mini-bar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 14px 10px 12px;
+        border-radius: 8px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        box-shadow:
+          0 2px 4px rgba(31,31,50,0.06),
+          0 12px 32px rgba(31,31,50,0.14);
+        color: var(--color-ink-900);
+        /* Constant width so the bar never visually jitters between states */
+        width: 540px;
+        box-sizing: border-box;
+      }
+      .mini-bar .seek-logo {
+        width: 28px; height: 28px;
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        position: relative;
+      }
+      .mini-bar .seek-logo svg {
+        width: 28px;
+        height: 28px;
+        display: block;
+      }
+      .running .mini-bar .seek-logo,
+      .needs-input .mini-bar .seek-logo {
+        animation: logo-breathe 2.4s ease-in-out infinite;
+      }
+      @keyframes logo-breathe {
+        0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+        50%      { transform: translateY(-1px) scale(1.06) rotate(-1.5deg); }
+      }
+
+      .mini-bar-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.25; }
+      .mini-bar-status {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-ink-900);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mini-bar-thinking {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-ink-500);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: opacity 280ms ease-out;
+        margin-top: 2px;
+      }
+      .mini-bar-thinking.fading { opacity: 0; }
+
+      .mini-bar-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .mini-btn {
+        width: 28px; height: 28px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--color-ink-700);
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        border: none;
+        transition: background 120ms, color 120ms;
+      }
+      .mini-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .mini-btn.danger { color: var(--color-fire-400); }
+      .mini-btn.danger:hover { background: rgba(239, 95, 0, 0.08); color: var(--color-fire-400); }
+
+      /* Reply — secondary outlined icon-only (Secondary-900) */
+      .mini-btn.cta-reply {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        background: transparent;
+        color: var(--color-side-900);
+        border-radius: 6px;
+        border: 1px solid var(--color-side-900);
+      }
+      .mini-btn.cta-reply:hover {
+        background: rgba(46, 46, 66, 0.06);
+        color: var(--color-side-900);
+      }
+
+      /* Resume — secondary outlined icon-only (Secondary-900) */
+      .mini-btn.cta-resume {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        background: transparent;
+        color: var(--color-side-900);
+        border-radius: 6px;
+        border: 1px solid var(--color-side-900);
+      }
+      .mini-btn.cta-resume:hover {
+        background: rgba(46, 46, 66, 0.06);
+        color: var(--color-side-900);
+      }
+
+      /* Open Seek — tertiary (blue text, no fill, no border) */
+      .mini-btn.cta-open-seek {
+        width: auto;
+        padding: 0 8px;
+        height: 28px;
+        gap: 6px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--color-info);
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+      }
+      .mini-btn.cta-open-seek:hover {
+        background: var(--color-info-bg);
+        color: var(--color-info-hover);
+      }
+
+      /* Hide controls per state */
+      .completed .mini-btn-pause,
+      .failed .mini-btn-pause,
+      .needs-input .mini-btn-pause,
+      .paused .mini-btn-pause,
+      .stopped .mini-btn-pause { display: none; }
+
+      .running .mini-btn-resume,
+      .completed .mini-btn-resume,
+      .failed .mini-btn-resume,
+      .needs-input .mini-btn-resume,
+      .stopped .mini-btn-resume,
+      .idle .mini-btn-resume { display: none; }
+
+      .running .mini-btn-reply,
+      .completed .mini-btn-reply,
+      .failed .mini-btn-reply,
+      .paused .mini-btn-reply,
+      .stopped .mini-btn-reply,
+      .idle .mini-btn-reply { display: none; }
+
+      .running .mini-btn-dismiss,
+      .needs-input .mini-btn-dismiss,
+      .paused .mini-btn-dismiss { display: none; }
+
+      .completed .mini-btn-stop,
+      .failed .mini-btn-stop,
+      .stopped .mini-btn-stop { display: none; }
+
+      /* Open Seek visibility — only while there's an active task in browser */
+      .idle .mini-btn-open-seek,
+      .completed .mini-btn-open-seek,
+      .failed .mini-btn-open-seek,
+      .stopped .mini-btn-open-seek { display: none; }
+
+      /* Status colors for non-running states */
+      .completed .mini-bar-status { color: var(--color-success); }
+      .failed    .mini-bar-status { color: var(--color-critical); }
+
+      /* Trail link in the completed-state meta line */
+      .trail-link {
+        color: var(--color-info);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .trail-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+      .trail-link svg { stroke-width: 2; }
+
+      /* Spinner — Navi info blue */
+      .spinner {
+        width: 14px; height: 14px;
+        border: 2px solid rgba(9, 117, 215, 0.20);
+        border-top-color: var(--color-info);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        flex-shrink: 0;
+        margin-right: 6px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .running .spinner,
+      .needs-input .spinner { display: inline-block; }
+      .idle .spinner,
+      .paused .spinner,
+      .completed .spinner,
+      .failed .spinner,
+      .stopped .spinner { display: none; }
+
+      /* ─── Dev state switcher ─────────────────────────────── */
+      .dev-bar {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        background: rgba(31, 31, 50, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 10px;
+        padding: 8px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        z-index: 100;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+      }
+      .dev-bar-label {
+        font-size: 10px;
+        color: #8C899F;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 0 10px 0 6px;
+      }
+      .dev-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.06);
+        color: #DFDDE7;
+        cursor: pointer;
+        border: none;
+      }
+      .dev-btn:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+      .dev-btn.active { background: var(--color-seek-orange); color: #1F1F32; }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div id="root" class="running h-full">
+      <!-- Mock browser window -->
+      <div class="browser-window h-full flex flex-col">
+        <div class="browser-bar">
+          <div class="traffic">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="tab-strip">
+            <!-- User's normal tabs -->
+            <div class="tab"><span class="favicon" style="background:#EA4335"></span>Gmail<span class="close"><i data-lucide="x" class="w-[10px] h-[10px]"></i></span></div>
+            <div class="tab"><span class="favicon" style="background:#000"></span>Notion<span class="close"><i data-lucide="x" class="w-[10px] h-[10px]"></i></span></div>
+            <!-- Seek AI tab group -->
+            <div class="tab-group-wrap">
+              <span class="tab-group-label">Seek AI</span>
+              <div class="tab seek-active">
+                <span class="seek-favicon">S</span>
+                Update opportunity 4421 — Acme CRM
+                <span class="close"><i data-lucide="x" class="w-[10px] h-[10px]"></i></span>
+              </div>
+            </div>
+            <!-- More user tabs -->
+            <div class="tab"><span class="favicon" style="background:#1DB954"></span>Spotify</div>
+          </div>
+        </div>
+        <div class="nav-row">
+          <button class="nav-icon-btn"><i data-lucide="arrow-left" class="w-[16px] h-[16px]"></i></button>
+          <button class="nav-icon-btn"><i data-lucide="arrow-right" class="w-[16px] h-[16px]"></i></button>
+          <button class="nav-icon-btn"><i data-lucide="rotate-cw" class="w-[16px] h-[16px]"></i></button>
+          <div class="url-bar">
+            <i data-lucide="lock" class="w-[12px] h-[12px] lock"></i>
+            <span class="url">acme.my.salesforce.com</span>
+            <span class="path">/opportunity/4421/edit</span>
+          </div>
+          <button class="nav-icon-btn"><i data-lucide="user" class="w-[16px] h-[16px]"></i></button>
+        </div>
+
+        <!-- Viewport with edge-glow -->
+        <div class="viewport-wrap flex-1">
+          <div class="page-canvas">
+            <div class="page-head">
+              <div class="salesforce-mark">SF</div>
+              <div>
+                <div class="page-crumb"><a href="#">Sales</a> / <a href="#">Opportunities</a> / OPP-4421</div>
+                <div class="page-title">Acme Corp — Annual SaaS Renewal</div>
+              </div>
+            </div>
+            <div class="page-meta">$184,000 · Closing 2026-06-30 · Owner: Sarah Chen</div>
+
+            <div class="panel">
+              <h3>Opportunity details</h3>
+              <div class="field-row">
+                <span class="field-label">Account name</span>
+                <span class="field-value">Acme Corp</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Amount</span>
+                <span class="field-value">$184,000.00</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Stage</span>
+                <span class="field-value"><span class="field-value editing" id="editing-field">Proposal/Quote</span></span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Probability</span>
+                <span class="field-value">60%</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Close date</span>
+                <span class="field-value">2026-06-30</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Next step</span>
+                <span class="field-value">Schedule renewal call with procurement</span>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>Activity</h3>
+              <div class="field-row">
+                <span class="field-label">Last contact</span>
+                <span class="field-value">2026-05-21 · Sarah Chen called CFO</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Open tasks</span>
+                <span class="field-value">2 open · 1 due this week</span>
+              </div>
+            </div>
+
+            <div style="height: 200px"></div>
+          </div>
+
+          <!-- Mini Seek Bar -->
+          <div class="mini-bar-wrap">
+            <div class="mini-bar">
+              <div class="seek-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <g>
+                    <path d="M3.9021 9.59375L22.5938 9.59375V0.247902L3.9021 0.247902V9.59375Z" fill="#F55800"/>
+                    <path d="M13.25 18.9417L13.25 0.25L3.90415 0.25L3.90415 18.9417H13.25Z" fill="#FBA450"/>
+                    <path d="M31.9375 28.2875V0.25L22.5917 0.25V28.2875H31.9375Z" fill="#F55800"/>
+                    <path d="M3.90625 0.25L13.2522 0.250001V9.59593H3.90625L3.90625 0.25Z" fill="#F58923"/>
+                    <path d="M13.25 18.9375H22.5955V28.2834H13.25V18.9375Z" fill="#F58923"/>
+                    <path d="M22.5938 18.9375H31.9397V28.2834H22.5938V18.9375Z" fill="#C63D22"/>
+                    <path d="M9.70489 31.8303H0.359375V22.4844H9.70489V31.8303Z" fill="#F55800"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="mini-bar-text">
+                <span class="mini-bar-status" id="bar-status">Seek is working in this tab</span>
+                <span class="mini-bar-thinking" id="bar-thinking"><span class="spinner"></span><span id="thinking-text">Reading the opportunity record…</span></span>
+              </div>
+              <div class="mini-bar-controls">
+                <button class="mini-btn cta-open-seek mini-btn-open-seek" title="Open Seek desktop app"><i data-lucide="external-link" class="w-[12px] h-[12px]"></i> Open Seek</button>
+                <button class="mini-btn cta-reply mini-btn-reply" title="Reply" aria-label="Reply"><i data-lucide="message-square" class="w-[14px] h-[14px]"></i></button>
+                <button class="mini-btn cta-resume mini-btn-resume" title="Resume" aria-label="Resume"><i data-lucide="play" class="w-[14px] h-[14px]"></i></button>
+                <button class="mini-btn mini-btn-pause" title="Pause" aria-label="Pause"><i data-lucide="pause" class="w-[12px] h-[12px]"></i></button>
+                <button class="mini-btn danger mini-btn-stop" title="Stop" aria-label="Stop"><i data-lucide="square" class="w-[12px] h-[12px]"></i></button>
+                <button class="mini-btn mini-btn-dismiss" title="Dismiss" aria-label="Dismiss"><i data-lucide="x" class="w-[12px] h-[12px]"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dev state switcher (prototype-only) -->
+      <div class="dev-bar">
+        <span class="dev-bar-label">State</span>
+        <button class="dev-btn" data-state="idle">Idle</button>
+        <button class="dev-btn active" data-state="running">Running</button>
+        <button class="dev-btn" data-state="paused">Paused</button>
+        <button class="dev-btn" data-state="needs-input">Needs input</button>
+        <button class="dev-btn" data-state="completed">Completed</button>
+        <button class="dev-btn" data-state="failed">Failed</button>
+        <button class="dev-btn" data-state="stopped">Stopped</button>
+      </div>
+    </div>
+
+    <script>
+      const root = document.getElementById("root");
+      const statusEl = document.getElementById("bar-status");
+      const thinkingEl = document.getElementById("bar-thinking");
+      const thinkingText = document.getElementById("thinking-text");
+      const editingField = document.getElementById("editing-field");
+
+      // ─── State copy ─────────────────────────────────────────
+      const STATE = {
+        idle:        { status: "Waiting for slot",                       thinking: null },
+        running:     { status: "Seek is working in this tab",            thinking: "cycle" },
+        paused:      { status: "Seek is paused",                         thinking: "Paused at: Typing into Stage field" },
+        "needs-input": { status: "Seek needs your input",                thinking: "Approve sending email to procurement@acme.com?" },
+        completed:   { status: 'Done. 12 opportunities moved to "Closed Won".', thinking: "completed-meta" },
+        failed:      { status: "Couldn't finish: Stage field is locked.",thinking: "Try again or take over from here." },
+        stopped:     { status: "Stopped",                                thinking: null },
+      };
+
+      // ─── Running-state thinking cycle ───────────────────────
+      const STEPS = [
+        "Reading the opportunity record…",
+        "Locating the Stage field…",
+        "Clicking the Stage dropdown…",
+        "Selecting \"Closed Won\"…",
+        "Confirming probability auto-update…",
+        "Saving changes…",
+      ];
+      let stepIdx = 0;
+      let cycleTimer = null;
+
+      function cycleSteps() {
+        clearInterval(cycleTimer);
+        cycleTimer = setInterval(() => {
+          if (root.classList.contains("running") === false) return;
+          // fade out
+          thinkingEl.classList.add("fading");
+          setTimeout(() => {
+            stepIdx = (stepIdx + 1) % STEPS.length;
+            thinkingText.textContent = STEPS[stepIdx];
+            thinkingEl.classList.remove("fading");
+          }, 280);
+        }, 2200);
+      }
+
+      function setState(state) {
+        // remove all state classes
+        ["idle","running","paused","needs-input","completed","failed","stopped"].forEach((s) => root.classList.remove(s));
+        root.classList.add(state);
+
+        const config = STATE[state];
+        statusEl.textContent = config.status;
+
+        if (config.thinking === "cycle") {
+          thinkingEl.style.display = "";
+          thinkingText.textContent = STEPS[stepIdx];
+          cycleSteps();
+        } else if (config.thinking === "completed-meta") {
+          thinkingEl.style.display = "";
+          thinkingText.innerHTML = '<span style="color: var(--color-ink-500)">1m 47s · 14 actions ·</span> <a class="trail-link" id="open-trail">View decision trail <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>';
+          clearInterval(cycleTimer);
+          // Bind the link
+          document.getElementById("open-trail").addEventListener("click", openDecisionTrail);
+        } else if (config.thinking) {
+          thinkingEl.style.display = "";
+          thinkingText.textContent = config.thinking;
+          clearInterval(cycleTimer);
+        } else {
+          thinkingEl.style.display = "none";
+          clearInterval(cycleTimer);
+        }
+
+        // Show / hide page-level editing caret
+        if (state === "running") {
+          editingField.style.display = "inline-block";
+        } else if (state === "completed") {
+          editingField.classList.remove("editing");
+          editingField.textContent = "Closed Won";
+        } else if (state === "failed") {
+          editingField.style.display = "inline-block";
+        }
+
+        // Dev button active state
+        document.querySelectorAll(".dev-btn").forEach((b) => b.classList.toggle("active", b.dataset.state === state));
+      }
+
+      // Bind dev buttons
+      document.querySelectorAll(".dev-btn").forEach((btn) => {
+        btn.addEventListener("click", () => setState(btn.dataset.state));
+      });
+
+      // Bind Mini Bar controls
+      document.querySelector(".mini-btn-pause").addEventListener("click", () => setState("paused"));
+      document.querySelector(".mini-btn-resume").addEventListener("click", () => setState("running"));
+      document.querySelector(".mini-btn-stop").addEventListener("click", () => setState("stopped"));
+      document.querySelector(".mini-btn-reply").addEventListener("click", () => setState("running"));
+      document.querySelector(".mini-btn-dismiss").addEventListener("click", () => setState("idle"));
+
+      // ─── Open Seek → launches the desktop app with current task ───
+      document.querySelector(".mini-btn-open-seek").addEventListener("click", () => {
+        const taskParam = new URLSearchParams(window.location.search).get("task") || "";
+        window.open(`Seek-Desktop-Phase-1.html?task=${taskParam}&from=phase2`, "_blank");
+      });
+
+      // ─── View decision trail → opens L2 (Visual Decision Trail) ──
+      function openDecisionTrail() {
+        const taskParam = new URLSearchParams(window.location.search).get("task") || "";
+        window.open(`Seek-Desktop-Phase-L2.html?task=${taskParam}`, "_blank");
+      }
+
+      lucide.createIcons();
+      setState("running");
+    </script>
+  </body>
+</html>

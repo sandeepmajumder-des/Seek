@@ -1,0 +1,2527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix · Video AI · Editor — Navi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        /* ─── Navi · Surfaces (canonical) ──────────────────────────────── */
+        --color-bg: #F6F6F9;            /* Inkredible 50  · page */
+        --color-surface: #FFFFFF;       /* Primitive white · cards */
+        --color-surface-2: #F2F2F8;     /* Inkredible 100 (reserved, sparingly used) */
+
+        /* ─── Navi · Ink scale (canonical) ─────────────────────────────── */
+        --color-ink-900: #1F1F32;       /* Inkredible 1000 · headings, dark nav */
+        --color-ink-800: #3D3C52;       /* Inkredible 800 · strong text */
+        --color-ink-500: #525066;       /* Inkredible 700 · body */
+        --color-ink-400: #7B7891;       /* Inkredible 500 · muted (canonical) */
+        --color-ink-200: #ECECF3;       /* Inkredible 200 · lines (canonical) */
+        --color-ink-100: #ECECF3;       /* alias */
+        --color-ink-300: #C1BFD0;       /* line strong */
+
+        /* ─── Navi · Whatfix Fire (canonical) ──────────────────────────── */
+        --color-fire-50:  #FFF8F5;      /* tint  (canonical) */
+        --color-fire-100: #FEE2D6;      /* light (canonical) */
+        --color-fire-200: #FCC8AE;      /* mid-light */
+        --color-fire-400: #C74900;      /* primary action */
+        --color-fire-500: #9E4100;      /* hover */
+        --color-fire-600: #873B00;      /* pressed */
+
+        /* ─── Spacing scale (4-multiple, enforce only these) ──────────── */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+        --space-10: 40px;
+
+        /* ─── Radii (Navi) ──────────────────────────────────────────────── */
+        --r-sm: 4px;   /* buttons, chips, inputs */
+        --r-md: 8px;   /* cards, panels */
+        --r-lg: 12px;  /* modals */
+        --r-pill: 999px;/* badges, counters */
+
+        /* ─── Icon sizing scale (lighter — 14px in 24px box, thinner strokes) ─── */
+        --icon-xs: 10px;  /* tight chrome (chip rows, scene meta numbers) */
+        --icon-sm: 14px;  /* canonical icon inside the 24×24 icon button */
+        --icon-md: 14px;  /* labelled buttons */
+        --icon-lg: 16px;  /* feature icons / play button hero */
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+      /* Lighter stroke-weight on all Lucide icons (default is 2 — heavy at small sizes) */
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      .btn-primary svg.lucide, .btn-primary-ink svg.lucide { stroke-width: 1.75; }
+
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* ───────────────────────────────────────────────────────────────────
+        BUTTON SYSTEM  (Navi spec: primary | secondary | tertiary; sm | md | lg)
+        Use these classes everywhere — no inline `style={background:…}`.
+      ──────────────────────────────────────────────────────────────────── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        border-radius: var(--r-sm);
+        font-weight: 500;
+        line-height: 1;
+        transition: background-color 120ms, border-color 120ms, color 120ms, box-shadow 120ms, opacity 120ms;
+        white-space: nowrap;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .btn:disabled,
+      .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+      /* Sizes */
+      .btn-sm  { height: 28px; padding: 0 var(--space-2);  font-size: 12px; }
+      .btn-md  { height: 32px; padding: 0 var(--space-3);  font-size: 13px; }
+      .btn-lg  { height: 40px; padding: 0 var(--space-4);  font-size: 14px; }
+      /* Canonical icon button: 24×24. md = 28 reserved for AI send. lg = 32 rarely used. */
+      .btn-icon-sm { width: 24px; height: 24px; padding: 0; }
+      .btn-icon-md { width: 28px; height: 28px; padding: 0; }
+      .btn-icon-lg { width: 32px; height: 32px; padding: 0; }
+
+      /* Primary — Whatfix Fire */
+      .btn-primary { background: var(--color-fire-400); color: #fff; }
+      .btn-primary:hover { background: var(--color-fire-500); }
+      .btn-primary:active { background: var(--color-fire-600); }
+
+      /* Primary · Ink (heavy secondary action, e.g. Publish) */
+      .btn-primary-ink { background: var(--color-ink-900); color: #fff; }
+      .btn-primary-ink:hover { background: var(--color-ink-800); }
+      .btn-primary-ink:active { background: #0F0F1F; }
+
+      /* Secondary — outlined */
+      .btn-secondary {
+        background: var(--color-surface);
+        color: var(--color-ink-900);
+        border-color: var(--color-ink-200);
+      }
+      .btn-secondary:hover { background: var(--color-surface-2); border-color: var(--color-ink-300); }
+      .btn-secondary:active { background: var(--color-ink-200); }
+
+      /* Tertiary — ghost text-only */
+      .btn-tertiary { background: transparent; color: var(--color-ink-500); }
+      .btn-tertiary:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .btn-tertiary:active { background: var(--color-ink-200); }
+
+      /* Tertiary on dark surface */
+      .btn-tertiary-dark { background: transparent; color: #A8B3B8; }
+      .btn-tertiary-dark:hover { background: rgba(255,255,255,0.06); color: #fff; }
+      .btn-tertiary-dark:active { background: rgba(255,255,255,0.10); }
+
+      /* Round pill modifier */
+      .btn-rounded { border-radius: var(--r-pill); }
+
+      /* ───────────────────────────────────────────────────────────────────
+        CHIP + AI-ICON + SUGGESTION-ICON — UNIFIED SUBTLE-BOX RECIPE
+        One container style. One icon size. No exceptions.
+      ──────────────────────────────────────────────────────────────────── */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        height: 24px;
+        padding: 0 var(--space-2);
+        border-radius: var(--r-sm);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        color: var(--color-ink-800);
+        font-size: 12.5px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 120ms, border-color 120ms;
+      }
+      .chip:hover { background: var(--color-surface-2); border-color: var(--color-ink-300); }
+      .chip svg { color: var(--color-ink-500); width: var(--icon-xs); height: var(--icon-xs); flex-shrink: 0; }
+
+      .ai-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        border-radius: var(--r-sm);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        color: var(--color-ink-700);
+      }
+      .ai-icon svg { width: var(--icon-sm); height: var(--icon-sm); }
+
+      /* ─── Selected line — darker tint than scene background ───────── */
+      .selected-line {
+        background: var(--color-fire-100);
+        padding: 6px 12px;
+        margin: 0 -12px;
+        border-radius: var(--r-sm);
+      }
+      .term {
+        background: var(--color-surface-2);
+        padding: 0 2px;
+        border-radius: 2px;
+        color: var(--color-ink-800);
+      }
+
+      /* ─── SCRIPT EDITING SURFACE ─────────────────────────────────────
+        The script IS the editor. Every paragraph and title is live-editable.
+        Visual language: doc-like, with a text caret on hover, soft bg on
+        focus, no chrome buttons. Patterned after Notion + Linear writing.
+      ──────────────────────────────────────────────────────────────── */
+      article { cursor: text; }
+
+      /* Make every text-bearing surface user-selectable so ⌘C / ⌃C just works */
+      article, article *, .editable-title, .editable-p, .scene-title,
+      .sug-row, .sug-row *,
+      .ai-context-chip, .ai-context-chip *,
+      [data-copyable], [data-copyable] * {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      /* All editable text gets a hover affordance + clear focus state */
+      .editable-title, .scene-title[contenteditable], .editable-p {
+        cursor: text;
+        border-radius: var(--r-sm);
+        padding: 2px 6px;
+        margin: 0 -6px;
+        transition: background-color 100ms;
+        outline: none;
+      }
+      .editable-title:hover,
+      .scene-title[contenteditable]:hover,
+      .editable-p:hover { background: rgba(31, 31, 50, 0.025); }
+
+      .editable-title:focus,
+      .scene-title[contenteditable]:focus,
+      .editable-p:focus {
+        background: var(--color-surface);
+        box-shadow:
+          0 0 0 2px var(--color-fire-100),
+          0 1px 3px rgba(31,31,50,0.08);
+      }
+
+      /* Placeholder for empty editable elements */
+      .editable-p:empty::before,
+      .scene-title[contenteditable]:empty::before {
+        content: attr(data-placeholder);
+        color: var(--color-ink-400);
+        pointer-events: none;
+      }
+
+      /* The selected line in scene 2 already has Fire-100 background;
+        keep its margin alignment consistent with the new editable padding */
+      .selected-line.editable-p { padding: 6px 12px; margin: 0 -12px; }
+
+      /* ─── Inter-scene "Add scene" affordance (Notion-style) ─── */
+      .add-scene-rail {
+        position: relative;
+        height: 12px;
+        margin: var(--space-2) 0;
+      }
+      .add-scene-rail::before {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; top: 50%;
+        height: 1px;
+        background: transparent;
+        transition: background-color 120ms;
+      }
+      .add-scene-rail-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 22px;
+        padding: 0 10px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-pill);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-ink-500);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 120ms, color 120ms, border-color 120ms;
+      }
+      .add-scene-rail:hover::before { background: var(--color-ink-200); }
+      .add-scene-rail:hover .add-scene-rail-btn { opacity: 1; }
+      .add-scene-rail-btn:hover { color: var(--color-fire-500); border-color: var(--color-fire-200); }
+
+      /* ─── Global narration voice strip (top of script) ──────────────
+        One control that applies to the entire script. Click to pick a
+        different voice; the change cascades through every scene.
+      ──────────────────────────────────────────────────────────────── */
+      .narration-voice {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-6);
+        padding: var(--space-2) var(--space-3);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-md);
+      }
+      .narration-voice-btn {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+        border-radius: var(--r-sm);
+        padding: 2px 4px;
+        transition: background-color 100ms;
+      }
+      .narration-voice-btn:hover { background: var(--color-surface-2); }
+      .voice-avatar-lg {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--r-pill);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #F1BB8A, #C74900);
+        flex-shrink: 0;
+      }
+      .voice-meta { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+      .voice-name { font-size: 13px; font-weight: 500; color: var(--color-ink-900); }
+      .voice-desc { font-size: 10.5px; color: var(--color-ink-400); }
+      .narration-voice-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-ink-400);
+        padding-right: var(--space-2);
+        border-right: 1px solid var(--color-ink-200);
+      }
+
+      /* ─── Per-paragraph timestamps (Descript-style gutter) ───────────
+        Every text block gets its start time in the left gutter.
+        Click → scrubs the playhead to that moment in the video.
+      ──────────────────────────────────────────────────────────────── */
+      .script-line {
+        position: relative;
+      }
+      .line-time {
+        position: absolute;
+        right: calc(100% + 12px);
+        top: 6px;
+        width: 38px;
+        font-family: ui-monospace, "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 10.5px;
+        font-weight: 500;
+        text-align: right;
+        color: var(--color-ink-300);
+        background: transparent;
+        border: 0;
+        padding: 2px 4px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 100ms, color 100ms, background-color 100ms;
+        user-select: none;
+      }
+      .script-line:hover .line-time { opacity: 1; color: var(--color-ink-500); }
+      .line-time:hover { color: var(--color-fire-500); background: var(--color-fire-50); opacity: 1 !important; }
+      /* When the paragraph itself is focused (caret in it), show its time as active */
+      .script-line:focus-within .line-time { opacity: 1; color: var(--color-fire-500); font-weight: 600; }
+
+      /* Live caret-position chip — small floating pill that shows the
+        current time at the cursor while typing. */
+      #caret-time-chip {
+        position: fixed;
+        z-index: 35;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: var(--r-sm);
+        background: var(--color-ink-900);
+        color: #fff;
+        font-family: ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 10.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 2px 6px -1px rgba(31,31,50,0.18);
+      }
+      #caret-time-chip::before {
+        content: '';
+        width: 0; height: 0;
+        border-style: solid;
+        border-width: 4px 4px 0 4px;
+        border-color: var(--color-ink-900) transparent transparent transparent;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: -4px;
+      }
+
+      /* End-of-script "Continue writing" affordance — visible cursor anchor */
+      .write-continue {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-3) 8px;
+        cursor: text;
+        color: var(--color-ink-400);
+        font-size: 14px;
+        transition: color 120ms;
+      }
+      .write-continue:hover { color: var(--color-ink-700); }
+      .write-continue::before {
+        content: '';
+        width: 1.5px;
+        height: 16px;
+        background: var(--color-fire-400);
+        animation: caret-blink 1.05s steps(1) infinite;
+      }
+      @keyframes caret-blink { 50% { opacity: 0; } }
+
+      /* ─── Elevation tokens ─────────────────────────────────────────────── */
+      .shadow-sm { box-shadow: 0 1px 0 rgba(31,31,50,0.04); }
+      .shadow-md { box-shadow: 0 2px 6px -1px rgba(31,31,50,0.06), 0 1px 2px rgba(31,31,50,0.04); }
+      .shadow-lg { box-shadow: 0 8px 24px -8px rgba(31,31,50,0.10), 0 2px 6px -2px rgba(31,31,50,0.06); }
+
+      .fade-up-mask {
+        background: linear-gradient(180deg, rgba(246,246,249,0) 0%, rgba(246,246,249,1) 70%);
+      }
+
+      /* ─── Skeleton shimmer for loading states ─────────────────────────── */
+      @keyframes shimmer { from { background-position: -200px 0; } to { background-position: 200px 0; } }
+      .skeleton {
+        background: linear-gradient(90deg, #ECECF3 0%, #F6F6F9 50%, #ECECF3 100%);
+        background-size: 400px 100%;
+        animation: shimmer 1.6s ease-in-out infinite;
+        border-radius: var(--r-sm);
+      }
+
+      /* ─── Toast slide-in ───────────────────────────────────────────────── */
+      @keyframes toast-in {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .toast-in { animation: toast-in 200ms ease-out; }
+
+      /* ─── Status pill in top bar ──────────────────────────────────────── */
+      .status-dot {
+        width: 6px; height: 6px; border-radius: 999px;
+      }
+      .status-dot.saving { background: var(--color-fire-400); animation: status-pulse 1.2s ease-in-out infinite; }
+      .status-dot.saved { background: #16a34a; }
+      .status-dot.failed { background: #dc2626; }
+      @keyframes status-pulse { 0%,100% { opacity: 0.5 } 50% { opacity: 1 } }
+
+      /* ─── Menu items (dropdowns, popovers) ─────────────────────────── */
+      .menu-item {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: var(--space-2);
+        padding: 6px 10px;
+        border-radius: var(--r-sm);
+        font-size: 12.5px;
+        color: var(--color-ink-800);
+        text-align: left;
+        cursor: pointer;
+        background: transparent;
+        border: 0;
+      }
+      .menu-item:hover { background: var(--color-surface-2); }
+      .menu-item .ml-auto { margin-left: auto; }
+      .menu-item svg { color: var(--color-ink-500); flex-shrink: 0; }
+
+      /* ─── KBD (keyboard hint) ───────────────────────────────────────── */
+      .kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        background: var(--color-bg);
+        border: 1px solid var(--color-ink-200);
+        border-bottom-width: 2px;
+        border-radius: var(--r-sm);
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-ink-800);
+        line-height: 1;
+      }
+      .kbd-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        font-size: 12.5px;
+        color: var(--color-ink-700);
+      }
+      .kbd-row > span:last-child { display:flex; align-items:center; gap:4px; }
+
+      /* ─── Color swatch ──────────────────────────────────────────────── */
+      .swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--r-sm);
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: transform 80ms, border-color 80ms;
+      }
+      .swatch:hover { transform: scale(1.08); border-color: var(--color-fire-400); }
+
+      /* ─── Playhead tooltip ──────────────────────────────────────────── */
+      #playhead-tooltip {
+        position: fixed;
+        z-index: 40;
+        background: var(--color-ink-900);
+        color: #fff;
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 4px 6px;
+        border-radius: var(--r-sm);
+        pointer-events: none;
+        display: none;
+        font-variant-numeric: tabular-nums;
+      }
+      #playhead-tooltip::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -4px;
+        transform: translateX(-50%);
+        border: 4px solid transparent;
+        border-top-color: var(--color-ink-900);
+        border-bottom: 0;
+      }
+
+      /* ─── Scene hover gutter actions ────────────────────────────────── */
+      .scene-actions {
+        position: absolute;
+        top: 4px;
+        right: -8px;
+        display: flex;
+        gap: 2px;
+        opacity: 0;
+        transform: translateX(6px);
+        transition: opacity 120ms, transform 120ms;
+      }
+      .scene:hover .scene-actions { opacity: 1; transform: translateX(0); }
+
+      /* ─── Preview shimmer when generating ──────────────────────────── */
+      #preview-shimmer {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.6s ease-in-out infinite;
+        display: none;
+        pointer-events: none;
+      }
+      #preview-shimmer.active { display: block; }
+
+      /* ─── Rate-limit indicator ─────────────────────────────────────── */
+      .rate-limit {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        font-size: 10.5px;
+        color: var(--color-ink-400);
+        border-top: 1px solid var(--color-ink-200);
+        background: var(--color-bg);
+      }
+      .rate-limit-bar {
+        flex: 1;
+        height: 4px;
+        background: var(--color-ink-200);
+        border-radius: var(--r-pill);
+        overflow: hidden;
+        max-width: 120px;
+      }
+      .rate-limit-bar > span {
+        display: block;
+        height: 100%;
+        background: var(--color-fire-400);
+        border-radius: var(--r-pill);
+      }
+
+      /* ─── Persistent selection mark (stays after the OS selection clears) ─── */
+      .ai-target {
+        background: var(--color-fire-100);
+        box-shadow: 0 0 0 1px var(--color-fire-200);
+        border-radius: 2px;
+      }
+
+      /* ─── Context chip inside the AI input (shows what AI is acting on) ─── */
+      .ai-context-chip {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-2);
+        padding: var(--space-2);
+        margin-bottom: var(--space-2);
+        background: var(--color-fire-50);
+        border: 1px solid var(--color-fire-100);
+        border-radius: var(--r-sm);
+        font-size: 12px;
+        color: var(--color-ink-800);
+        line-height: 1.45;
+      }
+      .ai-context-chip .quote-mark {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--r-sm);
+        background: var(--color-surface);
+        border: 1px solid var(--color-fire-100);
+        color: var(--color-fire-500);
+      }
+      .ai-context-chip .quote-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .ai-context-chip .quote-text {
+        color: var(--color-ink-800);
+        font-style: italic;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .ai-context-chip .quote-scope {
+        font-size: 10.5px;
+        font-weight: 500;
+        color: var(--color-fire-500);
+        font-style: normal;
+      }
+      .ai-context-chip .chip-close {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: var(--r-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--color-ink-500);
+        background: transparent;
+        border: 0;
+        transition: background-color 100ms, color 100ms;
+      }
+      .ai-context-chip .chip-close:hover { background: var(--color-surface); color: var(--color-ink-900); }
+
+      /* ─── Suggestion row — hover-only Apply (quieter than Fire-500 always-on) ─── */
+      .sug-row { transition: background-color 120ms; }
+      .sug-row:hover { background: var(--color-surface-2); }
+      .sug-apply {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 24px;
+        padding: 0 var(--space-2);
+        border-radius: var(--r-sm);
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--color-ink-500);
+        background: transparent;
+        border: 0;
+        opacity: 0;
+        transition: opacity 120ms, color 120ms, background-color 120ms;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sug-row:hover .sug-apply { opacity: 1; color: var(--color-fire-400); }
+      .sug-apply:hover { background: var(--color-surface); color: var(--color-fire-500); }
+
+      /* ─── Overrun warning ──────────────────────────────────────────── */
+      .overrun {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #B45309;
+        background: #FEF3C7;
+        border: 1px solid #FDE68A;
+        border-radius: var(--r-sm);
+        padding: 1px 5px;
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      /* One signal: preview confirms "your edit just changed the video" */
+      @keyframes preview-ring {
+        0%, 90%, 100% { box-shadow: 0 0 0 0 rgba(199,73,0,0); }
+        92%           { box-shadow: 0 0 0 3px rgba(199,73,0,0.28); }
+      }
+      .preview-pulse {
+        animation: preview-ring 6s ease-out infinite;
+      }
+
+      /* Hover-coupling: hovering a script scene highlights its timeline chip, and vice versa */
+      .scene { transition: background-color 120ms ease; border-radius: 4px; }
+      .scene:hover { background: rgba(199,73,0,0.03); }
+      .tl-chip { transition: transform 120ms ease, box-shadow 120ms ease; }
+      .scene.is-linked-hover { background: rgba(199,73,0,0.05); }
+      .tl-chip.is-linked-hover { transform: translateY(-1px); box-shadow: 0 2px 6px -1px rgba(199,73,0,0.18); }
+
+      /* Resizable column splitter */
+      .col-splitter {
+        cursor: col-resize;
+        user-select: none;
+        position: relative;
+      }
+      .col-splitter::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        height: 28px;
+        border-radius: 1px;
+        background: var(--color-ink-200);
+        opacity: 0;
+        transition: opacity 120ms, height 120ms, background-color 120ms;
+      }
+      .col-splitter:hover::before { opacity: 1; }
+      .col-splitter.is-dragging::before { opacity: 1; height: 40px; background: var(--color-fire-400); }
+      body.is-resizing { cursor: col-resize; }
+      body.is-resizing * { user-select: none !important; }
+
+      /* Hide scrollbar on the AI chip row — minimalism */
+      #ai-chip-row::-webkit-scrollbar { display: none; }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div id="playhead-tooltip"></div>
+    <div id="caret-time-chip"></div>
+    <div class="flex h-screen overflow-hidden">
+
+      <!-- ============================================================
+        WHATFIX CONTENT CREATOR NAV (Navi spec: 48px rail, dark Inkredible-1000)
+        ============================================================ -->
+      <aside class="w-12 shrink-0 flex flex-col items-center py-3 gap-0.5" style="background:var(--color-ink-900); color:#A8B3B8">
+        <div class="w-7 h-7 rounded flex items-center justify-center text-white font-bold text-[13px]" style="background:var(--color-fire-400)">W</div>
+        <div class="h-2"></div>
+        <button class="w-10 h-10 rounded flex items-center justify-center text-white relative" style="background:#2A2A40">
+          <i data-lucide="video" class="w-[18px] h-[18px]"></i>
+          <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r" style="background:var(--color-fire-400)"></span>
+        </button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="layout-grid" class="w-[18px] h-[18px]"></i></button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="browser" class="w-[18px] h-[18px]"></i></button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="users" class="w-[18px] h-[18px]"></i></button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="flask-conical" class="w-[18px] h-[18px]"></i></button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="bar-chart-3" class="w-[18px] h-[18px]"></i></button>
+        <div class="flex-1"></div>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="settings" class="w-[18px] h-[18px]"></i></button>
+        <button class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/5"><i data-lucide="circle-help" class="w-[18px] h-[18px]"></i></button>
+        <div class="w-7 h-7 rounded-full mt-1" style="background:var(--color-fire-200)"></div>
+      </aside>
+
+      <!-- ============================================================
+        EDITOR
+        ============================================================ -->
+      <div class="flex-1 flex flex-col min-w-0 bg-[var(--color-bg)]">
+
+        <!-- ────── TOP BAR (single line, hierarchy: title is the loudest left, Publish primary right) ────── -->
+        <header class="shrink-0 border-b flex items-center" style="height: 56px; border-color:var(--color-ink-200); background:var(--color-surface); padding: 0 var(--space-5); gap: var(--space-4);">
+          <div class="flex items-center min-w-0" style="gap: var(--space-3);">
+            <button class="btn btn-tertiary btn-sm" style="text-decoration:none;">
+              <i data-lucide="chevron-left" style="width:var(--icon-sm); height:var(--icon-sm);"></i>
+              <span>All content</span>
+            </button>
+            <span style="color:var(--color-ink-300)">/</span>
+            <span class="text-[13px]" style="color:var(--color-ink-500)">Video</span>
+            <div class="w-px" style="height:16px; background:var(--color-ink-200);"></div>
+            <div class="flex items-center min-w-0" style="gap: var(--space-2);">
+              <h1
+                id="video-title"
+                class="editable-title text-[20px] font-semibold tracking-tight truncate"
+                style="color:var(--color-ink-900);"
+                title="Click to rename · Last edited by Sandeep M. · 2 min ago"
+                contenteditable="true"
+                spellcheck="false"
+              >Understanding Whatfix guidance</h1>
+            </div>
+          </div>
+
+          <div class="flex-1"></div>
+
+          <div class="flex items-center" style="gap: var(--space-2);">
+            <!-- Save status — anchored next to the ship action -->
+            <div id="save-status" class="inline-flex items-center rounded text-[12px]" style="gap: var(--space-2); padding: 4px var(--space-2); color:var(--color-ink-500);">
+              <span class="status-dot saved"></span>
+              <span id="save-status-label">Saved</span>
+            </div>
+
+            <!-- Collaborator avatars — desaturated, smaller -->
+            <div class="flex items-center" style="margin: 0 var(--space-1);">
+              <span class="inline-flex items-center justify-center text-[9.5px] font-semibold" style="width:22px;height:22px;border-radius:var(--r-pill); background:var(--color-surface-2); color:var(--color-ink-700); border:2px solid white; margin-right:-6px;">AT</span>
+              <span class="inline-flex items-center justify-center text-[9.5px] font-semibold" style="width:22px;height:22px;border-radius:var(--r-pill); background:var(--color-surface-2); color:var(--color-ink-700); border:2px solid white; margin-right:-6px;">SM</span>
+              <span class="inline-flex items-center justify-center text-[9.5px] font-medium" style="width:22px;height:22px;border-radius:var(--r-pill); background:var(--color-surface-2); color:var(--color-ink-500); border:2px solid white;">+2</span>
+            </div>
+
+            <button class="btn btn-tertiary btn-md" id="share-btn" title="Share">
+              <i data-lucide="share-2" style="width:var(--icon-sm); height:var(--icon-sm);"></i>
+              Share
+            </button>
+            <!-- Publish — demoted to secondary outline so Fire-400 owns the primary slot -->
+            <button class="btn btn-secondary btn-md" id="publish-btn" title="Publish" style="font-weight:600;">
+              Publish
+              <i data-lucide="arrow-up-right" style="width:var(--icon-sm); height:var(--icon-sm);"></i>
+            </button>
+            <button class="btn btn-tertiary btn-icon-sm" id="help-btn" title="Help (?)">
+              <i data-lucide="circle-help" style="width:var(--icon-sm); height:var(--icon-sm);"></i>
+            </button>
+            <button class="btn btn-tertiary btn-icon-sm" id="more-menu-btn" title="More">
+              <i data-lucide="more-horizontal" style="width:var(--icon-sm); height:var(--icon-sm);"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- ────── MAIN GRID — resizable columns ────── -->
+        <div id="editor-grid" class="flex-1 grid min-h-0" style="grid-template-columns: minmax(0,1fr) 5px var(--right-w, 540px);">
+
+          <!-- ============ LEFT: SCRIPT + DOCKED AI ============ -->
+          <main class="min-w-0 flex flex-col min-h-0" style="background:var(--color-bg)">
+
+            <div class="flex-1 overflow-y-auto min-h-0">
+              <article class="max-w-[720px] mx-auto px-14 pt-10 pb-8">
+
+                <!-- ───── Global narration voice (applies to the entire script) ───── -->
+                <div class="narration-voice" id="narration-voice">
+                  <span class="narration-voice-label">Narration</span>
+                  <button class="narration-voice-btn voice-trigger" id="global-voice-trigger" data-voice-trigger="global" title="Change voice for the entire narration">
+                    <span class="voice-avatar-lg">C</span>
+                    <span class="voice-meta">
+                      <span class="voice-name">Camilla</span>
+                      <span class="voice-desc">Warm · British English · 4 scenes</span>
+                    </span>
+                    <i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--color-ink-500);margin-left:var(--space-1);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-sm" title="Preview voice">
+                    <i data-lucide="play" style="width:var(--icon-xs);height:var(--icon-xs);" class="fill-current"></i>
+                    Preview
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Voice settings (speed, pitch, pauses)">
+                    <i data-lucide="sliders-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                </div>
+
+                <!-- ───── Scene 1 ───── -->
+                <section class="mb-12 scene relative" data-scene="1">
+                  <div class="scene-actions">
+                    <button class="btn btn-tertiary btn-icon-sm" title="Play scene"><i data-lucide="play" style="width:var(--icon-xs);height:var(--icon-xs); color:var(--color-fire-500);" class="fill-current"></i></button>
+                    <button class="btn btn-tertiary btn-icon-sm scene-menu-trigger" title="Scene options" data-scene-trigger="1"><i data-lucide="more-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+                  </div>
+                  <div class="flex items-center text-[11px]" style="gap: var(--space-2); margin-bottom: var(--space-2); color:var(--color-ink-400)">
+                    <span class="font-medium tabular-nums" style="color:var(--color-ink-700)">Scene 01</span>
+                    <span class="tabular-nums">10s</span>
+                    <div class="h-px flex-1" style="background:var(--color-ink-200)"></div>
+                  </div>
+                  <h3 class="scene-title text-[15px] font-semibold tracking-tight" style="color:var(--color-ink-900); margin-bottom: var(--space-2);" contenteditable="true" spellcheck="false" data-placeholder="Untitled scene">Introduction to Whatfix</h3>
+                  <div class="script-line" data-time="0:00" data-time-secs="0">
+                    <button class="line-time" title="Jump to 0:00">0:00</button>
+                    <p class="editable-p text-[16px] leading-[1.65]" style="color:var(--color-ink-700)" contenteditable="true" spellcheck="false" data-placeholder="Write the script for this scene…"><span class="term">Whatfix</span> turns any web app into one that explains itself — step-by-step help, right where your team is already working.</p>
+                  </div>
+                </section>
+
+                <!-- Inter-scene add-rail -->
+                <div class="add-scene-rail" data-add-after="1">
+                  <button class="add-scene-rail-btn" title="Add scene after Scene 01"><i data-lucide="plus" style="width:10px;height:10px;"></i> Add scene</button>
+                </div>
+
+                <!-- ───── Scene 2 — SELECTED (background tint only, no side-stripe) ───── -->
+                <section class="mb-12 scene scene-active relative" data-scene="2" style="background: var(--color-fire-50); border-radius: var(--r-sm); padding: var(--space-3); margin: 0 calc(-1 * var(--space-3)) var(--space-10);">
+                  <div class="scene-actions">
+                    <button class="btn btn-tertiary btn-icon-sm" title="Play scene"><i data-lucide="play" style="width:var(--icon-xs);height:var(--icon-xs); color:var(--color-fire-500);" class="fill-current"></i></button>
+                    <button class="btn btn-tertiary btn-icon-sm scene-menu-trigger" title="Scene options" data-scene-trigger="2"><i data-lucide="more-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+                  </div>
+
+                  <div class="flex items-center text-[11px]" style="gap: var(--space-2); margin-bottom: var(--space-2); color:var(--color-ink-400)">
+                    <span class="font-semibold tabular-nums" style="color:var(--color-ink-900)">Scene 02</span>
+                    <span class="tabular-nums">21s</span>
+                    <div class="h-px flex-1" style="background:var(--color-fire-100)"></div>
+                  </div>
+                  <h3 class="scene-title text-[15px] font-semibold tracking-tight" style="color:var(--color-ink-900); margin-bottom: var(--space-2);" contenteditable="true" spellcheck="false" data-placeholder="Untitled scene">Whatfix guidance</h3>
+
+                  <div class="space-y-3 text-[16px] leading-[1.65]" style="color:var(--color-ink-800)">
+                    <div class="script-line" data-time="0:13" data-time-secs="13">
+                      <button class="line-time" title="Jump to 0:13">0:13</button>
+                      <p class="editable-p" contenteditable="true" spellcheck="false" data-placeholder="Write the script for this scene…">A <span class="term">Guidance Flow</span> walks someone through a task — creating a deal in Salesforce, filing an expense, onboarding a new hire.</p>
+                    </div>
+
+                    <div class="script-line" data-time="0:18" data-time-secs="18">
+                      <button class="line-time" title="Jump to 0:18">0:18</button>
+                      <p class="selected-line editable-p" contenteditable="true" spellcheck="false" data-selectable>You build it once by <strong>clicking through the task yourself</strong>, and Whatfix records every step. The result is a <strong>live walkthrough</strong> that anyone on that page can launch.</p>
+                    </div>
+
+                    <div class="script-line" data-time="0:28" data-time-secs="28">
+                      <button class="line-time" title="Jump to 0:28">0:28</button>
+                      <p class="editable-p" contenteditable="true" spellcheck="false">Flows update themselves when the app changes — so your training never goes stale.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="add-scene-rail" data-add-after="2">
+                  <button class="add-scene-rail-btn" title="Add scene after Scene 02"><i data-lucide="plus" style="width:10px;height:10px;"></i> Add scene</button>
+                </div>
+
+                <!-- ───── Scene 3 ───── -->
+                <section class="mb-12 scene relative" data-scene="3">
+                  <div class="scene-actions">
+                    <button class="btn btn-tertiary btn-icon-sm" title="Play scene"><i data-lucide="play" style="width:var(--icon-xs);height:var(--icon-xs); color:var(--color-fire-500);" class="fill-current"></i></button>
+                    <button class="btn btn-tertiary btn-icon-sm scene-menu-trigger" title="Scene options" data-scene-trigger="3"><i data-lucide="more-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+                  </div>
+                  <div class="flex items-center text-[11px]" style="gap: var(--space-2); margin-bottom: var(--space-2); color:var(--color-ink-400)">
+                    <span class="font-medium tabular-nums" style="color:var(--color-ink-700)">Scene 03</span>
+                    <span class="tabular-nums">14s</span>
+                    <span class="overrun" title="Reading time (~17s) exceeds scene duration (14s)"><i data-lucide="triangle-alert" style="width:10px;height:10px;"></i> 3s over</span>
+                    <div class="h-px flex-1" style="background:var(--color-ink-200)"></div>
+                  </div>
+                  <h3 class="scene-title text-[15px] font-semibold tracking-tight" style="color:var(--color-ink-900); margin-bottom: var(--space-2);" contenteditable="true" spellcheck="false" data-placeholder="Untitled scene">Styling in guidance</h3>
+                  <div class="script-line" data-time="0:34" data-time-secs="34">
+                    <button class="line-time" title="Jump to 0:34">0:34</button>
+                    <p class="editable-p text-[16px] leading-[1.65]" style="color:var(--color-ink-700)" contenteditable="true" spellcheck="false" data-placeholder="Write the script for this scene…">Every callout, popup, and tip can be styled to match your brand. Change the highlight colour, font, and corner radius from the <span class="term">Theme panel</span>, then save the look as a <span class="term">brand kit</span> and apply it across every flow.</p>
+                  </div>
+                </section>
+
+                <div class="add-scene-rail" data-add-after="3">
+                  <button class="add-scene-rail-btn" title="Add scene after Scene 03"><i data-lucide="plus" style="width:10px;height:10px;"></i> Add scene</button>
+                </div>
+
+                <!-- ───── Scene 4 ───── -->
+                <section class="mb-12 scene relative" data-scene="4">
+                  <div class="scene-actions">
+                    <button class="btn btn-tertiary btn-icon-sm" title="Play scene"><i data-lucide="play" style="width:var(--icon-xs);height:var(--icon-xs); color:var(--color-fire-500);" class="fill-current"></i></button>
+                    <button class="btn btn-tertiary btn-icon-sm scene-menu-trigger" title="Scene options" data-scene-trigger="4"><i data-lucide="more-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+                  </div>
+                  <div class="flex items-center text-[11px]" style="gap: var(--space-2); margin-bottom: var(--space-2); color:var(--color-ink-400)">
+                    <span class="font-medium tabular-nums" style="color:var(--color-ink-700)">Scene 04</span>
+                    <span class="tabular-nums">12s</span>
+                    <div class="h-px flex-1" style="background:var(--color-ink-200)"></div>
+                  </div>
+                  <h3 class="scene-title text-[15px] font-semibold tracking-tight" style="color:var(--color-ink-900); margin-bottom: var(--space-2);" contenteditable="true" spellcheck="false" data-placeholder="Untitled scene">Setting up Whatfix</h3>
+                  <div class="script-line" data-time="0:48" data-time-secs="48">
+                    <button class="line-time" title="Jump to 0:48">0:48</button>
+                    <p class="editable-p text-[16px] leading-[1.65]" style="color:var(--color-ink-700)" contenteditable="true" spellcheck="false" data-placeholder="Write the script for this scene…">To install, paste the <span class="term">Whatfix snippet</span> into your app's HTML, then invite your team. Anyone with a link can watch flows — admins can build new ones.</p>
+                  </div>
+                </section>
+
+                <!-- End-of-script affordance — a blinking caret that anchors the writing state -->
+                <div class="write-continue" id="write-continue-anchor" tabindex="0" onclick="this.focus()">
+                  Continue writing or add a new scene…
+                </div>
+              </article>
+            </div>
+
+            <!-- ───── Docked AI panel — aligned to article gutter ───── -->
+            <div class="shrink-0 relative" style="background:var(--color-bg)">
+              <div class="absolute -top-8 left-0 right-0 h-8 fade-up-mask pointer-events-none"></div>
+              <div class="px-14 pt-3 pb-5">
+                <div class="max-w-[720px] mx-auto">
+                  <div class="bg-white shadow-md overflow-hidden" id="ai-dock" style="border:1px solid var(--color-ink-200); border-radius: var(--r-md);">
+
+                    <!-- ① Input chat area — unified chip language + bigger input -->
+                    <div style="padding: var(--space-3);">
+
+                      <!-- Context chip — shows the script selection AI is targeting (hidden by default) -->
+                      <div id="ai-context" class="ai-context-chip" style="display:none;">
+                        <span class="quote-mark"><i data-lucide="quote" style="width:12px;height:12px;"></i></span>
+                        <div class="quote-body">
+                          <div id="ai-context-text" class="quote-text"></div>
+                          <div id="ai-context-scope" class="quote-scope"></div>
+                        </div>
+                        <button class="chip-close" id="ai-context-close" title="Clear context"><i data-lucide="x" style="width:12px;height:12px;"></i></button>
+                      </div>
+
+                      <!-- Chip options — single language (rectangular .chip) -->
+                      <div id="ai-chip-row" class="flex items-center overflow-x-auto" style="gap: var(--space-1); padding-bottom: var(--space-2); margin-bottom: var(--space-1); scrollbar-width: none;">
+                        <button class="chip" data-chip="capture">
+                          <i data-lucide="mouse-pointer-click"></i>
+                          Add capture
+                        </button>
+                        <button class="chip" data-chip="callout">
+                          <i data-lucide="message-square-quote"></i>
+                          Callout
+                        </button>
+                        <button class="chip" data-chip="highlight">
+                          <i data-lucide="highlighter"></i>
+                          Highlight
+                        </button>
+                        <button class="chip" data-chip="zoom">
+                          <i data-lucide="zoom-in"></i>
+                          Zoom
+                        </button>
+                        <button class="chip" data-chip="brand">
+                          <i data-lucide="wand-2"></i>
+                          Match brand
+                        </button>
+                        <button class="chip" data-chip="captions">
+                          <i data-lucide="captions"></i>
+                          Captions
+                        </button>
+                        <button class="chip" data-chip="transition">
+                          <i data-lucide="arrow-left-right"></i>
+                          Transition
+                        </button>
+                      </div>
+
+                      <!-- Input row -->
+                      <div class="flex items-center" style="gap: var(--space-3);">
+                        <span class="ai-icon" style="width:32px;height:32px;">
+                          <i data-lucide="sparkles" style="width:var(--icon-md);height:var(--icon-md);"></i>
+                        </span>
+                        <input
+                          id="ai-input"
+                          type="text"
+                          placeholder="Describe an edit for scene 2…"
+                          class="flex-1 bg-transparent text-[14px] outline-none placeholder:text-[var(--color-ink-400)] h-10"
+                          style="color:var(--color-ink-900)"
+                        />
+                        <button class="text-[10px] font-mono shrink-0 px-1.5 py-0.5" style="border:1px solid var(--color-ink-200); border-radius: var(--r-sm); color:var(--color-ink-400)">⌘K</button>
+                        <button class="btn btn-primary-ink btn-icon-md" id="ai-send" title="Send" onclick="window.aiSend()">
+                          <i data-lucide="arrow-up" id="ai-send-icon" style="width:var(--icon-md);height:var(--icon-md);"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Rate-limit indicator (subtle but legible) -->
+                    <div class="rate-limit">
+                      <span style="font-size:10.5px;">12 / 50 today</span>
+                      <div class="rate-limit-bar"><span style="width: 24%;"></span></div>
+                      <span style="font-size:10.5px;">resets 4h</span>
+                    </div>
+
+                    <!-- ② Suggestion accordion — Regenerate now lives in the header -->
+                    <div class="border-t" style="border-color:var(--color-ink-200);">
+
+                      <div class="w-full flex items-center" style="gap: var(--space-2); padding: var(--space-2) var(--space-3);">
+                        <button id="ai-suggestions-toggle" class="flex items-center flex-1 text-left" style="gap: var(--space-2);" aria-expanded="false" aria-controls="ai-suggestions-panel">
+                          <span class="ai-icon">
+                            <i data-lucide="sparkles"></i>
+                          </span>
+                          <span class="font-medium text-[12.5px]" style="color:var(--color-ink-900)">AI suggestions</span>
+                          <span id="ai-suggestion-count" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10.5px] font-semibold tabular-nums" style="background:var(--color-fire-50); color:var(--color-fire-500); border:1px solid var(--color-fire-100); border-radius: var(--r-pill);">7</span>
+                          <i id="ai-suggestions-chevron" data-lucide="chevron-down" class="transition-transform" style="width:var(--icon-sm); height:var(--icon-sm); color:var(--color-ink-500);"></i>
+                        </button>
+                        <button id="ai-regenerate" class="btn btn-secondary btn-sm" title="Regenerate suggestions">
+                          <i data-lucide="refresh-cw" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+                          Regenerate
+                        </button>
+                      </div>
+
+                      <!-- Loading state (default hidden, toggled by JS) -->
+                      <div id="ai-suggestions-loading" class="hidden border-t" style="border-color:var(--color-ink-200); padding: var(--space-3);">
+                        <div class="flex items-center text-[11.5px]" style="gap: var(--space-2); color:var(--color-ink-500); margin-bottom: var(--space-3);">
+                          <span class="ai-icon"><i data-lucide="sparkles"></i></span>
+                          AI is thinking…
+                        </div>
+                        <div class="space-y-2">
+                          <div class="skeleton h-7"></div>
+                          <div class="skeleton h-7" style="width:88%"></div>
+                          <div class="skeleton h-7" style="width:72%"></div>
+                        </div>
+                      </div>
+
+                      <!-- Empty state -->
+                      <div id="ai-suggestions-empty" class="hidden border-t text-center" style="border-color:var(--color-ink-200); padding: var(--space-6) var(--space-3);">
+                        <div class="inline-flex items-center justify-center" style="width:36px;height:36px;border-radius:var(--r-md);background:var(--color-surface-2);color:var(--color-ink-400);margin-bottom:var(--space-2);">
+                          <i data-lucide="sparkles" style="width:var(--icon-md);height:var(--icon-md);"></i>
+                        </div>
+                        <div class="text-[12.5px] font-medium" style="color:var(--color-ink-900); margin-bottom: 2px;">No suggestions yet</div>
+                        <div class="text-[11.5px]" style="color:var(--color-ink-500); margin-bottom: var(--space-3);">Try one of the chips above, or describe an edit below.</div>
+                        <button class="btn btn-secondary btn-sm" onclick="window.demoSuggestionState('loaded')">Generate suggestions</button>
+                      </div>
+
+                      <!-- Error state -->
+                      <div id="ai-suggestions-error" class="hidden border-t" style="border-color:var(--color-ink-200); padding: var(--space-3); background: #FEF2F2;">
+                        <div class="flex items-start" style="gap: var(--space-2);">
+                          <span class="inline-flex items-center justify-center shrink-0" style="width:20px;height:20px;border-radius:var(--r-sm);background:#FEE2E2;color:#B91C1C;">
+                            <i data-lucide="alert-triangle" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+                          </span>
+                          <div class="flex-1 min-w-0">
+                            <div class="text-[12.5px] font-medium" style="color:#7F1D1D;">Couldn't generate suggestions</div>
+                            <div class="text-[11px]" style="color:#991B1B; margin-bottom: var(--space-2);">Network error · request timed out</div>
+                            <button class="btn btn-secondary btn-sm" onclick="window.demoSuggestionState('loaded')">
+                              <i data-lucide="refresh-cw" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+                              Retry
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Suggestions list (loaded state) -->
+                      <ul id="ai-suggestions-panel" class="border-t" style="border-color:var(--color-ink-200);">
+                        <!-- Row template — repeated 7× -->
+                        <li class="border-b sug-row" style="border-color:var(--color-ink-200);" data-suggestion="capture">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon">
+                              <i data-lucide="mouse-pointer-click"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Add capture of someone recording a <span class="font-medium">Guidance Flow</span></span>
+                            <button class="sug-apply" onclick="window.applySuggestion('capture')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li class="border-b" style="border-color:var(--color-ink-200);" data-suggestion="callout">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="message-square-quote"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Insert callout <span class="font-medium">"Click any element to record"</span></span>
+                            <button class="sug-apply" onclick="window.applySuggestion('callout')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li class="border-b" style="border-color:var(--color-ink-200);" data-suggestion="highlight">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="highlighter"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Highlight the <span class="font-medium">Record Step</span> button</span>
+                            <button class="sug-apply" onclick="window.applySuggestion('highlight')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li class="border-b" style="border-color:var(--color-ink-200);" data-suggestion="zoom">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="zoom-in"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Zoom into the flow editor canvas</span>
+                            <button class="sug-apply" onclick="window.applySuggestion('zoom')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li class="border-b" style="border-color:var(--color-ink-200);" data-suggestion="brand">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="wand-2"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Match Whatfix brand voice</span>
+                            <button class="sug-apply" onclick="window.applySuggestion('brand')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li class="border-b" style="border-color:var(--color-ink-200);" data-suggestion="captions">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="captions"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Add captions for clarity</span>
+                            <button class="sug-apply" onclick="window.applySuggestion('captions')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                        <li data-suggestion="transition">
+                          <div class="flex items-center text-left" style="gap: var(--space-3); padding: var(--space-2) var(--space-3);">
+                            <span class="ai-icon" style="background:var(--color-surface-2);">
+                              <i data-lucide="arrow-left-right"></i>
+                            </span>
+                            <span class="flex-1 text-[12.5px]" style="color:var(--color-ink-800);">Add transition between Scene 1 and Scene 2</span>
+                            <button class="sug-apply" onclick="window.applySuggestion('transition')">Apply <i data-lucide="arrow-right" style="width:10px;height:10px;"></i></button>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <!-- ============ COLUMN SPLITTER (drag to resize) ============ -->
+          <div id="col-splitter" class="col-splitter" role="separator" aria-orientation="vertical" aria-label="Resize columns" tabindex="0"></div>
+
+          <!-- ============ RIGHT: PREVIEW + TIMELINE ============ -->
+          <aside class="border-l flex flex-col min-h-0" style="border-color:var(--color-ink-100); background:var(--color-bg)">
+
+            <!-- Video preview -->
+            <div style="padding: var(--space-5);">
+              <div class="rounded-lg overflow-hidden relative aspect-video flex items-center justify-center shadow-md preview-pulse" id="preview-frame" style="background: linear-gradient(135deg, #E8F1FB 0%, #7CAEE8 100%);">
+                <div id="preview-shimmer"></div>
+                <div class="absolute inset-4 rounded bg-white flex flex-col overflow-hidden" style="border:1px solid rgba(31,31,50,0.08); box-shadow: 0 4px 12px -4px rgba(31,31,50,0.10);">
+                  <div class="h-6 border-b flex items-center gap-1.5 px-2.5" style="background:var(--color-surface-2); border-color:var(--color-ink-100)">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:#DC8897"></span>
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:#F1BB8A"></span>
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:#A8B3B8"></span>
+                    <span class="text-[9.5px] ml-2 font-medium" style="color:var(--color-ink-500)">Salesforce · Leads</span>
+                  </div>
+                  <div class="flex-1 p-2.5 flex gap-2.5">
+                    <div class="w-14 rounded space-y-1 p-1.5" style="background:var(--color-surface-2)">
+                      <div class="h-1.5 rounded" style="background:var(--color-ink-100)"></div>
+                      <div class="h-1.5 rounded" style="background:var(--color-ink-100)"></div>
+                      <div class="h-1.5 rounded" style="background:var(--color-ink-200)"></div>
+                      <div class="h-1.5 rounded" style="background:var(--color-ink-100)"></div>
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                      <div class="h-2 rounded w-3/5" style="background:var(--color-ink-100)"></div>
+                      <div class="h-1.5 rounded w-4/5" style="background:var(--color-surface-2)"></div>
+                      <div class="h-1.5 rounded w-3/4" style="background:var(--color-surface-2)"></div>
+                      <div class="flex items-center gap-1 mt-2">
+                        <div class="h-6 px-2.5 rounded text-[9.5px] font-semibold inline-flex items-center gap-1 text-white" style="background:var(--color-fire-400)">+ New</div>
+                        <div class="h-6 w-12 rounded" style="background:var(--color-surface-2); border:1px solid var(--color-ink-100)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- AI status — legible chip, real contrast -->
+                <div class="absolute top-3 left-3 z-10 rounded px-2 py-1 text-[11px] font-medium inline-flex items-center gap-1.5 bg-white shadow-sm" style="color:var(--color-ink-900); border:1px solid var(--color-ink-100)">
+                  <span class="w-3.5 h-3.5 rounded flex items-center justify-center" style="background:var(--color-surface-2); color:var(--color-ink-700)">
+                    <i data-lucide="sparkles" class="w-2.5 h-2.5"></i>
+                  </span>
+                  Highlighting <strong>Record Step</strong> button
+                </div>
+                <!-- Play button — smaller, proportional -->
+                <button class="absolute z-10 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg" style="color:var(--color-fire-400)">
+                  <i data-lucide="play" class="w-4 h-4 fill-current ml-0.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Flex spacer — pushes playback + timeline to the bottom edge -->
+            <div class="flex-1"></div>
+
+            <!-- ────── EDITOR TOOLBAR (left controls · play · view controls) ────── -->
+            <div style="padding: var(--space-3) var(--space-5);">
+              <div class="flex items-center justify-between" style="gap: var(--space-3);">
+
+                <!-- LEFT: visual editing controls -->
+                <div class="flex items-center" style="gap: 2px;">
+                  <button class="btn btn-tertiary btn-icon-sm" id="aspect-trigger" title="Aspect ratio (16:9)">
+                    <i data-lucide="proportions" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Crop">
+                    <i data-lucide="crop" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" id="bg-color-trigger" title="Background colour">
+                    <i data-lucide="palette" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Alignment">
+                    <i data-lucide="align-center" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" id="scene-jump-trigger" title="Jump to scene">
+                    <i data-lucide="list" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+                  </button>
+                </div>
+
+                <!-- CENTER: undo · current · PLAY · total · redo (8px gaps) -->
+                <div class="flex items-center" style="gap: var(--space-2);">
+                  <button class="btn btn-tertiary btn-icon-sm" title="Undo">
+                    <i data-lucide="undo-2" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <span class="text-[12.5px] font-semibold tabular-nums" style="color:var(--color-ink-900)">00:13</span>
+                  <button class="btn btn-primary btn-icon-md" title="Play" style="border-radius: var(--r-pill); width: 36px; height: 36px;">
+                    <i data-lucide="play" class="fill-current" style="width:14px;height:14px;margin-left:2px;"></i>
+                  </button>
+                  <span class="text-[12.5px] font-medium tabular-nums" style="color:var(--color-ink-500)">01:00</span>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Redo">
+                    <i data-lucide="redo-2" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                </div>
+
+                <!-- RIGHT: timeline zoom · volume · fullscreen -->
+                <div class="flex items-center" style="gap: 2px;">
+                  <button class="btn btn-tertiary btn-icon-sm" title="Zoom out timeline">
+                    <i data-lucide="zoom-out" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Zoom in timeline">
+                    <i data-lucide="zoom-in" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <span class="w-px h-4 mx-1" style="background:var(--color-ink-200);"></span>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Volume">
+                    <i data-lucide="volume-2" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                  <button class="btn btn-tertiary btn-icon-sm" title="Fullscreen">
+                    <i data-lucide="maximize" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ────── PROPORTIONAL TIMELINE ────── -->
+            <div style="padding: 0 var(--space-5) var(--space-5);">
+              <div class="relative">
+
+                <!-- Time scale (now ABOVE chips) — labels top, axis line, ticks pointing down at chips -->
+                <div class="relative h-4 mb-1.5">
+                  <!-- 0:00 -->
+                  <span class="absolute top-0 left-0 text-[9px] font-medium tabular-nums" style="color:var(--color-ink-400)">0:00</span>
+                  <div class="absolute bottom-0 left-0 w-px h-1" style="background:var(--color-ink-200)"></div>
+                  <!-- 0:15 -->
+                  <span class="absolute top-0 text-[9px] font-medium tabular-nums -translate-x-1/2" style="left:25%; color:var(--color-ink-400)">0:15</span>
+                  <div class="absolute bottom-0 w-px h-1" style="left:25%; background:var(--color-ink-200)"></div>
+                  <!-- 0:30 -->
+                  <span class="absolute top-0 text-[9px] font-medium tabular-nums -translate-x-1/2" style="left:50%; color:var(--color-ink-400)">0:30</span>
+                  <div class="absolute bottom-0 w-px h-1" style="left:50%; background:var(--color-ink-200)"></div>
+                  <!-- 0:45 -->
+                  <span class="absolute top-0 text-[9px] font-medium tabular-nums -translate-x-1/2" style="left:75%; color:var(--color-ink-400)">0:45</span>
+                  <div class="absolute bottom-0 w-px h-1" style="left:75%; background:var(--color-ink-200)"></div>
+                  <!-- 1:00 -->
+                  <span class="absolute top-0 right-0 text-[9px] font-medium tabular-nums" style="color:var(--color-ink-400)">1:00</span>
+                  <div class="absolute bottom-0 right-0 w-px h-1" style="background:var(--color-ink-200)"></div>
+                  <!-- Axis line at the bottom of the scale, abutting the chip row -->
+                  <div class="absolute inset-x-0 bottom-1 h-px" style="background:var(--color-ink-100)"></div>
+                </div>
+
+                <!-- Scene chips proportional to duration -->
+                <div class="flex h-12 gap-[3px] relative">
+                  <button class="tl-chip basis-[16.7%] rounded px-1.5 flex flex-col justify-between py-1.5 text-left overflow-hidden hover:bg-white" data-scene="1" style="background:var(--color-surface); border:1px solid var(--color-ink-100)">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <i data-lucide="layout-dashboard" class="w-2.5 h-2.5 shrink-0" style="color:var(--color-ink-400)"></i>
+                      <span class="text-[9.5px] font-medium tabular-nums shrink-0" style="color:var(--color-ink-400)">01</span>
+                    </div>
+                    <span class="text-[10px] truncate" style="color:var(--color-ink-700)">Introduction</span>
+                  </button>
+
+                  <button class="tl-chip basis-[35%] rounded px-2 flex flex-col justify-between py-1.5 text-left overflow-hidden relative shadow-sm" data-scene="2" style="background:var(--color-fire-50); border:1.5px solid var(--color-fire-400)">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <i data-lucide="mouse-pointer-click" class="w-2.5 h-2.5 shrink-0" style="color:var(--color-fire-500)"></i>
+                      <span class="text-[9.5px] font-semibold tabular-nums shrink-0" style="color:var(--color-fire-500)">02 · 21s</span>
+                    </div>
+                    <span class="text-[10.5px] font-semibold truncate" style="color:var(--color-ink-900)">Whatfix guidance</span>
+                  </button>
+
+                  <button class="tl-chip basis-[23.3%] rounded px-1.5 flex flex-col justify-between py-1.5 text-left overflow-hidden hover:bg-white" data-scene="3" style="background:var(--color-surface); border:1px solid var(--color-ink-100)">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <i data-lucide="palette" class="w-2.5 h-2.5 shrink-0" style="color:var(--color-ink-400)"></i>
+                      <span class="text-[9.5px] font-medium tabular-nums shrink-0" style="color:var(--color-ink-400)">03 · 14s</span>
+                    </div>
+                    <span class="text-[10px] truncate" style="color:var(--color-ink-700)">Styling</span>
+                  </button>
+
+                  <button class="tl-chip basis-[25%] rounded px-1.5 flex flex-col justify-between py-1.5 text-left overflow-hidden hover:bg-white" data-scene="4" style="background:var(--color-surface); border:1px solid var(--color-ink-100)">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <i data-lucide="sliders-horizontal" class="w-2.5 h-2.5 shrink-0" style="color:var(--color-ink-400)"></i>
+                      <span class="text-[9.5px] font-medium tabular-nums shrink-0" style="color:var(--color-ink-400)">04 · 15s</span>
+                    </div>
+                    <span class="text-[10px] truncate" style="color:var(--color-ink-700)">Setting up</span>
+                  </button>
+                </div>
+
+                <!-- Playhead — spans full timeline (scale + chips) -->
+                <div class="absolute top-0 bottom-[-4px] z-20 pointer-events-none" style="left:21.7%">
+                  <div class="w-[1.5px] h-full" style="background:var(--color-fire-400)"></div>
+                  <div class="absolute -top-[3px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full" style="background:var(--color-fire-400)"></div>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────── Selection-driven inline AI toolbar (global, body-level) ──────────── -->
+    <div id="selection-toolbar"
+         class="fixed z-50 bg-white shadow-lg flex items-center p-0.5"
+         role="toolbar"
+         style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-sm); gap: 2px;">
+      <!-- Promote selection into the dock for a natural-language edit instruction -->
+      <button class="btn btn-tertiary btn-sm" id="selection-ask-ai" style="color:var(--color-fire-500); font-weight:600;" title="Describe how to edit this selection">
+        <i data-lucide="sparkles" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+        Edit with AI
+      </button>
+      <div style="width:1px;height:16px;background:var(--color-ink-200);margin: 0 2px;"></div>
+      <!-- Quick actions — applied inline -->
+      <button class="btn btn-tertiary btn-sm" data-action="rephrase">Rephrase</button>
+      <button class="btn btn-tertiary btn-sm" data-action="shorten">Shorten</button>
+      <button class="btn btn-tertiary btn-sm" data-action="simplify">Simplify</button>
+      <div style="width:1px;height:16px;background:var(--color-ink-200);margin: 0 2px;"></div>
+      <button class="btn btn-tertiary btn-sm" data-action="comment">
+        <i data-lucide="message-square" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+        Comment
+      </button>
+      <button class="btn btn-tertiary btn-icon-sm" data-action="more"><i data-lucide="more-horizontal" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+    </div>
+
+    <!-- ──────────── Toast container ──────────── -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col" style="gap: var(--space-2);"></div>
+
+    <!-- ──────────── Publish confirmation modal ──────────── -->
+    <div id="publish-modal"
+         class="fixed inset-0 z-50 items-center justify-center"
+         style="display:none; background:rgba(31,31,50,0.40); padding: var(--space-6);">
+      <div class="bg-white shadow-lg" role="dialog" aria-labelledby="publish-modal-title" style="width: 440px; max-width: 100%; border-radius: var(--r-lg); padding: var(--space-6);">
+        <div class="flex items-start" style="gap: var(--space-3); margin-bottom: var(--space-4);">
+          <span class="inline-flex items-center justify-center shrink-0" style="width:36px;height:36px;border-radius:var(--r-md);background:var(--color-fire-50);color:var(--color-fire-500);">
+            <i data-lucide="arrow-up-right" style="width:var(--icon-md);height:var(--icon-md);"></i>
+          </span>
+          <div class="flex-1 min-w-0">
+            <h2 id="publish-modal-title" class="text-[16px] font-semibold tracking-tight" style="color:var(--color-ink-900); margin-bottom: 4px;">Publish to 1,247 employees?</h2>
+            <p class="text-[13px] leading-[1.5]" style="color:var(--color-ink-500);">Once published, viewers in <strong>Sales · India</strong> will be notified by email. You can keep editing — they'll see the latest version.</p>
+          </div>
+        </div>
+
+        <div style="background:var(--color-bg); border-radius:var(--r-sm); padding: var(--space-3); margin-bottom: var(--space-5);">
+          <div class="flex items-center justify-between text-[11.5px]" style="color:var(--color-ink-500); margin-bottom: var(--space-1);">
+            <span>Duration</span><span class="tabular-nums" style="color:var(--color-ink-900);font-weight:500;">01:00</span>
+          </div>
+          <div class="flex items-center justify-between text-[11.5px]" style="color:var(--color-ink-500); margin-bottom: var(--space-1);">
+            <span>Scenes</span><span class="tabular-nums" style="color:var(--color-ink-900);font-weight:500;">4</span>
+          </div>
+          <div class="flex items-center justify-between text-[11.5px]" style="color:var(--color-ink-500);">
+            <span>Voice</span><span style="color:var(--color-ink-900);font-weight:500;">Camilla · British English</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end" style="gap: var(--space-2);">
+          <button class="btn btn-tertiary btn-md" data-modal-close>Cancel</button>
+          <button class="btn btn-primary-ink btn-md" data-modal-confirm>
+            Publish to 1,247
+            <i data-lucide="arrow-up-right" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────── Cheat-sheet modal (triggered by ?) ──────────── -->
+    <div id="cheatsheet-modal"
+         class="fixed inset-0 z-50 items-center justify-center"
+         style="display:none; background:rgba(31,31,50,0.40); padding: var(--space-6);">
+      <div class="bg-white shadow-lg" role="dialog" aria-labelledby="cheatsheet-title" style="width: 520px; max-width: 100%; border-radius: var(--r-lg); padding: var(--space-6);">
+        <div class="flex items-start justify-between" style="margin-bottom: var(--space-4);">
+          <div>
+            <h2 id="cheatsheet-title" class="text-[16px] font-semibold tracking-tight" style="color:var(--color-ink-900);">Keyboard shortcuts</h2>
+            <p class="text-[12px]" style="color:var(--color-ink-500); margin-top: 2px;">Press <kbd class="kbd">?</kbd> any time to reopen</p>
+          </div>
+          <button class="btn btn-tertiary btn-icon-sm" data-modal-close><i data-lucide="x" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-6);">
+          <div class="kbd-row"><span>Play / pause</span><kbd class="kbd">Space</kbd></div>
+          <div class="kbd-row"><span>Previous scene</span><kbd class="kbd">←</kbd></div>
+          <div class="kbd-row"><span>Next scene</span><kbd class="kbd">→</kbd></div>
+          <div class="kbd-row"><span>Focus AI input</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">K</kbd></span></div>
+          <div class="kbd-row"><span>Save</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">S</kbd></span></div>
+          <div class="kbd-row"><span>Undo</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">Z</kbd></span></div>
+          <div class="kbd-row"><span>Redo</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">⇧</kbd> <kbd class="kbd">Z</kbd></span></div>
+          <div class="kbd-row"><span>Search script</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">F</kbd></span></div>
+          <div class="kbd-row"><span>Copy selection (or block)</span><span><kbd class="kbd">⌘</kbd> <kbd class="kbd">C</kbd></span></div>
+          <div class="kbd-row"><span>Close panel</span><kbd class="kbd">Esc</kbd></div>
+          <div class="kbd-row"><span>This menu</span><kbd class="kbd">?</kbd></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────── Share modal ──────────── -->
+    <div id="share-modal"
+         class="fixed inset-0 z-50 items-center justify-center"
+         style="display:none; background:rgba(31,31,50,0.40); padding: var(--space-6);">
+      <div class="bg-white shadow-lg" role="dialog" aria-labelledby="share-title" style="width: 480px; max-width: 100%; border-radius: var(--r-lg); padding: var(--space-6);">
+        <div class="flex items-start justify-between" style="margin-bottom: var(--space-4);">
+          <h2 id="share-title" class="text-[16px] font-semibold tracking-tight" style="color:var(--color-ink-900);">Share this video</h2>
+          <button class="btn btn-tertiary btn-icon-sm" data-modal-close><i data-lucide="x" style="width:var(--icon-sm);height:var(--icon-sm);"></i></button>
+        </div>
+
+        <label class="block text-[11px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); margin-bottom: var(--space-2);">Shareable link</label>
+        <div class="flex" style="gap: var(--space-2); margin-bottom: var(--space-4);">
+          <input type="text" value="https://whatfix.com/v/understanding-guidance-a31x" readonly class="flex-1 text-[12.5px] outline-none" style="background:var(--color-bg); border:1px solid var(--color-ink-200); border-radius: var(--r-sm); padding: 8px 10px; color:var(--color-ink-800);"/>
+          <button class="btn btn-secondary btn-md" onclick="navigator.clipboard && navigator.clipboard.writeText('https://whatfix.com/v/understanding-guidance-a31x'); window.showToast({kind:'success', title:'Link copied', duration:2000});">
+            <i data-lucide="copy" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+            Copy
+          </button>
+        </div>
+
+        <label class="block text-[11px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); margin-bottom: var(--space-2);">Anyone with the link can</label>
+        <div class="flex" style="gap: var(--space-1); margin-bottom: var(--space-4);">
+          <button class="btn btn-secondary btn-sm" style="background:var(--color-fire-50); border-color:var(--color-fire-100); color:var(--color-fire-500); font-weight:600;">
+            <i data-lucide="eye" style="width:var(--icon-xs);height:var(--icon-xs);"></i> View
+          </button>
+          <button class="btn btn-tertiary btn-sm"><i data-lucide="message-square" style="width:var(--icon-xs);height:var(--icon-xs);"></i> Comment</button>
+          <button class="btn btn-tertiary btn-sm"><i data-lucide="pencil" style="width:var(--icon-xs);height:var(--icon-xs);"></i> Edit</button>
+        </div>
+
+        <div class="flex items-center" style="gap: var(--space-3); padding: var(--space-3); background:var(--color-bg); border-radius:var(--r-sm); margin-bottom: var(--space-5);">
+          <i data-lucide="clock" style="width:var(--icon-md);height:var(--icon-md); color:var(--color-ink-500);"></i>
+          <div class="flex-1 text-[12px]" style="color:var(--color-ink-700);">Link expires in <strong>30 days</strong></div>
+          <button class="btn btn-tertiary btn-sm">Change</button>
+        </div>
+
+        <div class="flex items-center justify-end" style="gap: var(--space-2);">
+          <button class="btn btn-tertiary btn-md" data-modal-close>Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────── More menu (top bar) ──────────── -->
+    <div id="more-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; right: var(--space-5); top: 52px; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 200px;">
+      <button class="menu-item"><i data-lucide="download" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Export…</button>
+      <button class="menu-item"><i data-lucide="history" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Version history</button>
+      <button class="menu-item"><i data-lucide="copy" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Duplicate video</button>
+      <div style="height:1px;background:var(--color-ink-200); margin: var(--space-1) 0;"></div>
+      <button class="menu-item" style="color:#B91C1C;"><i data-lucide="trash-2" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Move to trash</button>
+    </div>
+
+    <!-- ──────────── Aspect ratio dropdown ──────────── -->
+    <div id="aspect-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 180px;">
+      <button class="menu-item" data-aspect="16:9">
+        <span class="aspect-swatch" style="width:18px;height:10px;background:var(--color-ink-200);border-radius:2px;"></span>
+        <span class="flex-1">Landscape</span>
+        <span class="text-[11px] tabular-nums" style="color:var(--color-ink-500);">16:9</span>
+      </button>
+      <button class="menu-item" data-aspect="9:16">
+        <span class="aspect-swatch" style="width:9px;height:16px;background:var(--color-ink-200);border-radius:2px;"></span>
+        <span class="flex-1">Portrait</span>
+        <span class="text-[11px] tabular-nums" style="color:var(--color-ink-500);">9:16</span>
+      </button>
+      <button class="menu-item" data-aspect="1:1">
+        <span class="aspect-swatch" style="width:14px;height:14px;background:var(--color-ink-200);border-radius:2px;"></span>
+        <span class="flex-1">Square</span>
+        <span class="text-[11px] tabular-nums" style="color:var(--color-ink-500);">1:1</span>
+      </button>
+      <button class="menu-item" data-aspect="4:5">
+        <span class="aspect-swatch" style="width:12px;height:15px;background:var(--color-ink-200);border-radius:2px;"></span>
+        <span class="flex-1">Social</span>
+        <span class="text-[11px] tabular-nums" style="color:var(--color-ink-500);">4:5</span>
+      </button>
+    </div>
+
+    <!-- ──────────── Background colour swatches dropdown ──────────── -->
+    <div id="bg-color-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-3); width: 240px;">
+      <div class="text-[10px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); margin-bottom: var(--space-2);">Background colour</div>
+      <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 6px;">
+        <button class="swatch" data-color="#FFFFFF" style="background:#fff; border-color:var(--color-ink-200);" title="White"></button>
+        <button class="swatch" data-color="#F6F6F9" style="background:#F6F6F9;" title="Inkredible-50"></button>
+        <button class="swatch" data-color="#1F1F32" style="background:#1F1F32;" title="Inkredible-1000"></button>
+        <button class="swatch" data-color="#C74900" style="background:#C74900;" title="Whatfix Fire"></button>
+        <button class="swatch" data-color="#FFF8F5" style="background:#FFF8F5;" title="Fire-50"></button>
+        <button class="swatch" data-color="#99C3F4" style="background:#99C3F4;" title="Sky"></button>
+        <button class="swatch" data-color="#7CAEE8" style="background:#7CAEE8;" title="Blue"></button>
+        <button class="swatch" data-color="#16a34a" style="background:#16a34a;" title="Green"></button>
+        <button class="swatch" data-color="#F1BB8A" style="background:#F1BB8A;" title="Peach"></button>
+        <button class="swatch" data-color="#DC8897" style="background:#DC8897;" title="Rose"></button>
+        <button class="swatch" data-color="#3D3C52" style="background:#3D3C52;" title="Ink-800"></button>
+        <button class="swatch" data-color="gradient" style="background:linear-gradient(135deg,#E8F1FB,#7CAEE8);" title="Gradient"></button>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="width:100%; margin-top: var(--space-2);">
+        <i data-lucide="plus" style="width:var(--icon-xs);height:var(--icon-xs);"></i> Custom colour
+      </button>
+    </div>
+
+    <!-- ──────────── Scene three-dot menu ──────────── -->
+    <div id="scene-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 200px;">
+      <button class="menu-item"><i data-lucide="pencil" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Rename</button>
+      <button class="menu-item"><i data-lucide="copy" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Duplicate</button>
+      <button class="menu-item"><i data-lucide="arrow-up" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Move up</button>
+      <button class="menu-item"><i data-lucide="arrow-down" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Move down</button>
+      <button class="menu-item"><i data-lucide="eye-off" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Hide from output</button>
+      <div style="height:1px;background:var(--color-ink-200); margin: var(--space-1) 0;"></div>
+      <button class="menu-item" style="color:#B91C1C;"><i data-lucide="trash-2" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Delete scene</button>
+    </div>
+
+    <!-- ──────────── Voice picker ──────────── -->
+    <div id="voice-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 240px;">
+      <div class="text-[10px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); padding: var(--space-2) var(--space-3) var(--space-1);">Narration voice</div>
+      <button class="menu-item" data-voice="Camilla">
+        <span class="inline-flex items-center justify-center text-[10px] font-semibold text-white shrink-0" style="width:22px;height:22px;border-radius:var(--r-pill);background:linear-gradient(135deg,#F1BB8A,#C74900);">C</span>
+        <span class="flex-1 text-left"><div class="text-[12.5px] font-medium" style="color:var(--color-ink-900);">Camilla</div><div class="text-[10px]" style="color:var(--color-ink-400);">Warm · British English</div></span>
+        <i data-lucide="check" style="width:var(--icon-sm);height:var(--icon-sm); color:var(--color-fire-500);"></i>
+      </button>
+      <button class="menu-item" data-voice="Akash">
+        <span class="inline-flex items-center justify-center text-[10px] font-semibold text-white shrink-0" style="width:22px;height:22px;border-radius:var(--r-pill);background:linear-gradient(135deg,#7CAEE8,#5A95DB);">A</span>
+        <span class="flex-1 text-left"><div class="text-[12.5px] font-medium" style="color:var(--color-ink-900);">Akash</div><div class="text-[10px]" style="color:var(--color-ink-400);">Confident · Indian English</div></span>
+      </button>
+      <button class="menu-item" data-voice="Maya">
+        <span class="inline-flex items-center justify-center text-[10px] font-semibold text-white shrink-0" style="width:22px;height:22px;border-radius:var(--r-pill);background:linear-gradient(135deg,#DC8897,#B05A77);">M</span>
+        <span class="flex-1 text-left"><div class="text-[12.5px] font-medium" style="color:var(--color-ink-900);">Maya</div><div class="text-[10px]" style="color:var(--color-ink-400);">Friendly · US English</div></span>
+      </button>
+      <div style="height:1px;background:var(--color-ink-200); margin: var(--space-1) 0;"></div>
+      <button class="menu-item"><i data-lucide="plus" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Browse all voices</button>
+    </div>
+
+    <!-- ──────────── Inline AI toolbar overflow menu ──────────── -->
+    <div id="ai-overflow-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 200px;">
+      <button class="menu-item"><i data-lucide="languages" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Translate…</button>
+      <button class="menu-item"><i data-lucide="mic" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Change tone…</button>
+      <button class="menu-item"><i data-lucide="book-open" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Apply glossary</button>
+      <button class="menu-item"><i data-lucide="sticky-note" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Add a note</button>
+    </div>
+
+    <!-- ──────────── Jump-to-scene picker (long-script handling) ──────────── -->
+    <div id="scene-jump" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 240px;">
+      <div class="text-[10px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); padding: var(--space-2) var(--space-3) var(--space-1);">Jump to scene</div>
+      <button class="menu-item" data-jump="1"><span class="font-mono text-[10px]" style="color:var(--color-ink-400);">01</span> Introduction to Whatfix <span class="ml-auto text-[10px] tabular-nums" style="color:var(--color-ink-400);">10s</span></button>
+      <button class="menu-item" data-jump="2"><span class="font-mono text-[10px]" style="color:var(--color-fire-500);font-weight:600;">02</span> Whatfix guidance <span class="ml-auto text-[10px] tabular-nums" style="color:var(--color-fire-500);font-weight:600;">21s</span></button>
+      <button class="menu-item" data-jump="3"><span class="font-mono text-[10px]" style="color:var(--color-ink-400);">03</span> Styling in guidance <span class="ml-auto text-[10px] tabular-nums" style="color:var(--color-ink-400);">14s</span></button>
+      <button class="menu-item" data-jump="4"><span class="font-mono text-[10px]" style="color:var(--color-ink-400);">04</span> Setting up Whatfix <span class="ml-auto text-[10px] tabular-nums" style="color:var(--color-ink-400);">15s</span></button>
+    </div>
+
+    <!-- ──────────── Help menu ──────────── -->
+    <div id="help-menu" class="fixed z-50 bg-white shadow-lg" style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); min-width: 220px;">
+      <button class="menu-item" onclick="window.openModal('cheatsheet-modal')"><i data-lucide="keyboard" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Keyboard shortcuts <span class="ml-auto"><kbd class="kbd">?</kbd></span></button>
+      <button class="menu-item"><i data-lucide="book-open" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Documentation</button>
+      <button class="menu-item"><i data-lucide="message-circle" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Contact support</button>
+      <button class="menu-item"><i data-lucide="megaphone" style="width:var(--icon-sm);height:var(--icon-sm);"></i> Send feedback</button>
+    </div>
+
+    <!-- ──────────── Demo strip — collapsed by default, expand on click ──────────── -->
+    <button id="demo-toggle"
+            class="fixed bottom-4 left-16 z-40 btn btn-secondary btn-sm shadow-md"
+            onclick="document.getElementById('demo-panel').style.display = document.getElementById('demo-panel').style.display === 'flex' ? 'none' : 'flex'; this.style.display='none';"
+            title="Prototype state demo">
+      <i data-lucide="flask-conical" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+      Demo
+    </button>
+    <div id="demo-panel"
+         class="fixed bottom-4 left-16 z-40 items-center bg-white shadow-lg"
+         style="display:none; border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: var(--space-1); gap: 2px;">
+      <span class="text-[10px] font-semibold uppercase tracking-[0.08em]" style="color:var(--color-ink-400); padding: 0 var(--space-2);">Demo</span>
+      <button class="btn btn-tertiary btn-sm" onclick="window.demoSuggestionState('loaded')">Loaded</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.demoSuggestionState('loading')">Loading</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.demoSuggestionState('empty')">Empty</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.demoSuggestionState('error')">Error</button>
+      <span style="width:1px;height:16px; background:var(--color-ink-200); margin: 0 var(--space-1);"></span>
+      <button class="btn btn-tertiary btn-sm" onclick="document.getElementById('publish-btn').click()">Publish</button>
+      <button class="btn btn-tertiary btn-sm" onclick="document.getElementById('share-btn').click()">Share</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.openModal('cheatsheet-modal')">Shortcuts</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.demoShowSelectionToolbar()">Inline AI</button>
+      <button class="btn btn-tertiary btn-sm" onclick="window.showToast({kind:'success', title:'Demo toast', body:'Hello from the toast system'})">Toast</button>
+      <button class="btn btn-tertiary btn-icon-sm" title="Close demo panel" onclick="document.getElementById('demo-panel').style.display='none'; document.getElementById('demo-toggle').style.display='inline-flex';">
+        <i data-lucide="x" style="width:var(--icon-sm);height:var(--icon-sm);"></i>
+      </button>
+    </div>
+
+    <script>
+      lucide.createIcons();
+
+      // ── URL-param state harness (used for PNG export only) ──
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const state = params.get('state');
+        const modal = params.get('modal');
+        const toast = params.get('toast');
+        const selection = params.get('selection');
+        if (state || modal || toast || selection) {
+          // Hide the floating Demo button when exporting
+          const dt = document.getElementById('demo-toggle');
+          if (dt) dt.style.display = 'none';
+        }
+        // Wait for DOMContentLoaded plus a paint tick before mutating
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+          if (state) window.demoSuggestionState && window.demoSuggestionState(state);
+          if (modal) window.openModal && window.openModal(modal);
+          if (toast) window.showToast && window.showToast({ kind: 'success', title: 'Added screen capture of Status dropdown', body: 'Scene 02 · Whatfix guidance', actionLabel: 'Undo', duration: 30000 });
+          if (selection) {
+            // Demo: select the strong "Status" word, then promote into the dock as context
+            const t = document.querySelector('.selected-line strong');
+            if (t) {
+              const range = document.createRange();
+              range.selectNodeContents(t);
+              setAITarget(range);
+              // Pre-fill the chat with an example custom prompt for the screenshot
+              const ai = document.getElementById('ai-input');
+              if (ai) ai.value = 'Make this clearer and add a screen capture showing the dropdown.';
+            }
+          }
+          if (window.lucide) lucide.createIcons();
+        }));
+      })();
+
+      // Script ↔ Timeline hover binding — make the relationship felt
+      const bind = (selector, partnerSelector) => {
+        document.querySelectorAll(selector).forEach((el) => {
+          const id = el.dataset.scene;
+          if (!id) return;
+          const partner = document.querySelector(`${partnerSelector}[data-scene="${id}"]`);
+          if (!partner) return;
+          el.addEventListener('mouseenter', () => {
+            el.classList.add('is-linked-hover');
+            partner.classList.add('is-linked-hover');
+          });
+          el.addEventListener('mouseleave', () => {
+            el.classList.remove('is-linked-hover');
+            partner.classList.remove('is-linked-hover');
+          });
+        });
+      };
+      bind('.scene', '.tl-chip');
+      bind('.tl-chip', '.scene');
+
+      // ── Expandable "AI suggestions" bar
+      (function () {
+        const toggle = document.getElementById('ai-suggestions-toggle');
+        const panel = document.getElementById('ai-suggestions-panel');
+        const chevron = document.getElementById('ai-suggestions-chevron');
+        if (!toggle || !panel || !chevron) return;
+        const setOpen = (open) => {
+          panel.style.display = open ? '' : 'none';
+          chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)';
+          toggle.setAttribute('aria-expanded', String(open));
+        };
+        setOpen(true); // expanded by default so the design is discoverable
+        toggle.addEventListener('click', () => {
+          const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+          setOpen(!isOpen);
+        });
+      })();
+
+      // ──────────────────────────────────────────────────────────
+      //  TWO INTERACTION MODES
+      //   A) User edits the script directly (contenteditable, already wired)
+      //   B) User selects script text → it is promoted into the AI chat
+      //      as a context chip. Quick actions still work in place.
+      // ──────────────────────────────────────────────────────────
+
+      // Global AI selection state
+      const AISel = {
+        text: '',           // raw selected text
+        sceneId: null,      // which scene
+        sceneTitle: '',     // scene name for the chip
+        wrap: null,         // <span class="ai-target"> wrapping the selection
+        active: false,
+      };
+
+      const aiContextEl   = document.getElementById('ai-context');
+      const aiContextText = document.getElementById('ai-context-text');
+      const aiContextScope= document.getElementById('ai-context-scope');
+      const aiContextClose= document.getElementById('ai-context-close');
+      const aiInput       = document.getElementById('ai-input');
+
+      function unwrapTarget () {
+        if (!AISel.wrap) return;
+        const parent = AISel.wrap.parentNode;
+        while (AISel.wrap.firstChild) parent.insertBefore(AISel.wrap.firstChild, AISel.wrap);
+        parent.removeChild(AISel.wrap);
+        AISel.wrap = null;
+      }
+
+      function clearAITarget () {
+        unwrapTarget();
+        AISel.text = ''; AISel.sceneId = null; AISel.sceneTitle = ''; AISel.active = false;
+        if (aiContextEl) aiContextEl.style.display = 'none';
+        if (aiInput) aiInput.placeholder = 'Describe an edit for scene 2…';
+      }
+
+      function setAITarget (range) {
+        if (!range || range.collapsed) return false;
+        const text = range.toString().trim();
+        if (!text) return false;
+        // Clear previous target
+        unwrapTarget();
+
+        const scene = range.startContainer.parentElement?.closest('.scene');
+        const sceneId = scene?.dataset?.scene || null;
+        const sceneTitle = scene?.querySelector('.scene-title')?.textContent?.trim() || '';
+
+        // Wrap the selection with a persistent highlight
+        try {
+          const span = document.createElement('span');
+          span.className = 'ai-target';
+          span.dataset.aiTarget = '';
+          range.surroundContents(span);
+          AISel.wrap = span;
+        } catch (err) {
+          // surroundContents fails on multi-element ranges; capture text only
+          AISel.wrap = null;
+        }
+
+        AISel.text = text;
+        AISel.sceneId = sceneId;
+        AISel.sceneTitle = sceneTitle;
+        AISel.active = true;
+
+        // Update the context chip in the dock
+        if (aiContextEl) aiContextEl.style.display = 'flex';
+        if (aiContextText) aiContextText.textContent = `"${text}"`;
+        if (aiContextScope) aiContextScope.textContent = sceneId
+          ? `Scene ${String(sceneId).padStart(2,'0')} · ${sceneTitle}`
+          : 'In-script selection';
+        if (aiInput) aiInput.placeholder = 'Describe the edit you want for this selection…';
+        return true;
+      }
+
+      aiContextClose?.addEventListener('click', clearAITarget);
+
+      // ── Inline floating toolbar
+      (function () {
+        const toolbar = document.getElementById('selection-toolbar');
+        if (!toolbar) return;
+
+        const hide = () => { toolbar.style.display = 'none'; };
+        const showAt = (rect) => {
+          toolbar.style.display = 'flex';
+          const tbRect = toolbar.getBoundingClientRect();
+          const tbW = tbRect.width || 360;
+          const tbH = tbRect.height || 32;
+          const margin = 8;
+          let left = rect.left + rect.width / 2 - tbW / 2;
+          left = Math.max(margin, Math.min(window.innerWidth - tbW - margin, left));
+          let top = rect.top - tbH - margin;
+          if (top < margin) top = rect.bottom + margin;
+          toolbar.style.left = left + 'px';
+          toolbar.style.top = top + 'px';
+        };
+
+        document.addEventListener('mouseup', (e) => {
+          // Ignore mouseups inside the toolbar / dock / popovers
+          if (e.target.closest('#selection-toolbar, #ai-dock, [data-popover], #ai-context')) return;
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed) { hide(); return; }
+          const anchorEl = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+          const inScript = anchorEl && anchorEl.closest('article');
+          if (!inScript) { hide(); return; }
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) { hide(); return; }
+          showAt(rect);
+        });
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { hide(); clearAITarget(); } });
+
+        // Quick actions — these would apply inline AI rewrites
+        toolbar.querySelectorAll('[data-action]').forEach(b => {
+          b.addEventListener('click', () => {
+            const action = b.dataset.action;
+            const map = { rephrase: 'Rephrased', shorten: 'Shortened', simplify: 'Simplified', comment: 'Comment added', more: 'More actions' };
+            window.showToast({ kind: 'success', title: map[action] || 'Applied', body: `On "${AISel.text || window.getSelection().toString().slice(0, 60)}"`, duration: 2200 });
+            hide();
+          });
+        });
+
+        // Ask AI — promote selection into the dock chat
+        document.getElementById('selection-ask-ai')?.addEventListener('click', () => {
+          const sel = window.getSelection();
+          if (sel && !sel.isCollapsed) {
+            const range = sel.getRangeAt(0).cloneRange();
+            setAITarget(range);
+            sel.removeAllRanges();
+          }
+          hide();
+          aiInput?.focus();
+        });
+
+        // Manual trigger used by the Demo strip — picks the selected-line strong word
+        window.demoShowSelectionToolbar = () => {
+          const target = document.querySelector('.selected-line strong');
+          if (!target) return;
+          const range = document.createRange();
+          range.selectNodeContents(target);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          showAt(range.getBoundingClientRect());
+        };
+      })();
+
+      // ── Chip presets respect the active selection
+      document.querySelectorAll('#ai-chip-row .chip').forEach(c => {
+        c.addEventListener('click', () => {
+          const label = c.textContent.trim();
+          if (AISel.active) {
+            window.showToast({
+              kind: 'success',
+              title: `${label} on the selected text`,
+              body: AISel.sceneTitle ? `Scene ${String(AISel.sceneId).padStart(2,'0')} · ${AISel.sceneTitle}` : '',
+              duration: 2400,
+            });
+          } else {
+            window.showToast({ kind: 'info', title: label, body: 'Applied to Scene 02 · Whatfix guidance', duration: 1800 });
+          }
+        });
+      });
+
+      // ── Save status cycle (Saved → Saving → Saved)
+      (function () {
+        const label = document.getElementById('save-status-label');
+        const dot = document.querySelector('#save-status .status-dot');
+        if (!label || !dot) return;
+        let t = 0;
+        const set = (state, text) => {
+          dot.classList.remove('saved', 'saving', 'failed');
+          dot.classList.add(state);
+          label.textContent = text;
+        };
+        setInterval(() => {
+          t = (t + 1) % 6;
+          if (t === 0) set('saving', 'Saving…');
+          else if (t === 1) set('saved', 'Saved just now');
+          else if (t === 4) set('saved', 'Saved 12s ago');
+        }, 4000);
+      })();
+
+      // ── Suggestion counter formatter (edge cases: 0, 99+)
+      window.setSuggestionCount = function (n) {
+        const count = document.getElementById('ai-suggestion-count');
+        if (!count) return;
+        if (n <= 0) {
+          count.textContent = '0';
+          count.style.background = 'var(--color-surface-2)';
+          count.style.color = 'var(--color-ink-400)';
+          count.style.borderColor = 'var(--color-ink-200)';
+        } else if (n >= 99) {
+          count.textContent = '99+';
+          count.style.background = 'var(--color-fire-50)';
+          count.style.color = 'var(--color-fire-500)';
+          count.style.borderColor = 'var(--color-fire-100)';
+        } else {
+          count.textContent = String(n);
+          count.style.background = 'var(--color-fire-50)';
+          count.style.color = 'var(--color-fire-500)';
+          count.style.borderColor = 'var(--color-fire-100)';
+        }
+      };
+
+      // ── Suggestion state machine (loaded / loading / empty / error)
+      window.demoSuggestionState = function (state) {
+        const list    = document.getElementById('ai-suggestions-panel');
+        const load    = document.getElementById('ai-suggestions-loading');
+        const empty   = document.getElementById('ai-suggestions-empty');
+        const error   = document.getElementById('ai-suggestions-error');
+        const shimmer = document.getElementById('preview-shimmer');
+        [list, load, empty, error].forEach(el => el && (el.classList.add('hidden'), el.style.display = 'none'));
+        if (state === 'loading') {
+          load.classList.remove('hidden'); load.style.display = '';
+          if (shimmer) shimmer.classList.add('active');
+        } else if (state === 'empty') {
+          empty.classList.remove('hidden'); empty.style.display = '';
+          window.setSuggestionCount(0);
+          if (shimmer) shimmer.classList.remove('active');
+        } else if (state === 'error') {
+          error.classList.remove('hidden'); error.style.display = '';
+          if (shimmer) shimmer.classList.remove('active');
+        } else {
+          list.classList.remove('hidden'); list.style.display = '';
+          window.setSuggestionCount(7);
+          if (shimmer) shimmer.classList.remove('active');
+        }
+        // expand on state change so the user sees the new state
+        const toggle = document.getElementById('ai-suggestions-toggle');
+        if (toggle && toggle.getAttribute('aria-expanded') !== 'true') toggle.click();
+      };
+
+      // ── Toast system
+      window.showToast = function (opts) {
+        const c = document.getElementById('toast-container');
+        if (!c) return;
+        const { kind = 'success', title = 'Done', body = '', actionLabel, onAction } = opts;
+        const wrap = document.createElement('div');
+        wrap.className = 'bg-white shadow-lg toast-in';
+        wrap.style.cssText = `border:1px solid var(--color-ink-200); border-radius: var(--r-md); padding: ${getComputedStyle(document.documentElement).getPropertyValue('--space-3')}; min-width: 280px; max-width: 360px; display:flex; gap: var(--space-2); align-items: flex-start;`;
+        const palette = {
+          success: { bg: '#ECFDF5', fg: '#065F46', dot: '#16a34a', icon: 'check' },
+          error:   { bg: '#FEF2F2', fg: '#7F1D1D', dot: '#dc2626', icon: 'alert-triangle' },
+          info:    { bg: 'var(--color-fire-50)', fg: 'var(--color-fire-500)', dot: 'var(--color-fire-400)', icon: 'sparkles' },
+        };
+        const p = palette[kind] || palette.info;
+        wrap.innerHTML = `
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:var(--r-sm);background:${p.bg};color:${p.fg};flex-shrink:0;">
+            <i data-lucide="${p.icon}" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+          </span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12.5px;font-weight:500;color:var(--color-ink-900);">${title}</div>
+            ${body ? `<div style="font-size:11.5px;color:var(--color-ink-500);margin-top:2px;">${body}</div>` : ''}
+            ${actionLabel ? `<button class="btn btn-tertiary btn-sm" style="margin-top: var(--space-2); color:var(--color-fire-500); padding-left:0;" data-toast-action>${actionLabel}</button>` : ''}
+          </div>
+          <button class="btn btn-tertiary btn-icon-sm" data-toast-close style="margin: -4px;">
+            <i data-lucide="x" style="width:var(--icon-xs);height:var(--icon-xs);"></i>
+          </button>
+        `;
+        c.appendChild(wrap);
+        if (window.lucide) lucide.createIcons();
+        const dismiss = () => wrap.remove();
+        wrap.querySelector('[data-toast-close]').addEventListener('click', dismiss);
+        if (actionLabel) wrap.querySelector('[data-toast-action]').addEventListener('click', () => { onAction && onAction(); dismiss(); });
+        setTimeout(dismiss, opts.duration || 5000);
+      };
+
+      // ── Apply with undo
+      window.applySuggestion = function (id) {
+        // remove the row from the list to simulate "applied"
+        const row = document.querySelector(`#ai-suggestions-panel [data-suggestion="${id}"]`);
+        let undid = false;
+        const parent = row?.parentElement;
+        const sibling = row?.nextSibling;
+        if (row) row.remove();
+        // decrement counter (uses edge-case formatter)
+        const count = document.getElementById('ai-suggestion-count');
+        if (count) {
+          const current = parseInt(count.textContent.replace('+', ''), 10) || 0;
+          window.setSuggestionCount(Math.max(0, current - 1));
+        }
+        const map = {
+          capture: 'Added screen capture of Status dropdown',
+          callout: 'Inserted "Required field" callout',
+          highlight: 'Highlighted New button',
+          zoom: 'Zoomed into form area',
+          brand: 'Matched Whatfix brand voice',
+          captions: 'Added captions',
+          transition: 'Added transition',
+        };
+        window.showToast({
+          kind: 'success',
+          title: map[id] || 'Applied',
+          body: 'Scene 02 · Whatfix guidance',
+          actionLabel: 'Undo',
+          onAction: () => {
+            if (undid) return; undid = true;
+            if (parent && row) parent.insertBefore(row, sibling || null);
+            if (count) {
+              const cur = parseInt(count.textContent.replace('+', ''), 10) || 0;
+              window.setSuggestionCount(cur + 1);
+            }
+            window.showToast({ kind: 'info', title: 'Restored', duration: 2500 });
+          },
+        });
+      };
+
+      // ── Regenerate button — demo loading → loaded
+      (function () {
+        const btn = document.getElementById('ai-regenerate');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          window.demoSuggestionState('loading');
+          setTimeout(() => {
+            window.demoSuggestionState('loaded');
+            window.showToast({ kind: 'info', title: 'Regenerated 7 suggestions', duration: 2500 });
+          }, 1400);
+        });
+      })();
+
+      // ── Modal helpers
+      window.openModal = function (id) {
+        const m = document.getElementById(id);
+        if (m) { m.style.display = 'flex'; }
+      };
+      window.closeModal = function (id) {
+        const m = document.getElementById(id);
+        if (m) { m.style.display = 'none'; }
+      };
+
+      // ── Wire all modals (close on backdrop, [data-modal-close], Esc)
+      document.querySelectorAll('[role="dialog"]').forEach(dlg => {
+        const wrap = dlg.parentElement;
+        wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.style.display = 'none'; });
+        wrap.querySelectorAll('[data-modal-close]').forEach(b => b.addEventListener('click', () => wrap.style.display = 'none'));
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.fixed.inset-0').forEach(m => { if (m.style.display === 'flex') m.style.display = 'none'; });
+          document.querySelectorAll('[data-popover]').forEach(p => p.style.display = 'none');
+        }
+      });
+
+      // ── Publish modal
+      document.getElementById('publish-btn')?.addEventListener('click', () => window.openModal('publish-modal'));
+      document.querySelectorAll('#publish-modal [data-modal-confirm]').forEach(b => b.addEventListener('click', () => {
+        window.closeModal('publish-modal');
+        window.showToast({ kind: 'success', title: 'Published to 1,247 viewers', body: 'Viewers will be notified within 5 minutes.', duration: 4000 });
+      }));
+
+      // ── Share modal
+      document.getElementById('share-btn')?.addEventListener('click', () => window.openModal('share-modal'));
+
+      // ── Help button + Help menu
+      const helpBtn = document.getElementById('help-btn');
+      const helpMenu = document.getElementById('help-menu');
+      if (helpBtn && helpMenu) {
+        helpMenu.setAttribute('data-popover', '');
+        helpBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const r = helpBtn.getBoundingClientRect();
+          helpMenu.style.top = (r.bottom + 6) + 'px';
+          helpMenu.style.left = (r.right - 220) + 'px';
+          helpMenu.style.display = helpMenu.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+
+      // ── More menu (top bar)
+      const moreBtn = document.getElementById('more-menu-btn');
+      const moreMenu = document.getElementById('more-menu');
+      if (moreBtn && moreMenu) {
+        moreMenu.setAttribute('data-popover', '');
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moreMenu.style.display = moreMenu.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+
+      // ── Generic popover positioner (anchor below the trigger)
+      const positionPopover = (trigger, menu, alignRight = false) => {
+        const r = trigger.getBoundingClientRect();
+        menu.style.display = 'block';
+        const mw = menu.offsetWidth;
+        menu.style.top = (r.bottom + 6) + 'px';
+        menu.style.left = (alignRight ? r.right - mw : r.left) + 'px';
+      };
+      const togglePopover = (trigger, menu, alignRight = false) => {
+        if (menu.style.display === 'block') { menu.style.display = 'none'; }
+        else { positionPopover(trigger, menu, alignRight); }
+      };
+
+      // ── Aspect ratio menu
+      const aspectTrigger = document.getElementById('aspect-trigger');
+      const aspectMenu = document.getElementById('aspect-menu');
+      if (aspectTrigger && aspectMenu) {
+        aspectMenu.setAttribute('data-popover', '');
+        aspectTrigger.addEventListener('click', (e) => { e.stopPropagation(); togglePopover(aspectTrigger, aspectMenu); });
+        aspectMenu.querySelectorAll('[data-aspect]').forEach(b => b.addEventListener('click', () => {
+          aspectMenu.style.display = 'none';
+          window.showToast({ kind: 'info', title: `Aspect ratio: ${b.dataset.aspect}`, duration: 2000 });
+        }));
+      }
+
+      // ── Background colour menu
+      const bgTrigger = document.getElementById('bg-color-trigger');
+      const bgMenu = document.getElementById('bg-color-menu');
+      if (bgTrigger && bgMenu) {
+        bgMenu.setAttribute('data-popover', '');
+        bgTrigger.addEventListener('click', (e) => { e.stopPropagation(); togglePopover(bgTrigger, bgMenu); });
+        bgMenu.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+          bgMenu.style.display = 'none';
+          const c = s.dataset.color;
+          const frame = document.getElementById('preview-frame');
+          if (frame) frame.style.background = c === 'gradient' ? 'linear-gradient(135deg,#E8F1FB,#7CAEE8)' : c;
+          window.showToast({ kind: 'info', title: 'Background updated', duration: 1800 });
+        }));
+      }
+
+      // ── Scene three-dot menu (multiple triggers)
+      const sceneMenu = document.getElementById('scene-menu');
+      if (sceneMenu) {
+        sceneMenu.setAttribute('data-popover', '');
+        document.querySelectorAll('.scene-menu-trigger').forEach(t => {
+          t.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePopover(t, sceneMenu, true);
+          });
+        });
+      }
+
+      // ── Voice picker (per scene)
+      const voiceMenu = document.getElementById('voice-menu');
+      if (voiceMenu) {
+        voiceMenu.setAttribute('data-popover', '');
+        document.querySelectorAll('.voice-trigger').forEach(t => {
+          t.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePopover(t, voiceMenu, true);
+          });
+        });
+        voiceMenu.querySelectorAll('[data-voice]').forEach(b => b.addEventListener('click', () => {
+          voiceMenu.style.display = 'none';
+          const name = b.dataset.voice;
+          // Update the global voice strip in place
+          const strip = document.getElementById('global-voice-trigger');
+          if (strip) {
+            const avatar = strip.querySelector('.voice-avatar-lg');
+            const nameEl = strip.querySelector('.voice-name');
+            const desc = strip.querySelector('.voice-desc');
+            const palette = {
+              'Camilla': { initial: 'C', grad: 'linear-gradient(135deg,#F1BB8A,#C74900)', desc: 'Warm · British English · 4 scenes' },
+              'Akash':   { initial: 'A', grad: 'linear-gradient(135deg,#7CAEE8,#5A95DB)', desc: 'Confident · Indian English · 4 scenes' },
+              'Maya':    { initial: 'M', grad: 'linear-gradient(135deg,#DC8897,#B05A77)', desc: 'Friendly · US English · 4 scenes' },
+            };
+            const p = palette[name];
+            if (p) {
+              if (avatar) { avatar.textContent = p.initial; avatar.style.background = p.grad; }
+              if (nameEl) nameEl.textContent = name;
+              if (desc) desc.textContent = p.desc;
+            }
+          }
+          window.showToast({
+            kind: 'success',
+            title: `Narration voice set to ${name}`,
+            body: 'Applied to all 4 scenes',
+            duration: 2400,
+          });
+        }));
+      }
+
+      // ── Jump-to-scene menu
+      const sceneJumpTrigger = document.getElementById('scene-jump-trigger');
+      const sceneJump = document.getElementById('scene-jump');
+      if (sceneJumpTrigger && sceneJump) {
+        sceneJump.setAttribute('data-popover', '');
+        sceneJumpTrigger.addEventListener('click', (e) => { e.stopPropagation(); togglePopover(sceneJumpTrigger, sceneJump); });
+        sceneJump.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => {
+          sceneJump.style.display = 'none';
+          const id = b.dataset.jump;
+          const el = document.querySelector(`.scene[data-scene="${id}"]`);
+          el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          window.showToast({ kind: 'info', title: `Jumped to Scene ${String(id).padStart(2,'0')}`, duration: 1600 });
+        }));
+      }
+
+      // ── Hide all popovers on outside click
+      document.addEventListener('click', () => {
+        document.querySelectorAll('[data-popover]').forEach(p => p.style.display = 'none');
+      });
+      // Prevent popover clicks from closing themselves
+      document.querySelectorAll('[data-popover]').forEach(p => p.addEventListener('click', (e) => e.stopPropagation()));
+
+      // ── Script editing surface
+      // Titles and paragraphs are now always contenteditable (cursor: text on hover,
+      // soft bg + Fire-100 ring on focus). Enter on titles commits without adding a newline.
+      document.querySelectorAll('.editable-title, .scene-title[contenteditable]').forEach(el => {
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+          if (e.key === 'Escape') { e.preventDefault(); el.blur(); }
+        });
+      });
+
+      // Legacy compat — kept so any external callers still work
+      window.editTitle = () => document.getElementById('video-title')?.focus();
+
+      // ── Per-paragraph timestamps: click to scrub
+      document.querySelectorAll('.line-time').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const line = btn.closest('.script-line');
+          const time = line?.dataset?.time || '0:00';
+          const secs = parseInt(line?.dataset?.timeSecs || '0', 10);
+          window.showToast({
+            kind: 'info',
+            title: `Playhead at ${time}`,
+            body: `Scrubbed ${secs}s into the video`,
+            duration: 1400,
+          });
+        });
+      });
+
+      // ── Live caret-time chip — follows the cursor in any script-line while typing
+      (function () {
+        const chip = document.getElementById('caret-time-chip');
+        if (!chip) return;
+        const show = (line) => {
+          const t = line?.dataset?.time;
+          if (!t) { chip.style.display = 'none'; return; }
+          chip.textContent = t;
+          // Position above the current caret location
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount) { chip.style.display = 'none'; return; }
+          const range = sel.getRangeAt(0).cloneRange();
+          range.collapse(true);
+          let rect = range.getBoundingClientRect();
+          // Empty paragraphs return 0,0 — fall back to paragraph rect
+          if (rect.width === 0 && rect.height === 0) {
+            rect = line.getBoundingClientRect();
+          }
+          chip.style.display = 'inline-flex';
+          chip.style.left = (rect.left - 12) + 'px';
+          chip.style.top = (rect.top - 26) + 'px';
+        };
+        const hide = () => { chip.style.display = 'none'; };
+        document.querySelectorAll('.script-line .editable-p').forEach(p => {
+          p.addEventListener('focus', () => show(p.closest('.script-line')));
+          p.addEventListener('blur', hide);
+          p.addEventListener('keyup', () => show(p.closest('.script-line')));
+          p.addEventListener('click', () => show(p.closest('.script-line')));
+        });
+      })();
+
+      // ── "+ Add scene" rails between scenes
+      document.querySelectorAll('.add-scene-rail-btn').forEach(b => {
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.showToast({ kind: 'info', title: 'Add scene', body: 'A new scene would appear here.', duration: 1800 });
+        });
+      });
+
+      // ── End-of-script continue-writing anchor
+      const writeContinue = document.getElementById('write-continue-anchor');
+      if (writeContinue) {
+        writeContinue.addEventListener('click', () => {
+          // Place the cursor in the last paragraph
+          const last = document.querySelectorAll('.editable-p');
+          const target = last[last.length - 1];
+          if (!target) return;
+          target.focus();
+          const range = document.createRange();
+          range.selectNodeContents(target);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+      }
+
+      // ── AI send → loading → loaded; Cancel-in-flight (Stop button)
+      // Respects the active selection context (AISel) for the toast body.
+      window.aiSend = function () {
+        const sendBtn = document.getElementById('ai-send');
+        const sendIcon = document.getElementById('ai-send-icon');
+        const input = document.getElementById('ai-input');
+        if (!sendBtn || !sendIcon) return;
+        if (sendBtn.dataset.state === 'thinking') {
+          // STOP
+          sendBtn.dataset.state = '';
+          sendIcon.setAttribute('data-lucide', 'arrow-up');
+          sendBtn.classList.remove('btn-secondary');
+          sendBtn.classList.add('btn-primary-ink');
+          sendBtn.title = 'Send';
+          window.demoSuggestionState('loaded');
+          window.showToast({ kind: 'info', title: 'Generation cancelled', duration: 1500 });
+        } else {
+          // SEND → thinking
+          sendBtn.dataset.state = 'thinking';
+          sendIcon.setAttribute('data-lucide', 'square');
+          sendBtn.classList.remove('btn-primary-ink');
+          sendBtn.classList.add('btn-secondary');
+          sendBtn.title = 'Stop generating';
+          window.demoSuggestionState('loading');
+          const prompt = (input?.value || '').trim();
+          setTimeout(() => {
+            if (sendBtn.dataset.state !== 'thinking') return;
+            sendBtn.dataset.state = '';
+            sendIcon.setAttribute('data-lucide', 'arrow-up');
+            sendBtn.classList.remove('btn-secondary');
+            sendBtn.classList.add('btn-primary-ink');
+            sendBtn.title = 'Send';
+            window.demoSuggestionState('loaded');
+            if (AISel.active) {
+              window.showToast({
+                kind: 'success',
+                title: 'Edits ready for your selection',
+                body: AISel.sceneTitle ? `Scene ${String(AISel.sceneId).padStart(2,'0')} · ${AISel.sceneTitle}` : '',
+                duration: 2400,
+              });
+            } else {
+              window.showToast({ kind: 'info', title: 'Generated 7 edit options', duration: 2000 });
+            }
+            if (input) input.value = '';
+          }, 1800);
+        }
+        if (window.lucide) lucide.createIcons();
+      };
+
+      // ── Timeline interactions
+      (function () {
+        const timelineRoot = document.querySelector('.tl-chip')?.closest('.relative');
+        if (!timelineRoot) return;
+        const tooltip = document.getElementById('playhead-tooltip');
+        const dot = timelineRoot.querySelector('[style*="background:var(--color-fire-400)"]')?.parentElement;
+        const scaleRow = timelineRoot.querySelector('.relative.h-4, .h-4.mb-1\\.5, .h-4');
+
+        // Click on time scale → move playhead (simulated by toast)
+        if (scaleRow) {
+          scaleRow.style.cursor = 'pointer';
+          scaleRow.addEventListener('click', (e) => {
+            const rect = scaleRow.getBoundingClientRect();
+            const pct = ((e.clientX - rect.left) / rect.width) * 100;
+            const secs = Math.round((pct / 100) * 60);
+            const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+            const ss = String(secs % 60).padStart(2, '0');
+            window.showToast({ kind: 'info', title: `Scrubbed to ${mm}:${ss}`, duration: 1200 });
+          });
+        }
+
+        // Click timeline chip → jump
+        document.querySelectorAll('.tl-chip').forEach(c => {
+          c.addEventListener('click', () => {
+            const id = c.dataset.scene;
+            const el = document.querySelector(`.scene[data-scene="${id}"]`);
+            el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        });
+
+        // Playhead tooltip on hover near playhead area
+        const chipRow = timelineRoot.querySelector('.flex.h-12');
+        if (chipRow && tooltip) {
+          chipRow.addEventListener('mousemove', (e) => {
+            const rect = chipRow.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+            const secs = Math.round((pct / 100) * 60);
+            const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+            const ss = String(secs % 60).padStart(2, '0');
+            tooltip.textContent = `${mm}:${ss}`;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX - 18) + 'px';
+            tooltip.style.top = (rect.top - 28) + 'px';
+          });
+          chipRow.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+        }
+      })();
+
+      // ── Copy support
+      // Native ⌘C / ⌃C copy works on any text selection (user-select: text is enabled).
+      // We add: (1) a 'copy' event toast confirming what was copied,
+      //         (2) a ⌘C fallback when there's no selection — copies the focused block.
+      const showCopyToast = (text) => {
+        if (!text) return;
+        const trimmed = text.trim();
+        if (!trimmed) return;
+        window.showToast({
+          kind: 'success',
+          title: 'Copied to clipboard',
+          body: trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
+          duration: 1800,
+        });
+      };
+      document.addEventListener('copy', (e) => {
+        // Browser already handled the copy — show feedback
+        const sel = window.getSelection()?.toString();
+        if (sel) showCopyToast(sel);
+      });
+      document.addEventListener('keydown', async (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
+          const sel = window.getSelection();
+          if (sel && !sel.isCollapsed && sel.toString().trim()) return; // native copy handles it
+          // No selection — copy the focused block, or the active scene
+          const focused = document.activeElement;
+          const block = focused?.closest?.('.editable-p, .scene-title, .editable-title, [data-copyable]')
+                     || document.querySelector('.scene-active');
+          if (!block) return;
+          e.preventDefault();
+          const text = block.innerText?.trim() || block.textContent?.trim() || '';
+          if (!text) return;
+          try {
+            await navigator.clipboard.writeText(text);
+            showCopyToast(text);
+          } catch (err) {
+            // Fallback: legacy execCommand
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            showCopyToast(text);
+          }
+        }
+      });
+
+      // ── Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Skip when typing in inputs / contenteditable
+        const tgt = e.target;
+        const inField = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable);
+
+        // ? — cheat-sheet (works anywhere)
+        if (!inField && e.key === '?' ) { e.preventDefault(); window.openModal('cheatsheet-modal'); return; }
+
+        // ⌘K — focus AI input
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          document.getElementById('ai-input')?.focus();
+          return;
+        }
+        // ⌘S — save (toast)
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          window.showToast({ kind: 'success', title: 'Saved', duration: 1500 });
+          return;
+        }
+        // ⌘Z / ⌘⇧Z — undo / redo
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          window.showToast({ kind: 'info', title: e.shiftKey ? 'Redo' : 'Undo', duration: 1000 });
+          return;
+        }
+        // ⌘F — search (placeholder)
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          window.showToast({ kind: 'info', title: 'Search (not yet implemented)', duration: 1500 });
+          return;
+        }
+
+        if (inField) return;
+
+        // Space — play/pause
+        if (e.key === ' ') {
+          e.preventDefault();
+          window.showToast({ kind: 'info', title: '▶ Play', duration: 800 });
+        }
+        // ← → — scene nav
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          window.showToast({ kind: 'info', title: e.key === 'ArrowLeft' ? '◂ Previous scene' : 'Next scene ▸', duration: 800 });
+        }
+      });
+
+      // Resizable splitter: drag to set the right column width
+      (function () {
+        const grid = document.getElementById('editor-grid');
+        const handle = document.getElementById('col-splitter');
+        const MIN = 380;   // right column min
+        const MAX = 820;   // right column max
+        const STORAGE_KEY = 'wf-editor-right-w';
+
+        // Restore last width if present
+        const saved = parseInt(localStorage.getItem(STORAGE_KEY) || '', 10);
+        if (saved && saved >= MIN && saved <= MAX) {
+          grid.style.setProperty('--right-w', saved + 'px');
+        }
+
+        const setWidth = (px) => {
+          const clamped = Math.min(Math.max(px, MIN), MAX);
+          grid.style.setProperty('--right-w', clamped + 'px');
+          return clamped;
+        };
+
+        const onMove = (e) => {
+          const rect = grid.getBoundingClientRect();
+          // splitter takes 5px; subtract half so the handle centers under the cursor
+          const next = rect.right - e.clientX - 2.5;
+          setWidth(next);
+        };
+
+        const onUp = () => {
+          handle.classList.remove('is-dragging');
+          document.body.classList.remove('is-resizing');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          const current = parseInt(getComputedStyle(grid).getPropertyValue('--right-w'), 10);
+          if (current) localStorage.setItem(STORAGE_KEY, current);
+        };
+
+        handle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          handle.classList.add('is-dragging');
+          document.body.classList.add('is-resizing');
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+
+        // Double-click resets to default 540
+        handle.addEventListener('dblclick', () => {
+          setWidth(540);
+          localStorage.setItem(STORAGE_KEY, 540);
+        });
+
+        // Keyboard nudges for accessibility (← → with Shift = 40px)
+        handle.addEventListener('keydown', (e) => {
+          const rect = grid.getBoundingClientRect();
+          const current = parseInt(getComputedStyle(grid).getPropertyValue('--right-w'), 10) || 540;
+          const step = e.shiftKey ? 40 : 8;
+          if (e.key === 'ArrowLeft') { setWidth(current + step); e.preventDefault(); }
+          if (e.key === 'ArrowRight') { setWidth(current - step); e.preventDefault(); }
+        });
+      })();
+    </script>
+  </body>
+</html>

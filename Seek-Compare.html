@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Whatfix Seek — Two directions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      :root {
+        --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+        --bg:        #F7F7FB;
+        --surface:   #FFFFFF;
+
+        --ink-900:   #1F1F32;
+        --ink-800:   #3D3C52;
+        --ink-700:   #525066;
+        --ink-600:   #6B697B;
+        --ink-500:   #8C899F;
+        --ink-400:   #B4B2C1;
+        --ink-300:   #DFDDE7;
+        --ink-200:   #ECECF3;
+        --ink-100:   #F2F2F8;
+        --divider:   #E5E5EE;
+
+        --fire-400:  #EF5F00;
+        --fire-300:  #F58923;
+        --fire-50:   #FFF6EF;
+        --info-400:  #0975D7;
+        --info-500:  #0D59AB;
+        --info-100:  #D7EFFE;
+        --info-50:   #F0F9FF;
+        --success-500: #1E9B6A;
+        --success-50: #E8F6EE;
+
+        --side-bg:   #1F1F32;
+        --side-bg-2: #2B2B40;
+        --side-text: #ECECF3;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        background: var(--bg);
+        color: var(--ink-900);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        min-height: 100%;
+      }
+      a { color: inherit; text-decoration: none; }
+
+      /* Soft ambient backdrop behind the hero. Two faint radial spots tinted
+         with the brand orange + info blue so the page doesn't feel flat. */
+      body::before {
+        content: "";
+        position: fixed; inset: 0;
+        background:
+          radial-gradient(800px 500px at 16% -10%, rgba(239, 95, 0, 0.06), transparent 60%),
+          radial-gradient(900px 600px at 88% 8%, rgba(9, 117, 215, 0.05), transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 88px 40px 96px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ─── Hero ─────────────────────────────────────────────── */
+      .eyebrow {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--ink-700);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 22px;
+        padding: 6px 12px 6px 6px;
+        background: var(--surface);
+        border: 1px solid var(--divider);
+        border-radius: 999px;
+        box-shadow: 0 1px 0 rgba(31, 31, 50, 0.02);
+      }
+      .eyebrow .seek-mark {
+        width: 22px; height: 22px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .eyebrow .seek-mark svg { width: 18px; height: 18px; display: block; }
+      .eyebrow .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-400); }
+
+      .hero h1 {
+        font-size: 60px;
+        font-weight: 800;
+        line-height: 1.04;
+        letter-spacing: -0.035em;
+        color: var(--ink-900);
+        max-width: 16ch;
+      }
+      .hero h1 .accent {
+        color: var(--fire-400);
+        position: relative;
+      }
+      .hero h1 .accent::after {
+        content: "";
+        position: absolute;
+        left: 4%; right: 4%;
+        bottom: 4px;
+        height: 8px;
+        background: rgba(239, 95, 0, 0.18);
+        border-radius: 4px;
+        z-index: -1;
+      }
+      .hero p {
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--ink-600);
+        margin-top: 20px;
+        max-width: 58ch;
+      }
+      .hero-meta {
+        display: flex; flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 28px;
+      }
+      .hero-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 30px;
+        padding: 0 12px;
+        background: var(--surface);
+        border: 1px solid var(--divider);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--ink-700);
+      }
+      .hero-chip i { color: var(--ink-500); }
+      .hero-chip-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--success-500);
+        box-shadow: 0 0 0 3px rgba(30, 155, 106, 0.18);
+      }
+
+      /* ─── Options grid ─────────────────────────────────────── */
+      .options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        margin-top: 72px;
+      }
+      @media (max-width: 980px) {
+        .options { grid-template-columns: 1fr; }
+        .page { padding: 56px 24px 72px; }
+        .hero h1 { font-size: 40px; }
+      }
+
+      .opt-card {
+        background: var(--surface);
+        border: 1px solid var(--divider);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex; flex-direction: column;
+        position: relative;
+        transition: border-color 220ms, box-shadow 280ms, transform 280ms cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      .opt-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--ink-900);
+        z-index: 2;
+      }
+      .opt-card.opt-panel::before { background: var(--fire-400); }
+      .opt-card:hover {
+        border-color: var(--ink-700);
+        box-shadow: 0 24px 60px rgba(31, 31, 50, 0.10),
+                    0 8px 16px rgba(31, 31, 50, 0.05);
+        transform: translateY(-4px);
+      }
+
+      /* ─── Preview area — live screenshots via scaled iframe ─── */
+      .opt-preview {
+        position: relative;
+        height: 380px;
+        background: #F1F1F6;
+        overflow: hidden;
+        border-bottom: 1px solid var(--divider);
+      }
+      .opt-card.opt-panel .opt-preview {
+        background:
+          radial-gradient(circle at 80% 100%, rgba(239, 95, 0, 0.06), transparent 55%),
+          linear-gradient(150deg, #ECEFF5 0%, #D9DCE5 100%);
+      }
+      .opt-preview-frame {
+        /* Render the target page at a roomy native size then scale it down to
+           fit the preview area. `pointer-events: none` keeps the card click
+           target on the card itself, and prevents the iframe from stealing
+           scroll/keyboard. */
+        position: absolute;
+        top: 0; left: 0;
+        width: 1440px;
+        height: 1100px;
+        border: 0;
+        transform-origin: top left;
+        transform: scale(0.34);
+        pointer-events: none;
+        background: var(--surface);
+      }
+      /* The Workspace iframe sits flush with the preview edges. The Panel
+         iframe shows the desktop+panel — let it bleed naturally. */
+      .opt-card.opt-panel .opt-preview-frame {
+        transform: scale(0.34);
+      }
+      /* Fade the bottom edge so the cut-off looks intentional (like a fold)
+         rather than abrupt. */
+      .opt-preview::after {
+        content: "";
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 90px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(247, 247, 251, 0.85) 100%);
+        pointer-events: none;
+      }
+
+      /* ─── Option A preview — workspace mock ─── */
+      .pv-ws {
+        position: absolute;
+        inset: 28px;
+        background: var(--surface);
+        border-radius: 10px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10),
+                    0 2px 6px rgba(0, 0, 0, 0.04);
+        display: flex;
+        overflow: hidden;
+      }
+      .pv-ws-side {
+        width: 30%;
+        background: linear-gradient(180deg, var(--side-bg) 0%, var(--side-bg-2) 100%);
+        padding: 12px 8px 8px;
+        display: flex; flex-direction: column; gap: 3px;
+      }
+      .pv-ws-brand {
+        display: flex; align-items: center; gap: 6px;
+        padding: 4px 6px 10px;
+      }
+      .pv-ws-brand-square {
+        width: 12px; height: 12px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, var(--fire-400), var(--fire-300));
+        box-shadow: 0 1px 3px rgba(239, 95, 0, 0.4);
+      }
+      .pv-ws-brand-text {
+        height: 8px; width: 38px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 2px;
+      }
+      .pv-ws-section {
+        font-size: 7px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.35);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 6px 7px 2px;
+      }
+      .pv-ws-nav {
+        height: 14px;
+        margin: 1px 4px;
+        border-radius: 3px;
+        background: rgba(255,255,255,0.04);
+        display: flex; align-items: center; gap: 5px;
+        padding: 0 6px;
+      }
+      .pv-ws-nav-dot {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.30);
+      }
+      .pv-ws-nav-text {
+        height: 4px; width: 50%;
+        background: rgba(255, 255, 255, 0.32);
+        border-radius: 1.5px;
+      }
+      .pv-ws-nav.active { background: rgba(255, 255, 255, 0.12); }
+      .pv-ws-nav.active .pv-ws-nav-text { background: rgba(255, 255, 255, 0.85); width: 60%; }
+      .pv-ws-nav.active .pv-ws-nav-dot {
+        background: var(--info-400);
+        box-shadow: 0 0 6px rgba(9, 117, 215, 0.6);
+        animation: pv-pulse 1.6s ease-out infinite;
+      }
+      .pv-ws-content {
+        flex: 1;
+        padding: 14px 16px;
+        display: flex; flex-direction: column; gap: 10px;
+        background: var(--surface);
+      }
+      .pv-ws-titlerow {
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .pv-ws-title {
+        height: 14px; width: 40%;
+        background: var(--ink-900);
+        border-radius: 3px;
+      }
+      .pv-ws-cta {
+        height: 16px; width: 38px;
+        background: var(--ink-900);
+        border-radius: 4px;
+        position: relative;
+      }
+      .pv-ws-cta::after {
+        content: "";
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 16px; height: 3px;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 1.5px;
+        transform: translate(-50%, -50%);
+      }
+      .pv-ws-chips {
+        display: flex; gap: 4px;
+      }
+      .pv-ws-chip {
+        height: 14px; padding: 0 6px;
+        border-radius: 999px;
+        background: var(--ink-100);
+        border: 1px solid var(--divider);
+        display: inline-flex; align-items: center;
+      }
+      .pv-ws-chip::after {
+        content: ""; width: 16px; height: 4px;
+        background: var(--ink-500);
+        border-radius: 1.5px;
+      }
+      .pv-ws-chip.active {
+        background: var(--ink-900);
+        border-color: var(--ink-900);
+      }
+      .pv-ws-chip.active::after { background: rgba(255, 255, 255, 0.9); }
+      .pv-ws-row {
+        height: 22px;
+        background: linear-gradient(90deg, var(--ink-100) 0%, var(--ink-100) 100%);
+        border-radius: 4px;
+        display: flex; align-items: center;
+        padding: 0 8px;
+        gap: 8px;
+      }
+      .pv-ws-row::before {
+        content: ""; width: 32%; height: 5px;
+        background: var(--ink-700);
+        border-radius: 1.5px;
+      }
+      .pv-ws-row::after {
+        content: ""; width: 20%; height: 5px;
+        background: var(--success-500);
+        border-radius: 1.5px;
+        margin-left: auto;
+      }
+      .pv-ws-row.warn::after { background: var(--fire-400); }
+      .pv-ws-row.idle::after { background: var(--ink-400); }
+
+      /* ─── Option B preview — floating panel + bg app ─── */
+      .pv-panel-wrap { position: absolute; inset: 0; }
+      .pv-bg-app {
+        position: absolute;
+        top: 24px; left: 24px;
+        width: calc(100% - 48px);
+        height: calc(100% - 48px);
+        background: var(--surface);
+        border-radius: 8px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+      }
+      .pv-bg-bar {
+        height: 22px;
+        background: linear-gradient(180deg, #F2F3F8 0%, #E3E5EC 100%);
+        display: flex; align-items: center; gap: 5px;
+        padding: 0 10px;
+        border-bottom: 1px solid var(--divider);
+      }
+      .pv-bg-bar span {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.12);
+      }
+      .pv-bg-bar span:first-child { background: #FF5F57; }
+      .pv-bg-bar span:nth-child(2) { background: #FFBD2E; }
+      .pv-bg-bar span:nth-child(3) { background: #28C840; }
+      .pv-bg-body {
+        padding: 14px 16px;
+        display: flex; flex-direction: column; gap: 8px;
+      }
+      .pv-bg-line {
+        height: 8px;
+        background: var(--ink-100);
+        border-radius: 2px;
+      }
+      .pv-bg-line.s { width: 45%; }
+      .pv-bg-line.m { width: 75%; }
+      .pv-bg-line.l { width: 92%; }
+      .pv-bg-line.title { background: var(--ink-700); height: 10px; width: 35%; }
+
+      .pv-panel {
+        position: absolute;
+        right: 32px;
+        bottom: 32px;
+        width: 168px;
+        height: 232px;
+        background: var(--surface);
+        border-radius: 14px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22),
+                    0 10px 20px rgba(0, 0, 0, 0.10),
+                    0 0 0 1px rgba(239, 95, 0, 0.10);
+        overflow: hidden;
+        display: flex; flex-direction: column;
+      }
+      .pv-panel-head {
+        height: 26px;
+        background: var(--side-bg);
+        display: flex; align-items: center; gap: 6px;
+        padding: 0 10px;
+      }
+      .pv-panel-mark {
+        width: 10px; height: 10px;
+        border-radius: 2px;
+        background: linear-gradient(135deg, var(--fire-400), var(--fire-300));
+      }
+      .pv-panel-headtxt {
+        height: 7px; width: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 2px;
+      }
+      .pv-panel-body {
+        flex: 1;
+        background: linear-gradient(180deg, #FAFAFC 0%, #ECECF3 100%);
+        padding: 10px;
+        display: flex; flex-direction: column; gap: 7px;
+      }
+      .pv-bub {
+        align-self: flex-end;
+        max-width: 78%;
+        height: 22px;
+        background: var(--info-400);
+        border-radius: 5px 1px 5px 5px;
+        padding: 5px 7px;
+        display: flex; flex-direction: column; gap: 3px;
+        justify-content: center;
+      }
+      .pv-bub::before, .pv-bub::after {
+        content: ""; height: 3px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 1px;
+      }
+      .pv-bub::before { width: 80%; }
+      .pv-bub::after { width: 55%; }
+      .pv-activity {
+        background: rgba(31, 31, 50, 0.04);
+        border-radius: 4px;
+        padding: 5px 7px;
+        display: flex; flex-direction: column; gap: 3px;
+      }
+      .pv-activity-line {
+        height: 3px;
+        background: rgba(31, 31, 50, 0.18);
+        border-radius: 1px;
+      }
+      .pv-activity-line.s { width: 60%; }
+      .pv-activity-line.m { width: 80%; }
+      .pv-tb {
+        margin: auto 0 6px;
+        background: var(--surface);
+        border: 1px solid var(--ink-300);
+        border-radius: 5px;
+        padding: 5px 7px;
+        display: flex; align-items: center; gap: 5px;
+      }
+      .pv-tb-chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 1px 6px;
+        background: var(--info-100);
+        border-radius: 999px;
+        height: 12px;
+      }
+      .pv-tb-dot {
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        background: var(--info-400);
+        animation: pv-pulse 1.4s ease-out infinite;
+      }
+      .pv-tb-text {
+        height: 4px; width: 28px;
+        background: var(--info-500);
+        border-radius: 1px;
+      }
+      .pv-tb-cta {
+        margin-left: auto;
+        height: 10px; width: 24px;
+        background: var(--ink-900);
+        border-radius: 2px;
+      }
+      .pv-composer {
+        height: 26px;
+        background: var(--surface);
+        border: 1px solid var(--ink-300);
+        border-radius: 5px;
+        padding: 5px 7px;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .pv-composer-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--ink-300);
+      }
+      .pv-composer-text {
+        height: 4px; flex: 1;
+        background: var(--ink-200);
+        border-radius: 1.5px;
+      }
+      .pv-composer-btn {
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: var(--ink-800);
+      }
+
+      @keyframes pv-pulse {
+        0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0   rgba(9, 117, 215, 0.45); }
+        50%      { transform: scale(1.2); box-shadow: 0 0 0 4px rgba(9, 117, 215, 0); }
+      }
+
+      /* ─── Card body ─────────────────────────────────────── */
+      .opt-body {
+        padding: 32px 32px 28px;
+        display: flex; flex-direction: column;
+        gap: 16px;
+        flex: 1;
+      }
+      .opt-tag {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ink-700);
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+      }
+      .opt-tag .pill {
+        background: var(--ink-100);
+        padding: 3px 9px;
+        border-radius: 999px;
+        color: var(--ink-800);
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+      .opt-card.opt-panel .opt-tag .pill {
+        background: var(--fire-50);
+        color: var(--fire-400);
+      }
+      .opt-title {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--ink-900);
+        letter-spacing: -0.018em;
+      }
+      .opt-sub {
+        font-size: 14.5px;
+        color: var(--ink-600);
+        line-height: 1.55;
+      }
+
+      .opt-traits {
+        list-style: none;
+        display: flex; flex-direction: column;
+        gap: 12px;
+        padding-top: 8px;
+      }
+      .opt-traits li {
+        display: grid;
+        grid-template-columns: 24px 1fr;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 13.5px;
+        color: var(--ink-700);
+        line-height: 1.55;
+      }
+      .opt-traits li .trait-icon {
+        width: 24px; height: 24px;
+        background: var(--ink-100);
+        border-radius: 6px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--ink-700);
+        margin-top: 1px;
+      }
+      .opt-card.opt-panel .opt-traits li .trait-icon {
+        background: var(--fire-50);
+        color: var(--fire-400);
+      }
+      .opt-traits li strong { font-weight: 600; color: var(--ink-900); }
+
+      .opt-foot {
+        margin-top: auto;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px;
+        padding-top: 10px;
+      }
+      .opt-cta {
+        display: inline-flex; align-items: center; gap: 8px;
+        height: 46px;
+        padding: 0 22px;
+        border: none;
+        background: var(--ink-900);
+        color: #FFFFFF;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 160ms, transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+        box-shadow: 0 2px 6px rgba(31, 31, 50, 0.12);
+      }
+      .opt-cta i { transition: transform 200ms cubic-bezier(0.25, 1, 0.5, 1); }
+      .opt-cta:hover { background: var(--ink-800); transform: translateY(-1px); }
+      .opt-cta:hover i { transform: translateX(3px); }
+      .opt-card.opt-panel .opt-cta {
+        background: var(--fire-400);
+        box-shadow: 0 4px 12px rgba(239, 95, 0, 0.25);
+      }
+      .opt-card.opt-panel .opt-cta:hover { background: var(--fire-300); }
+      .opt-foot-note {
+        font-size: 12px;
+        color: var(--ink-500);
+        line-height: 1.4;
+      }
+
+      /* ─── Fit guidance (two side-by-side panels, replaces the table) ─ */
+      .fit {
+        margin-top: 80px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 980px) { .fit { grid-template-columns: 1fr; } }
+      .fit-card {
+        background: var(--surface);
+        border: 1px solid var(--divider);
+        border-radius: 16px;
+        padding: 28px;
+        display: flex; flex-direction: column;
+        gap: 14px;
+      }
+      .fit-head { display: flex; align-items: center; gap: 10px; }
+      .fit-mark {
+        width: 32px; height: 32px;
+        background: var(--ink-100);
+        color: var(--ink-800);
+        border-radius: 8px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .fit-card.fit-panel .fit-mark {
+        background: var(--fire-50);
+        color: var(--fire-400);
+      }
+      .fit-title {
+        font-size: 15px; font-weight: 700;
+        color: var(--ink-900);
+        letter-spacing: -0.005em;
+      }
+      .fit-sub {
+        font-size: 12px;
+        color: var(--ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+        font-weight: 600;
+      }
+      .fit-list {
+        list-style: none;
+        display: flex; flex-direction: column;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      .fit-list li {
+        display: grid;
+        grid-template-columns: 16px 1fr;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 13.5px;
+        color: var(--ink-700);
+        line-height: 1.5;
+      }
+      .fit-list li i { color: var(--success-500); margin-top: 3px; }
+
+      /* ─── Footer note ─── */
+      .foot {
+        margin-top: 56px;
+        padding: 20px 28px;
+        background: var(--surface);
+        border: 1px solid var(--divider);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px;
+      }
+      @media (max-width: 720px) { .foot { flex-direction: column; align-items: flex-start; } }
+      .foot p {
+        font-size: 13px;
+        color: var(--ink-600);
+        line-height: 1.5;
+        max-width: 60ch;
+      }
+      .foot p strong { color: var(--ink-900); font-weight: 600; }
+      .foot-stats {
+        display: flex; gap: 18px;
+        font-size: 12px;
+        color: var(--ink-500);
+        white-space: nowrap;
+      }
+      .foot-stats strong { color: var(--ink-900); font-size: 14px; font-weight: 700; }
+      .foot-stats span { display: flex; flex-direction: column; gap: 1px; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+
+      <!-- Hero -->
+      <header class="hero">
+        <span class="eyebrow">
+          <span class="seek-mark">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.9021 9.59375L22.5938 9.59375V0.247902L3.9021 0.247902V9.59375Z" fill="#F55800"/>
+              <path d="M13.25 18.9417L13.25 0.25L3.90415 0.25L3.90415 18.9417H13.25Z" fill="#FBA450"/>
+              <path d="M31.9375 28.2875V0.25L22.5917 0.25V28.2875H31.9375Z" fill="#F55800"/>
+              <path d="M3.90625 0.25L13.2522 0.250001V9.59593H3.90625L3.90625 0.25Z" fill="#F58923"/>
+              <path d="M13.25 18.9375H22.5955V28.2834H13.25V18.9375Z" fill="#F58923"/>
+              <path d="M22.5938 18.9375H31.9397V28.2834H22.5938V18.9375Z" fill="#C63D22"/>
+              <path d="M9.70489 31.8303H0.359375V22.4844H9.70489V31.8303Z" fill="#F55800"/>
+            </svg>
+          </span>
+          Whatfix Seek
+          <span class="dot"></span>
+          Design exploration
+        </span>
+        <h1>Two directions for how <span class="accent">Seek</span> lives on your desktop.</h1>
+        <p>
+          We've built both, end&nbsp;to&nbsp;end. Try each one, then tell us which mental model fits how you'd actually run tasks day-to-day. There are no wrong answers — the goal is to pick the one that feels native, not the one that demos best.
+        </p>
+        <div class="hero-meta">
+          <span class="hero-chip"><span class="hero-chip-dot"></span> Both prototypes live</span>
+          <span class="hero-chip"><i data-lucide="mouse-pointer-click" style="width:13px;height:13px;"></i> Fully clickable</span>
+          <span class="hero-chip"><i data-lucide="palette" style="width:13px;height:13px;"></i> Built on Navi tokens</span>
+          <span class="hero-chip"><i data-lucide="clock-3" style="width:13px;height:13px;"></i> ~12 min to walk both</span>
+        </div>
+      </header>
+
+      <!-- Two options -->
+      <section class="options">
+
+        <!-- Option A: Workspace -->
+        <article class="opt-card opt-fullscreen">
+          <div class="opt-preview">
+            <iframe class="opt-preview-frame" src="Seek-Workspace.html" title="Seek Workspace preview" loading="lazy" aria-hidden="true"></iframe>
+          </div>
+          <div class="opt-body">
+            <span class="opt-tag">Option A <span class="pill">Workspace</span></span>
+            <h2 class="opt-title">Full-screen workspace</h2>
+            <p class="opt-sub">Seek as its own app. Persistent sidebar, dedicated surfaces for every job — composer, activity, prompt library, decision trails. Built for users who want a control center.</p>
+            <ul class="opt-traits">
+              <li>
+                <span class="trait-icon"><i data-lucide="layout-dashboard" style="width:13px;height:13px;"></i></span>
+                <span><strong>Familiar workspace pattern.</strong> Sidebar + canvas, like Linear or Notion. Fast to onboard.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="files" style="width:13px;height:13px;"></i></span>
+                <span><strong>Dedicated surfaces.</strong> Tasks, Activity, Prompt Library — each gets the real estate it deserves.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="table-2" style="width:13px;height:13px;"></i></span>
+                <span><strong>Dense data views.</strong> Sortable activity table, decision-trail flowcharts, multi-column overview cards.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="maximize" style="width:13px;height:13px;"></i></span>
+                <span><strong>Takes the screen.</strong> Seek is primary; the SaaS app you're automating sits in a separate tab.</span>
+              </li>
+            </ul>
+            <div class="opt-foot">
+              <a class="opt-cta" href="Seek-Workspace.html">
+                Try the workspace
+                <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </a>
+              <span class="opt-foot-note">~5 min walkthrough</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Option B: Companion panel -->
+        <article class="opt-card opt-panel">
+          <div class="opt-preview">
+            <iframe class="opt-preview-frame" src="Seek-Panel.html" title="Seek Companion Panel preview" loading="lazy" aria-hidden="true"></iframe>
+          </div>
+          <div class="opt-body">
+            <span class="opt-tag">Option B <span class="pill">Companion</span></span>
+            <h2 class="opt-title">Floating companion panel</h2>
+            <p class="opt-sub">A 400px panel that floats over the app you're working in. Expands to 940px with the full task drawer. Designed to disappear when you don't need it.</p>
+            <ul class="opt-traits">
+              <li>
+                <span class="trait-icon"><i data-lucide="rectangle-vertical" style="width:13px;height:13px;"></i></span>
+                <span><strong>400 → 940 px.</strong> Mobile-sized by default; expands when you want the task list visible.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="layers" style="width:13px;height:13px;"></i></span>
+                <span><strong>Floats over real work.</strong> Salesforce, Zendesk, Dynamics stay in view. Seek doesn't take over.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="zap" style="width:13px;height:13px;"></i></span>
+                <span><strong>Execution-first.</strong> Sticky thinking bar, session recording, milestones. Minimal chat back-and-forth.</span>
+              </li>
+              <li>
+                <span class="trait-icon"><i data-lucide="layout-panel-left" style="width:13px;height:13px;"></i></span>
+                <span><strong>One surface, multiple views.</strong> Active task, recent runs, decision trails — all without leaving the panel.</span>
+              </li>
+            </ul>
+            <div class="opt-foot">
+              <a class="opt-cta" href="Seek-Panel.html">
+                Try the panel
+                <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </a>
+              <span class="opt-foot-note">~5 min walkthrough</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Fit guidance (replaces the comparison table) -->
+      <section class="fit">
+        <div class="fit-card fit-workspace">
+          <div class="fit-head">
+            <span class="fit-mark"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i></span>
+            <div>
+              <div class="fit-sub">Workspace fits when</div>
+              <div class="fit-title">You want Seek as a control center</div>
+            </div>
+          </div>
+          <ul class="fit-list">
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>You monitor many tasks at once and want them all visible.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>You spend more time in Seek itself than in the apps it automates.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>You want sortable tables, dense activity views, prompt library at scale.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>The mental model is "open Seek to start a task" — like opening Linear.</span></li>
+          </ul>
+        </div>
+
+        <div class="fit-card fit-panel">
+          <div class="fit-head">
+            <span class="fit-mark"><i data-lucide="layout-panel-left" style="width:16px;height:16px;"></i></span>
+            <div>
+              <div class="fit-sub">Companion fits when</div>
+              <div class="fit-title">Seek runs alongside your real work</div>
+            </div>
+          </div>
+          <ul class="fit-list">
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>You live in Salesforce / Zendesk / Dynamics and want Seek there too.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>One prompt at a time — execution matters, chat doesn't.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>You want minimal context switch; Seek shouldn't replace your workspace.</span></li>
+            <li><i data-lucide="check" style="width:14px;height:14px;"></i><span>The mental model is "Seek is here while I work" — like Cmd+K, always-on.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Footer card -->
+      <div class="foot">
+        <p>Both prototypes are <strong>fully functional HTML</strong>. Click through real flows: attach a flow, send a prompt, follow up on a stale task, open Activity, browse the Prompt Library. Feedback welcome on the Seek design channel.</p>
+        <div class="foot-stats">
+          <span><strong>2</strong>prototypes</span>
+          <span><strong>~12 min</strong>both walked</span>
+          <span><strong>Navi</strong>design system</span>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

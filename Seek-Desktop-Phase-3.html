@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek · Insights</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        /* Canvas + chrome */
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        /* Ink */
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        /* Dark sidebar */
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        /* Whatfix Fire */
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+        --color-fire-500:     #C74900;
+
+        /* Status */
+        --color-success:      #21AD73;
+        --color-success-bg:   rgba(33, 173, 115, 0.10);
+        --color-warning:      #E0A400;
+        --color-warning-bg:   rgba(224, 164, 0, 0.12);
+        --color-critical:     #B3141D;
+        --color-critical-bg:  rgba(179, 20, 29, 0.10);
+        --color-info:         #0975D7;
+        --color-info-bg:      rgba(9, 117, 215, 0.08);
+
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; background: transparent; border: none; }
+      a { color: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px; height: 36px; border-radius: var(--r-sm);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        cursor: pointer;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Sidebar */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more {
+        display: none;
+      }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item,
+      aside.sidebar[data-collapsed="true"] #sidebar-toggle-bottom {
+        justify-content: center;
+      }
+
+      .brand-row { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; }
+      .brand-text { font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em; }
+
+      .switcher {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; margin: 0 8px 8px;
+        border-radius: var(--r-md);
+        cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-text .ent { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+
+      .nav-list { padding: 8px; flex: 1; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px;
+        height: 40px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px; font-weight: 500;
+        cursor: pointer; user-select: none;
+        border: 1px solid transparent;
+        text-decoration: none;
+      }
+      .nav-item:hover:not([data-active="true"]) {
+        background: var(--color-side-hover);
+        color: #FFFFFF;
+      }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon { width: 18px; height: 18px; flex-shrink: 0; }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 999px;
+        line-height: 16px;
+        min-width: 18px;
+        text-align: center;
+      }
+
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row { display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name { font-size: 13px; font-weight: 600; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatar-meta .role { font-size: 11px; color: var(--color-side-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      #sidebar-toggle-bottom {
+        display: flex; align-items: center; gap: 12px;
+        height: 36px; margin: 4px 8px 8px; padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-muted);
+        font-size: 13px; font-weight: 500;
+        cursor: pointer; width: calc(100% - 16px); text-align: left;
+      }
+      #sidebar-toggle-bottom:hover { background: var(--color-side-hover); color: #FFFFFF; }
+      #sidebar-toggle-bottom .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+      .wf-mark, .ent-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 12px; flex-shrink: 0;
+        color: #fff;
+      }
+      .wf-mark { background: var(--color-side-active); border: 1px solid var(--color-side-stroke); }
+      .ent-mark { background: #2A2940; border: 1px solid var(--color-side-stroke); width: 28px; height: 28px; font-size: 13px; }
+
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+
+      /* ─── AI overview header ───────────────────────────────── */
+      .ai-overview {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        margin-bottom: 24px;
+      }
+      .ai-overview-mark {
+        width: 40px; height: 40px;
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .ai-overview-mark svg { width: 40px; height: 40px; }
+      .ai-overview-text { flex: 1; min-width: 0; }
+      .ai-overview-text h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-ink-900);
+        line-height: 1.4;
+      }
+      .ai-overview-text p {
+        font-size: 13px;
+        color: var(--color-ink-600);
+        margin-top: 4px;
+        line-height: 1.45;
+      }
+
+      /* ─── Stat cards ───────────────────────────────────────── */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        padding: 16px 18px;
+      }
+      .stat-card .label {
+        font-size: 12px;
+        color: var(--color-ink-500);
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .stat-card .value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--color-ink-900);
+        line-height: 1.1;
+      }
+      .stat-card .delta {
+        font-size: 11px;
+        color: var(--color-ink-500);
+        font-weight: 500;
+        margin-top: 4px;
+      }
+      .stat-card .delta.positive { color: var(--color-success); }
+
+      /* ─── Section header ───────────────────────────────────── */
+      .section-head {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .section-head h3 { font-size: 15px; font-weight: 600; color: var(--color-ink-900); }
+      .section-head .meta { font-size: 12px; color: var(--color-ink-500); }
+
+      /* ─── Filters & search ─────────────────────────────────── */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .filter-chip {
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-700);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .filter-chip:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .filter-chip.active {
+        background: var(--color-ink-900);
+        color: #fff;
+        border-color: var(--color-ink-900);
+      }
+      .filter-chip .count {
+        background: rgba(255,255,255,0.18);
+        color: inherit;
+        padding: 0 6px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .filter-chip:not(.active) .count {
+        background: var(--color-surface-2);
+        color: var(--color-ink-500);
+      }
+
+      .search-wrap {
+        flex: 1;
+        max-width: 320px;
+        position: relative;
+      }
+      .search-input {
+        width: 100%;
+        height: 28px;
+        padding: 0 12px 0 32px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--color-ink-900);
+        outline: none;
+        font-family: inherit;
+      }
+      .search-input::placeholder { color: var(--color-ink-500); }
+      .search-input:focus { border-color: var(--color-ink-700); }
+      .search-wrap .search-icon {
+        position: absolute;
+        left: 10px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-ink-500);
+      }
+
+      /* ─── Tasks grid (CSS Grid based, not HTML table) ────────── */
+      .tasks-grid {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .tg-row {
+        display: grid;
+        /* Task flexes; everything else is fixed. minmax(0,1fr) lets the task
+           column shrink instead of overflowing on narrow viewports. */
+        grid-template-columns: minmax(0, 1fr) 160px 110px 110px 70px 130px;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--color-divider);
+        font-size: 13px;
+        color: var(--color-ink-800);
+      }
+      .tg-row:last-child { border-bottom: none; }
+      .tg-row.tg-head {
+        background: var(--color-surface-2);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 10px 18px;
+      }
+      .tg-row:not(.tg-head) {
+        cursor: pointer;
+        transition: background 100ms;
+      }
+      .tg-row:not(.tg-head):hover { background: rgba(31,31,50,0.025); }
+      .tg-row.tg-highlighted { background: rgba(239, 95, 0, 0.04); }
+
+      /* Cell variants */
+      .tg-task {
+        min-width: 0;
+        color: var(--color-ink-900);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tg-app {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .tg-app-name {
+        color: var(--color-ink-700);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tg-started, .tg-duration {
+        color: var(--color-ink-600);
+        white-space: nowrap;
+      }
+      .tg-duration { font-variant-numeric: tabular-nums; }
+      .tg-steps {
+        color: var(--color-ink-600);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .tg-status { white-space: nowrap; }
+
+      /* Status pills */
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 10px;
+        border-radius: var(--r-pill);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 18px;
+      }
+      .status-pill .pip { width: 6px; height: 6px; border-radius: 50%; }
+      .status-pill.completed { background: var(--color-success-bg); color: var(--color-success); }
+      .status-pill.completed .pip { background: var(--color-success); }
+      .status-pill.paused    { background: var(--color-warning-bg); color: var(--color-warning); }
+      .status-pill.paused .pip { background: var(--color-warning); }
+      .status-pill.failed    { background: var(--color-critical-bg); color: var(--color-critical); }
+      .status-pill.failed .pip { background: var(--color-critical); }
+      .status-pill.running   { background: rgba(239, 95, 0, 0.10); color: var(--color-fire-400); }
+      .status-pill.running .pip {
+        background: var(--color-fire-400);
+        animation: pip-pulse 1.4s ease-in-out infinite;
+      }
+      .status-pill.stopped   { background: var(--color-surface-2); color: var(--color-ink-600); }
+      .status-pill.stopped .pip { background: var(--color-ink-500); }
+      @keyframes pip-pulse {
+        0%,100% { opacity: 1; transform: scale(1); }
+        50%     { opacity: 0.5; transform: scale(0.75); }
+      }
+
+      /* App glyphs (single-tone, neutral) */
+      .app-glyph {
+        width: 22px; height: 22px; border-radius: 5px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 9px; font-weight: 700;
+        color: var(--color-ink-700);
+        background: var(--color-surface-2);
+        border: 1px solid var(--color-divider);
+        flex-shrink: 0;
+      }
+
+      /* Tertiary link used inside the AI overview card */
+      .row-action {
+        color: var(--color-info);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+      }
+      .row-action:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+      /* Toast for stubbed actions */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--color-ink-900);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: var(--r-md);
+        font-size: 13px;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 200ms, transform 200ms;
+        pointer-events: none;
+        z-index: 100;
+        box-shadow: 0 8px 24px rgba(31,31,50,0.20);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <!-- ─────────── SIDEBAR (rendered by seek-sidebar.js) ─────────── -->
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <!-- ─────────── RIGHT COLUMN ─────────── -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[1180px] mx-auto px-8 pt-10 pb-12">
+            <!-- Page title -->
+            <h1 class="text-[28px] font-bold mb-6" style="color: var(--color-ink-900)">Insights</h1>
+
+            <!-- AI overview header -->
+            <div class="ai-overview">
+              <div class="ai-overview-mark">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M3.9021 9.59375L22.5938 9.59375V0.247902L3.9021 0.247902V9.59375Z" fill="#F55800"/>
+                  <path d="M13.25 18.9417L13.25 0.25L3.90415 0.25L3.90415 18.9417H13.25Z" fill="#FBA450"/>
+                  <path d="M31.9375 28.2875V0.25L22.5917 0.25V28.2875H31.9375Z" fill="#F55800"/>
+                  <path d="M3.90625 0.25L13.2522 0.250001V9.59593H3.90625L3.90625 0.25Z" fill="#F58923"/>
+                  <path d="M13.25 18.9375H22.5955V28.2834H13.25V18.9375Z" fill="#F58923"/>
+                  <path d="M22.5938 18.9375H31.9397V28.2834H22.5938V18.9375Z" fill="#C63D22"/>
+                  <path d="M9.70489 31.8303H0.359375V22.4844H9.70489V31.8303Z" fill="#F55800"/>
+                </svg>
+              </div>
+              <div class="ai-overview-text">
+                <h2>Seek ran <strong>87 tasks</strong> this week, saving you about <strong>6.4 hours</strong>.</h2>
+                <p>94% completed without intervention. 2 are running right now.</p>
+              </div>
+              <a class="row-action" href="Seek-Desktop-Phase-1.html">
+                <i data-lucide="plus" class="w-[12px] h-[12px]"></i>
+                New task
+              </a>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="label"><i data-lucide="calendar" class="w-[12px] h-[12px]"></i> Tasks today</div>
+                <div class="value">12</div>
+                <div class="delta positive">+3 vs yesterday</div>
+              </div>
+              <div class="stat-card">
+                <div class="label"><i data-lucide="calendar-days" class="w-[12px] h-[12px]"></i> This week</div>
+                <div class="value">87</div>
+                <div class="delta positive">+18 vs last week</div>
+              </div>
+              <div class="stat-card">
+                <div class="label"><i data-lucide="check-check" class="w-[12px] h-[12px]"></i> Success rate</div>
+                <div class="value">94%</div>
+                <div class="delta">82 of 87 completed cleanly</div>
+              </div>
+              <div class="stat-card">
+                <div class="label"><i data-lucide="timer" class="w-[12px] h-[12px]"></i> Time saved</div>
+                <div class="value">6.4h</div>
+                <div class="delta">~4 min average per task</div>
+              </div>
+            </div>
+
+            <!-- Tasks section -->
+            <div class="section-head">
+              <h3>Tasks</h3>
+              <span class="meta">Showing 8 of 87</span>
+            </div>
+
+            <div class="toolbar">
+              <button class="filter-chip active" data-filter="all">All <span class="count">87</span></button>
+              <button class="filter-chip" data-filter="running">Running <span class="count">2</span></button>
+              <button class="filter-chip" data-filter="paused">Paused <span class="count">1</span></button>
+              <button class="filter-chip" data-filter="failed">Failed <span class="count">5</span></button>
+              <button class="filter-chip" data-filter="completed">Completed <span class="count">79</span></button>
+              <div class="flex-1"></div>
+              <div class="search-wrap">
+                <i data-lucide="search" class="w-[14px] h-[14px] search-icon"></i>
+                <input class="search-input" placeholder="Search tasks…" id="search-input" />
+              </div>
+            </div>
+
+            <div class="tasks-grid" id="tasks-grid">
+              <div class="tg-row tg-head">
+                <span>Task</span>
+                <span>App</span>
+                <span>Started</span>
+                <span>Duration</span>
+                <span>Steps</span>
+                <span>Status</span>
+              </div>
+              <div id="tasks-tbody"></div>
+            </div>
+
+            <div class="h-20"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Stub toast for trail-link clicks (L2 lands in the final phase) -->
+    <div class="toast" id="toast">Decision trail view ships in the final phase.</div>
+
+    <script>
+      const TASKS = [
+        {
+          id: 1, status: "completed", justNow: true,
+          task: 'Update 12 opportunities to "Closed Won"',
+          app: "Salesforce", started: "just now", duration: "1m 47s", steps: 7,
+        },
+        {
+          id: 2, status: "running",
+          task: "Triage today's Zendesk tickets by severity",
+          app: "Zendesk", started: "4m ago", duration: "0m 32s", steps: 2,
+        },
+        {
+          id: 3, status: "paused",
+          task: "Reconcile yesterday's Stripe payouts with the ledger",
+          app: "Stripe", started: "12m ago", duration: "2m 14s", steps: 4,
+        },
+        {
+          id: 4, status: "completed",
+          task: "Pull onboarding status for new hires this week",
+          app: "Workday", started: "1h ago", duration: "0m 58s", steps: 3,
+        },
+        {
+          id: 5, status: "completed",
+          task: "Export this week's pipeline report",
+          app: "HubSpot", started: "3h ago", duration: "1m 12s", steps: 4,
+        },
+        {
+          id: 6, status: "completed",
+          task: "Add 3 new users to Okta and assign Workday access",
+          app: "Okta", started: "5h ago", duration: "1m 03s", steps: 3,
+        },
+        {
+          id: 7, status: "failed",
+          task: "Send welcome emails to new hires",
+          app: "Outreach", started: "yesterday", duration: "0m 41s", steps: 2,
+        },
+        {
+          id: 8, status: "completed",
+          task: "Update CRM with this week's leads",
+          app: "Salesforce", started: "yesterday", duration: "5m 12s", steps: 8,
+        },
+      ];
+
+      const APP_GLYPHS = {
+        Salesforce: "SF",
+        Zendesk:    "ZD",
+        Stripe:     "S",
+        Workday:    "W",
+        HubSpot:    "HS",
+        Okta:       "O",
+        Outreach:   "OR",
+      };
+
+      const STATUS_LABEL = {
+        completed: "Completed",
+        running:   "Running",
+        paused:    "Paused",
+        failed:    "Failed",
+        stopped:   "Stopped",
+      };
+
+      function renderTasks(filter = "all", query = "") {
+        const tbody = document.getElementById("tasks-tbody");
+        const q = query.toLowerCase().trim();
+        const filtered = TASKS.filter((t) => {
+          if (filter !== "all" && t.status !== filter) return false;
+          if (q && !t.task.toLowerCase().includes(q) && !t.app.toLowerCase().includes(q)) return false;
+          return true;
+        });
+
+        // The just-completed task (from a Phase 2 trail link) gets highlighted
+        const highlightedId = window._highlightedTaskId || null;
+
+        tbody.innerHTML = filtered.map((t) => `
+          <div class="tg-row ${t.id === highlightedId ? 'tg-highlighted' : ''}" data-id="${t.id}">
+            <span class="tg-task" title="${t.task}">${t.task}</span>
+            <span class="tg-app">
+              <span class="app-glyph">${APP_GLYPHS[t.app] || "?"}</span>
+              <span class="tg-app-name">${t.app}</span>
+            </span>
+            <span class="tg-started">${t.started}</span>
+            <span class="tg-duration">${t.duration}</span>
+            <span class="tg-steps">${t.steps}</span>
+            <span class="tg-status">
+              <span class="status-pill ${t.status}"><span class="pip"></span>${STATUS_LABEL[t.status]}</span>
+            </span>
+          </div>
+        `).join("");
+
+        lucide.createIcons();
+
+        // Every row click → opens the decision trail (L2) for that task
+        tbody.querySelectorAll(".tg-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            const id = parseInt(row.dataset.id);
+            const t = TASKS.find((x) => x.id === id);
+            if (!t) return;
+            window.location.href = "Seek-Desktop-Phase-L2.html?task=" + encodeURIComponent(t.task || t.name || "");
+          });
+        });
+      }
+
+      // Filters
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          renderTasks(chip.dataset.filter, document.getElementById("search-input").value);
+        });
+      });
+
+      // Search
+      document.getElementById("search-input").addEventListener("input", (e) => {
+        const activeFilter = document.querySelector(".filter-chip.active").dataset.filter;
+        renderTasks(activeFilter, e.target.value);
+      });
+
+      // Toast
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(window._toastT);
+        window._toastT = setTimeout(() => t.classList.remove("show"), 2400);
+      }
+
+      // If we arrived from a Phase 2 trail-link, highlight task #1 (the just-completed one)
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("task")) {
+        window._highlightedTaskId = 1;
+      }
+
+      lucide.createIcons();
+      renderTasks("all", "");
+    </script>
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "insights" });
+    </script>
+  </body>
+</html>

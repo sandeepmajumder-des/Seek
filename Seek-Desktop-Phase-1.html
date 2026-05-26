@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Whatfix Seek</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+        /* Canvas + top bar (light, warm-tinted) */
+        --color-bg:           #FCFBFA;
+        --color-surface:      #FEFDFC;
+        --color-surface-2:    #F3F2EF;
+        --color-divider:      #E8E6E1;
+
+        /* Ink */
+        --color-ink-900:      #1F1F32;
+        --color-ink-800:      #3D3C52;
+        --color-ink-700:      #525066;
+        --color-ink-600:      #6B697B;
+        --color-ink-500:      #8B8D98;
+        --color-ink-400:      #8C899F;
+        --color-ink-300:      #C4C4C4;
+        --color-ink-200:      #ECECF3;
+
+        /* Dark sidebar */
+        --color-side-bg:      #1F1F32;
+        --color-side-hover:   #2A2940;
+        --color-side-active:  #3D3C52;
+        --color-side-stroke:  #525066;
+        --color-side-text:    #ECECF3;
+        --color-side-muted:   #8C899F;
+        --color-side-divider: rgba(255, 255, 255, 0.06);
+
+        /* Whatfix Fire */
+        --color-fire-50:      #FFF8F5;
+        --color-fire-300:     #E45913;
+        --color-fire-400:     #EF5F00;
+        --color-fire-500:     #C74900;
+
+        /* Seek in-flight (Phase 2 seed) */
+        --color-seek-orange:  #FA8A1F;
+        --color-seek-grad-1:  #454565;
+        --color-seek-grad-2:  #2B2B40;
+
+        /* Status */
+        --color-info:         #0975D7;
+
+        /* Scale */
+        --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+        --space-5: 20px; --space-6: 24px; --space-8: 32px;
+        --r-sm: 4px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+      }
+
+      html, body { background: var(--color-bg); color: var(--color-ink-900); }
+      body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+      svg.lucide, svg[data-lucide] { stroke-width: 1.5; }
+      button { font-family: inherit; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-thumb { background: #D6D6E0; border-radius: 999px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+
+      /* Top bar */
+      .topbar {
+        height: 56px;
+        background: var(--color-surface);
+        border-bottom: 0.5px solid var(--color-divider);
+      }
+      .topbar-icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--r-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-ink-700);
+        cursor: pointer;
+        background: transparent;
+        border: none;
+      }
+      .topbar-icon-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Editable task name in topbar */
+      .task-name-wrap {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 13px;
+        line-height: 1.2;
+      }
+      .task-name-prefix { color: var(--color-ink-500); }
+      .task-name-sep    { color: var(--color-ink-300); }
+      .task-name {
+        color: var(--color-ink-900);
+        font-weight: 600;
+        outline: none;
+        border-radius: 4px;
+        padding: 3px 6px;
+        margin: -3px -6px;
+        min-width: 60px;
+        max-width: 60ch;
+        cursor: text;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .task-name:hover { background: var(--color-surface-2); }
+      .task-name:focus {
+        background: #FFFFFF;
+        box-shadow: 0 0 0 2px rgba(239, 95, 0, 0.20);
+        overflow: visible;
+        text-overflow: clip;
+      }
+      .task-name[data-empty="true"] {
+        color: var(--color-ink-500);
+        font-weight: 500;
+        font-style: italic;
+      }
+      .task-name-edit-hint {
+        color: var(--color-ink-400);
+        opacity: 0;
+        transition: opacity 120ms;
+      }
+      .task-name-wrap:hover .task-name-edit-hint { opacity: 1; }
+      .task-name:focus + .task-name-edit-hint { opacity: 0; }
+
+      /* Sidebar */
+      aside.sidebar {
+        width: 240px;
+        background: var(--color-side-bg);
+        color: var(--color-side-text);
+        transition: width 200ms cubic-bezier(.4,.0,.2,1);
+      }
+      aside.sidebar[data-collapsed="true"] { width: 64px; }
+      aside.sidebar[data-collapsed="true"] .label,
+      aside.sidebar[data-collapsed="true"] .switcher-text,
+      aside.sidebar[data-collapsed="true"] .avatar-meta,
+      aside.sidebar[data-collapsed="true"] .switcher-caret,
+      aside.sidebar[data-collapsed="true"] .brand-text,
+      aside.sidebar[data-collapsed="true"] .avatar-more {
+        display: none;
+      }
+      aside.sidebar[data-collapsed="true"] .brand-row,
+      aside.sidebar[data-collapsed="true"] .switcher,
+      aside.sidebar[data-collapsed="true"] .avatar-row,
+      aside.sidebar[data-collapsed="true"] .nav-item,
+      aside.sidebar[data-collapsed="true"] #sidebar-toggle-bottom {
+        justify-content: center;
+      }
+
+      /* Brand row */
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 16px 14px;
+      }
+      .brand-text {
+        font-size: 14px;
+        font-weight: 700;
+        color: #FFFFFF;
+        letter-spacing: -0.01em;
+      }
+
+      /* Workspace switcher — receded, no border */
+      .switcher {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        margin: 0 8px 8px;
+        border-radius: var(--r-md);
+        cursor: pointer;
+      }
+      .switcher:hover { background: var(--color-side-hover); }
+      .switcher-text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .switcher-text .name {
+        font-size: 13px; font-weight: 600; color: #FFFFFF;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .switcher-text .ent {
+        font-size: 11px; color: var(--color-side-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .switcher-caret { color: var(--color-side-muted); flex-shrink: 0; }
+
+      /* Nav */
+      .nav-list { padding: 8px; flex: 1; }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-text);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        user-select: none;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover:not([data-active="true"]) {
+        background: var(--color-side-hover);
+        color: #FFFFFF;
+      }
+      .nav-item[data-active="true"] {
+        background: var(--color-side-active);
+        border-color: var(--color-side-stroke);
+        color: var(--color-fire-50);
+        font-weight: 600;
+      }
+      .nav-item .icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      .nav-badge {
+        margin-left: auto;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 999px;
+        line-height: 16px;
+        min-width: 18px;
+        text-align: center;
+      }
+
+      /* Sidebar footer */
+      .sidebar-footer { border-top: 1px solid var(--color-side-divider); }
+      .avatar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        cursor: pointer;
+      }
+      .avatar-row:hover { background: var(--color-side-hover); }
+      .avatar-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.2; }
+      .avatar-meta .name {
+        font-size: 13px; font-weight: 600; color: #FFFFFF;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .avatar-meta .role {
+        font-size: 11px; color: var(--color-side-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      #sidebar-toggle-bottom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 36px;
+        margin: 4px 8px 8px;
+        padding: 0 12px;
+        border-radius: var(--r-md);
+        color: var(--color-side-muted);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        width: calc(100% - 16px);
+        text-align: left;
+      }
+      #sidebar-toggle-bottom:hover { background: var(--color-side-hover); color: #FFFFFF; }
+      #sidebar-toggle-bottom .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+      /* WF mark — neutral; orange is reserved for the Send CTA */
+      .wf-mark {
+        width: 24px; height: 24px; border-radius: 6px;
+        background: var(--color-side-active);
+        color: #fff; font-weight: 700; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--color-side-stroke);
+      }
+      .ent-mark {
+        width: 28px; height: 28px; border-radius: 6px;
+        background: #2A2940; color: #FFFFFF;
+        font-weight: 700; font-size: 13px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid var(--color-side-stroke);
+      }
+
+      .avatar {
+        width: 28px; height: 28px; border-radius: var(--r-pill);
+        background: linear-gradient(135deg, #525066, #1F1F32);
+        color: #fff; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* Composer */
+      .composer {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        box-shadow: 0 2px 4px rgba(31,31,50,0.04);
+        transition: border-color 120ms, box-shadow 120ms;
+      }
+      .composer:focus-within {
+        border-color: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(239, 95, 0, 0.12);
+      }
+      .composer textarea {
+        font-family: inherit;
+        font-size: 15px;
+        color: var(--color-ink-900);
+        background: transparent;
+        border: none;
+        outline: none;
+        resize: none;
+        width: 100%;
+        line-height: 1.5;
+      }
+      .composer textarea::placeholder { color: var(--color-ink-500); }
+
+      /* Mode pill — sits in the action row, recedes by default */
+      .mode-wrap { position: relative; }
+      .mode-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: var(--r-pill);
+        background: var(--color-surface-2);
+        color: var(--color-ink-700);
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--color-divider);
+        cursor: pointer;
+      }
+      .mode-pill:hover { background: var(--color-divider); color: var(--color-ink-900); }
+
+      .composer-action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: var(--r-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-ink-600);
+        cursor: pointer;
+        background: transparent;
+        border: none;
+      }
+      .composer-action-btn:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* Primary button — Send (icon-only, arrow up) */
+      .btn-primary {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--r-md);
+        background: var(--color-fire-400);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        transition: background 120ms, transform 120ms;
+        flex-shrink: 0;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--color-fire-300);
+        transform: translateY(-1px);
+      }
+      .btn-primary:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      .btn-primary:disabled {
+        background: var(--color-ink-400);   /* Navi Secondary-400 — #8C899F */
+        color: #FFFFFF;
+        cursor: not-allowed;
+      }
+
+      /* Example cards */
+      .ex-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        padding: 14px 14px 14px 12px;
+        cursor: pointer;
+        transition: border-color 120ms, box-shadow 160ms, transform 160ms;
+        text-align: left;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .ex-card:hover {
+        border-color: var(--color-ink-700);
+        box-shadow: 0 6px 18px rgba(31,31,50,0.08);
+        transform: translateY(-1px);
+      }
+      .ex-card .ex-icon {
+        width: 28px; height: 28px; border-radius: var(--r-md);
+        display: inline-flex; align-items: center; justify-content: center;
+        background: var(--color-surface-2);
+        color: var(--color-ink-700);
+        flex-shrink: 0;
+      }
+      .ex-card p {
+        font-size: 13px;
+        color: var(--color-ink-900);
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      /* Menus */
+      .mode-menu, .attach-menu {
+        position: absolute;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        box-shadow: 0 12px 32px rgba(31,31,50,0.16);
+        padding: 6px;
+        z-index: 50;
+      }
+      .mode-menu   { bottom: 44px; left: 0; min-width: 340px; }
+      .attach-menu { bottom: 44px; left: 0; min-width: 280px; }
+
+      .mode-menu-item, .am-item {
+        display: flex;
+        gap: 12px;
+        padding: 10px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+        align-items: flex-start;
+      }
+      .mode-menu-item:hover, .am-item:hover { background: var(--color-bg); }
+      .mode-menu-item[data-current="true"] { background: var(--color-surface-2); }
+
+      .mode-menu-item .mm-icon, .am-icon {
+        width: 32px; height: 32px; border-radius: var(--r-md);
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .mode-menu-item .mm-icon { background: var(--color-surface-2); color: var(--color-ink-700); }
+      .am-icon.doc  { background: var(--color-surface-2); color: var(--color-ink-700); }
+      .am-icon.flow { background: var(--color-surface-2); color: var(--color-ink-700); }
+
+      .mode-menu-item h5, .am-item h5 { font-size: 13px; font-weight: 600; color: var(--color-ink-900); }
+      .mode-menu-item p, .am-item p   { font-size: 12px; color: var(--color-ink-500); line-height: 1.45; }
+
+      .hidden-flex { display: none !important; }
+
+      .disclaimer { font-size: 12px; color: var(--color-ink-600); line-height: 1.55; }
+      .disclaimer a { color: var(--color-info); text-decoration: underline; text-underline-offset: 2px; }
+
+      /* ─── Flow-attached composer state ─────────────────────── */
+      /* Flow chip — lives INSIDE the composer input area */
+      .flow-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--color-info-bg);
+        color: var(--color-info);
+        padding: 4px 6px 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .flow-chip-close {
+        width: 18px; height: 18px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--color-info);
+        background: transparent; border: none;
+      }
+      .flow-chip-close:hover { background: rgba(9, 117, 215, 0.16); }
+
+      /* Prefilled prompt + inline categorical chips */
+      .prefill {
+        min-height: 90px;
+        font-size: 15px;
+        color: var(--color-ink-900);
+        line-height: 1.85;
+        outline: none;
+        padding: 2px 0;
+      }
+      .cat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 9px 2px 8px;
+        border-radius: 5px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.4;
+        cursor: pointer;
+        margin: 0 1px;
+        white-space: nowrap;
+        vertical-align: baseline;
+        user-select: none;
+        background: var(--color-surface-2);
+        border: 1px dashed var(--color-divider);
+        color: var(--color-ink-500);
+        font-style: italic;
+      }
+      .cat-chip:hover {
+        background: rgba(9, 117, 215, 0.06);
+        color: var(--color-info);
+        border-color: rgba(9, 117, 215, 0.40);
+      }
+      .cat-chip.filled {
+        font-style: normal;
+        background: var(--color-fire-50);
+        border-style: solid;
+        border-color: var(--color-fire-400);
+        color: var(--color-ink-900);
+      }
+      .cat-chip.filled:hover {
+        background: rgba(239, 95, 0, 0.08);
+        border-color: var(--color-fire-300);
+        color: var(--color-ink-900);
+      }
+      .cat-chip .cat-chip-icon { color: inherit; opacity: 0.7; }
+      .cat-chip .cat-chip-caret { color: inherit; opacity: 0.5; margin-left: 2px; }
+
+      .flow-hint {
+        font-size: 12px;
+        color: var(--color-ink-600);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .flow-hint .dot { color: var(--color-ink-300); }
+      .flow-hint .customize-btn {
+        color: var(--color-info);
+        font-weight: 600;
+        cursor: pointer;
+        background: transparent; border: none;
+        padding: 0; font-size: 12px;
+      }
+      .flow-hint .customize-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+      /* ─── Modal overlay ─────────────────────────────────────── */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(31, 31, 50, 0.40);
+        backdrop-filter: blur(2px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 200;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease-out;
+      }
+      .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+      .modal {
+        background: var(--color-surface);
+        border-radius: var(--r-md);
+        box-shadow: 0 20px 60px rgba(31,31,50,0.20), 0 4px 12px rgba(31,31,50,0.08);
+        width: 720px;
+        max-width: calc(100vw - 48px);
+        max-height: calc(100vh - 96px);
+        display: flex;
+        flex-direction: column;
+        transform: translateY(8px);
+        transition: transform 180ms ease-out;
+      }
+      .modal-backdrop.open .modal { transform: translateY(0); }
+      .modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--color-divider);
+      }
+      .modal-title { font-size: 16px; font-weight: 700; color: var(--color-ink-900); }
+      .modal-sub   { font-size: 12px; color: var(--color-ink-500); margin-top: 2px; }
+      .modal-close {
+        width: 28px; height: 28px; border-radius: 4px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-600);
+        background: transparent; border: none; cursor: pointer;
+      }
+      .modal-close:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .modal-body { flex: 1; overflow-y: auto; padding: 14px 20px; }
+      .modal-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; padding: 14px 20px;
+        border-top: 1px solid var(--color-divider);
+        background: var(--color-surface-2);
+      }
+      .modal-footer .left { font-size: 12px; color: var(--color-ink-600); }
+
+      .modal-toolbar {
+        display: flex; align-items: center; gap: 8px;
+        margin-bottom: 12px;
+      }
+      .modal-toolbar .search-wrap {
+        flex: 1; position: relative;
+      }
+      .modal-toolbar .search-input {
+        width: 100%; height: 32px;
+        padding: 0 12px 0 32px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--color-ink-900);
+        outline: none; font-family: inherit;
+      }
+      .modal-toolbar .search-input:focus { border-color: var(--color-ink-700); }
+      .modal-toolbar .search-icon {
+        position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+        color: var(--color-ink-500);
+      }
+      .filter-chip {
+        height: 28px; padding: 0 12px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--color-divider);
+        color: var(--color-ink-700);
+        font-size: 12px; font-weight: 500; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .filter-chip:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+      .filter-chip.active {
+        background: var(--color-ink-900); color: #fff;
+        border-color: var(--color-ink-900);
+      }
+
+      .flow-row {
+        display: grid;
+        grid-template-columns: 1fr 100px 24px;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .flow-row:hover { background: var(--color-surface-2); }
+      .flow-row.selected {
+        background: var(--color-fire-50);
+        border-color: var(--color-fire-400);
+      }
+      .flow-main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+      .flow-glyph {
+        width: 32px; height: 32px;
+        border-radius: 6px;
+        background: var(--color-surface-2);
+        border: 1px solid var(--color-divider);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        flex-shrink: 0;
+      }
+      .flow-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .flow-name { font-size: 13px; font-weight: 600; color: var(--color-ink-900); }
+      .flow-desc { font-size: 12px; color: var(--color-ink-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .flow-app-cell {
+        font-size: 12px; color: var(--color-ink-700);
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .flow-app-glyph {
+        width: 20px; height: 20px; border-radius: 5px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 9px; font-weight: 700;
+        color: var(--color-ink-700);
+        background: var(--color-surface-2);
+        border: 1px solid var(--color-divider);
+      }
+      .flow-row .selected-check {
+        color: var(--color-fire-400);
+        opacity: 0;
+        justify-self: end;
+      }
+      .flow-row.selected .selected-check { opacity: 1; }
+
+      .btn-attach {
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: var(--color-fire-400);
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-attach:disabled {
+        background: var(--color-ink-400);
+        cursor: not-allowed;
+      }
+      .btn-cancel {
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--color-ink-700);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--color-divider);
+      }
+      .btn-cancel:hover { background: var(--color-surface-2); color: var(--color-ink-900); }
+
+      /* ─── Chip option picker (popover) ─────────────────────── */
+      .chip-popover {
+        position: absolute;
+        background: var(--color-surface);
+        border: 1px solid var(--color-divider);
+        border-radius: var(--r-md);
+        box-shadow: 0 12px 32px rgba(31,31,50,0.16);
+        padding: 6px;
+        z-index: 60;
+        min-width: 280px;
+        max-width: 360px;
+      }
+      .chip-popover .pop-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 8px 10px 4px;
+      }
+      .chip-popover .pop-option {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--color-ink-900);
+      }
+      .chip-popover .pop-option:hover { background: var(--color-surface-2); }
+      .chip-popover .pop-option.selected {
+        background: var(--color-fire-50);
+        color: var(--color-ink-900);
+        font-weight: 500;
+      }
+      .chip-popover .pop-option .check {
+        color: var(--color-fire-400);
+        margin-left: auto;
+        opacity: 0;
+      }
+      .chip-popover .pop-option.selected .check { opacity: 1; }
+      .chip-popover .pop-divider {
+        height: 1px;
+        background: var(--color-divider);
+        margin: 4px 6px;
+      }
+      .chip-popover .pop-custom {
+        padding: 8px 10px;
+      }
+      .chip-popover .pop-custom input {
+        width: 100%;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 5px;
+        border: 1px solid var(--color-divider);
+        background: var(--color-surface);
+        color: var(--color-ink-900);
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+      }
+      .chip-popover .pop-custom input:focus {
+        border-color: var(--color-fire-400);
+      }
+      .chip-popover .pop-custom input::placeholder { color: var(--color-ink-500); }
+
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div class="flex h-full">
+      <!-- ─────────── SIDEBAR (rendered by seek-sidebar.js) ─────────── -->
+      <aside id="sidebar" class="sidebar shrink-0 flex flex-col" data-collapsed="false"></aside>
+
+      <!-- ─────────── RIGHT COLUMN ─────────── -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="topbar shrink-0 flex items-center px-4">
+          <button id="sidebar-toggle-top" class="topbar-icon-btn" title="Toggle sidebar (⌘\)" aria-label="Toggle sidebar">
+            <i data-lucide="panel-left" class="w-[18px] h-[18px]"></i>
+          </button>
+          <div class="task-name-wrap ml-2">
+            <span class="task-name-prefix">Task</span>
+            <span class="task-name-sep">/</span>
+            <span class="task-name" id="task-name" data-empty="true" contenteditable="true" spellcheck="false" title="Click to rename">Untitled task</span>
+            <i data-lucide="pencil" class="task-name-edit-hint w-[12px] h-[12px]"></i>
+          </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+          <div class="max-w-[920px] mx-auto px-8 pt-16 pb-12">
+            <!-- Single primary hook -->
+            <h1 class="text-[30px] leading-tight mb-8 text-center" style="color: var(--color-ink-900)">
+              <span class="font-normal" style="color: var(--color-ink-700)">Hi Sandeep,</span><span class="font-bold"> what task do you want </span><span class="font-bold" style="color: var(--color-fire-400)">Seek</span><span class="font-bold"> to do.</span>
+            </h1>
+
+            <!-- Composer -->
+            <div class="composer p-4 relative">
+              <!-- Flow chip — lives inside the composer input area when a flow is attached -->
+              <div id="flow-chip" class="flow-chip" hidden>
+                <i data-lucide="zap" class="w-[12px] h-[12px]"></i>
+                <span id="flow-chip-name">Flow name</span>
+                <button id="flow-chip-close" class="flow-chip-close" aria-label="Detach flow">
+                  <i data-lucide="x" class="w-[12px] h-[12px]"></i>
+                </button>
+              </div>
+
+              <textarea
+                id="prompt-input"
+                rows="3"
+                autofocus
+                placeholder='Describe a task. For example: "Pull yesterday&apos;s MRR breakdown from Stripe and email it to finance@"'
+              ></textarea>
+
+              <!-- Prefilled prompt (visible when flow attached) — inline categorical chips -->
+              <div id="prefill" class="prefill" hidden contenteditable="false"></div>
+
+              <!-- Flow meta hint -->
+              <div id="flow-hint" class="flow-hint" hidden></div>
+
+              <!-- Action row: attach · mode · spacer · send -->
+              <div class="flex items-center gap-2 mt-2">
+                <div class="relative">
+                  <button id="attach-btn" class="composer-action-btn" title="Attach" aria-label="Attach">
+                    <i data-lucide="paperclip" class="w-[18px] h-[18px]"></i>
+                  </button>
+                  <div id="attach-menu" class="attach-menu hidden-flex">
+                    <div class="am-item">
+                      <div class="am-icon doc"><i data-lucide="file-text" class="w-[16px] h-[16px]"></i></div>
+                      <div class="flex-1 min-w-0">
+                        <h5>Upload document</h5>
+                        <p>PDF, DOCX, CSV, image…</p>
+                      </div>
+                    </div>
+                    <a class="am-item" id="am-flow" href="Seek-Desktop-Phase-5.html" style="text-decoration: none; color: inherit;">
+                      <div class="am-icon flow"><i data-lucide="zap" class="w-[16px] h-[16px]"></i></div>
+                      <div class="flex-1 min-w-0">
+                        <h5>Attach Whatfix Flow</h5>
+                        <p>247 flows in your ENT</p>
+                      </div>
+                    </a>
+                    <a class="am-item" href="Seek-Desktop-Phase-6.html" style="text-decoration: none; color: inherit;">
+                      <div class="am-icon flow"><i data-lucide="library-big" class="w-[16px] h-[16px]"></i></div>
+                      <div class="flex-1 min-w-0">
+                        <h5>From Prompt Library</h5>
+                        <p>Reusable task instructions</p>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+
+                <div class="mode-wrap">
+                  <button id="mode-toggle" class="mode-pill">
+                    <i data-lucide="globe" class="w-[12px] h-[12px]"></i>
+                    <span id="mode-label">Work in Browser</span>
+                    <i data-lucide="chevron-down" class="w-[12px] h-[12px]"></i>
+                  </button>
+                  <div id="mode-menu" class="mode-menu hidden-flex">
+                    <div class="mode-menu-item" data-mode="browser" data-current="true">
+                      <div class="mm-icon"><i data-lucide="globe" class="w-[16px] h-[16px]"></i></div>
+                      <div class="flex-1 min-w-0">
+                        <h5>Work in Browser</h5>
+                        <p>Runs in your browser inside a "Seek AI" tab group. You can keep working.</p>
+                      </div>
+                    </div>
+                    <div class="mode-menu-item" data-mode="desktop">
+                      <div class="mm-icon"><i data-lucide="monitor" class="w-[16px] h-[16px]"></i></div>
+                      <div class="flex-1 min-w-0">
+                        <h5>Work on Desktop</h5>
+                        <p>Takes over your screen to drive native apps. Don't touch the mouse or keyboard until it finishes.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex-1"></div>
+                <button id="send-btn" class="btn-primary" disabled title="Send · ⌘↵" aria-label="Send">
+                  <i data-lucide="arrow-up" class="w-[18px] h-[18px]"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action-agent disclaimer -->
+            <p class="disclaimer mt-3">
+              Seek will take real actions on your behalf. Pause or stop anytime; review high-impact steps before they run.
+              <a href="#" onclick="return false">Learn more</a>
+            </p>
+
+            <!-- Examples — 3-col grid, no uppercase dept labels -->
+            <div class="mt-12 grid grid-cols-3 gap-3" id="example-grid"></div>
+
+            <div class="h-12"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- ─── Flow Picker modal ─────────────────────────────────────── -->
+    <div class="modal-backdrop" id="flow-modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">Attach a Flow</div>
+            <div class="modal-sub">247 flows in <strong>ENT-2841</strong> · Synced 2 min ago</div>
+          </div>
+          <button class="modal-close" id="flow-modal-close" aria-label="Close">
+            <i data-lucide="x" class="w-[16px] h-[16px]"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-toolbar">
+            <div class="search-wrap">
+              <i data-lucide="search" class="w-[14px] h-[14px] search-icon"></i>
+              <input class="search-input" id="flow-search" placeholder="Search flows by name, app, or tag…" />
+            </div>
+            <button class="filter-chip active" data-flow-filter="all">All</button>
+            <button class="filter-chip" data-flow-filter="recent">Recent</button>
+            <button class="filter-chip" data-flow-filter="mine">Mine</button>
+          </div>
+          <div id="flow-list"></div>
+        </div>
+        <div class="modal-footer">
+          <span class="left" id="flow-modal-status">Select a flow to attach</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-cancel" id="flow-modal-cancel">Cancel</button>
+            <button class="btn-attach" id="flow-modal-attach" disabled>Attach</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Chip option popover ──────────────────────────────────── -->
+    <div id="chip-popover" class="chip-popover" hidden></div>
+
+    <script src="seek-sidebar.js"></script>
+    <script>
+      renderSidebar({ active: "new-task" });
+    </script>
+    <script>
+      // Examples — icons match the ACTION (verb), brand name lives in the text
+      const examples = [
+        { icon: "circle-check-big",  text: "Update opportunity stage in Salesforce for 12 records" },
+        { icon: "inbox",             text: "Triage today's Zendesk tickets by severity" },
+        { icon: "user-check",        text: "Pull onboarding status for new hires this week" },
+        { icon: "scale",             text: "Reconcile yesterday's Stripe payouts with the ledger" },
+        { icon: "key-round",         text: "Add 3 new users to Okta and assign Workday access" },
+        { icon: "bar-chart-3",       text: "Export this week's pipeline report from HubSpot" },
+      ];
+
+      document.getElementById("example-grid").innerHTML = examples
+        .map((e) => `
+          <button class="ex-card" data-text="${e.text}">
+            <div class="ex-icon"><i data-lucide="${e.icon}" class="w-[14px] h-[14px]"></i></div>
+            <p>${e.text}</p>
+          </button>
+        `)
+        .join("");
+
+      lucide.createIcons();
+
+      // ─── Mode toggle ───────────────────────────────────────
+      const modeMenu = document.getElementById("mode-menu");
+      const attachMenu = document.getElementById("attach-menu");
+
+      function bindModeBtn() {
+        document.getElementById("mode-toggle").addEventListener("click", (e) => {
+          e.stopPropagation();
+          modeMenu.classList.toggle("hidden-flex");
+          attachMenu.classList.add("hidden-flex");
+        });
+      }
+      bindModeBtn();
+
+      modeMenu.querySelectorAll(".mode-menu-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const mode = item.dataset.mode;
+          modeMenu.querySelectorAll(".mode-menu-item").forEach((i) => i.removeAttribute("data-current"));
+          item.setAttribute("data-current", "true");
+
+          const modeBtn = document.getElementById("mode-toggle");
+          modeBtn.innerHTML = `
+            <i data-lucide="${mode === "browser" ? "globe" : "monitor"}" class="w-[12px] h-[12px]"></i>
+            <span id="mode-label">${mode === "browser" ? "Work in Browser" : "Work on Desktop"}</span>
+            <i data-lucide="chevron-down" class="w-[12px] h-[12px]"></i>
+          `;
+          lucide.createIcons();
+          modeMenu.classList.add("hidden-flex");
+          bindModeBtn();
+        });
+      });
+
+      // Attach menu
+      document.getElementById("attach-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        attachMenu.classList.toggle("hidden-flex");
+        modeMenu.classList.add("hidden-flex");
+      });
+
+      document.addEventListener("click", () => {
+        modeMenu.classList.add("hidden-flex");
+        attachMenu.classList.add("hidden-flex");
+      });
+
+      // ─── Auto-generated task name + rename ─────────────────
+      function generateTaskName(prompt) {
+        if (!prompt || prompt.trim().length < 8) return "";
+        let text = prompt.trim();
+        text = text.replace(/^(please|can you|could you|i want to|i need to|help me|let'?s)\s+/i, "");
+        const punct = text.search(/[.!?,;:]/);
+        if (punct > 10 && punct < 80) text = text.slice(0, punct);
+        if (text.length > 50) text = text.slice(0, 50).trim() + "…";
+        return text.charAt(0).toUpperCase() + text.slice(1);
+      }
+
+      const taskNameEl = document.getElementById("task-name");
+      let nameManuallySet = false;
+
+      function setTaskName(name) {
+        if (!name) {
+          taskNameEl.textContent = "Untitled task";
+          taskNameEl.dataset.empty = "true";
+        } else {
+          taskNameEl.textContent = name;
+          taskNameEl.dataset.empty = "false";
+        }
+      }
+
+      taskNameEl.addEventListener("focus", () => {
+        if (taskNameEl.dataset.empty === "true") taskNameEl.textContent = "";
+        setTimeout(() => {
+          const range = document.createRange();
+          range.selectNodeContents(taskNameEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }, 10);
+      });
+      taskNameEl.addEventListener("blur", () => {
+        const val = taskNameEl.textContent.trim();
+        if (val) {
+          nameManuallySet = true;
+          taskNameEl.dataset.empty = "false";
+          taskNameEl.textContent = val;
+        } else {
+          nameManuallySet = false;
+          const auto = generateTaskName(document.getElementById("prompt-input").value);
+          setTaskName(auto);
+        }
+      });
+      taskNameEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === "Escape") {
+          e.preventDefault();
+          taskNameEl.blur();
+        }
+      });
+
+      // ─── Example click → prefill ───────────────────────────
+      const input = document.getElementById("prompt-input");
+      const sendBtn = document.getElementById("send-btn");
+
+      document.getElementById("example-grid").addEventListener("click", (e) => {
+        const card = e.target.closest(".ex-card");
+        if (!card) return;
+        input.value = card.dataset.text;
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        refreshSend();
+      });
+      input.addEventListener("input", refreshSend);
+
+      // ─── Send → routes by mode (Browser = chat thread, Desktop = takeover) ──
+      function sendTask() {
+        if (sendBtn.disabled) return;
+        let taskText, flowParam = "";
+        const scaffoldEl = document.getElementById("scaffold");
+        if (scaffoldEl && !scaffoldEl.hidden) {
+          taskText = scaffoldEl.innerText.trim().replace(/\s+/g, " ");
+          flowParam = `&flow=${encodeURIComponent(flowChipName.textContent)}`;
+        } else if (!document.getElementById("prefill").hidden) {
+          taskText = document.getElementById("prefill").innerText.trim().replace(/\s+/g, " ");
+          flowParam = `&flow=${encodeURIComponent(flowChipName.textContent)}`;
+        } else {
+          taskText = input.value.trim();
+        }
+        const desktopMode = modeMenu.querySelector('.mode-menu-item[data-current="true"]')?.dataset.mode === "desktop";
+        const dest = desktopMode ? "Seek-Desktop-Phase-7.html" : "Seek-Desktop-Phase-1-Working.html";
+        window.location.href = `${dest}?task=${encodeURIComponent(taskText)}${flowParam}`;
+      }
+      sendBtn.addEventListener("click", sendTask);
+
+      // ─── ⌘↵ to send (Cmd+Enter / Ctrl+Enter) ───────────────
+      input.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          sendTask();
+        }
+      });
+
+      // ─── Flow data ──────────────────────────────────────────
+      const FLOWS = [
+        { id: 1, name: "Update Opportunity Stage", icon: "circle-check-big", description: "Move opportunities to a new stage with auto-probability.", app: "Salesforce", steps: 7, tags: ["recent"] },
+        { id: 2, name: "Triage Zendesk Ticket", icon: "inbox", description: "Assess priority, assign owner, route to queue.", app: "Zendesk", steps: 5, tags: ["recent"] },
+        { id: 3, name: "Onboard New Hire", icon: "user-plus", description: "Provision accounts, send welcome materials, create tasks.", app: "Workday", steps: 12, tags: [] },
+        { id: 4, name: "Reconcile Stripe Payouts", icon: "scale", description: "Compare payouts against the GL and flag mismatches.", app: "Stripe", steps: 6, tags: ["recent", "mine"] },
+        { id: 5, name: "Export Pipeline Report", icon: "file-spreadsheet", description: "Generate weekly pipeline snapshot and email to ops.", app: "HubSpot", steps: 4, tags: ["recent"] },
+        { id: 6, name: "Provision Okta Access", icon: "key-round", description: "Add user, assign apps, trigger password setup.", app: "Okta", steps: 5, tags: ["mine"] },
+        { id: 7, name: "Send Renewal Reminder", icon: "mail", description: "Email customers 60 days before contract renewal.", app: "Outreach", steps: 8, tags: [] },
+        { id: 8, name: "Update Account Health Score", icon: "activity", description: "Recalculate health from usage, NPS, and CSM notes.", app: "Salesforce", steps: 9, tags: [] },
+        { id: 9, name: "Refund Customer Charge", icon: "rotate-ccw", description: "Validate refund, process via Stripe, notify customer.", app: "Stripe", steps: 6, tags: ["recent"] },
+        { id: 10, name: "Update CRM with This Week's Leads", icon: "users", description: "Push qualified leads to Salesforce.", app: "Salesforce", steps: 4, tags: [] },
+      ];
+      const APP_GLYPHS = {
+        Salesforce: "SF", Zendesk: "ZD", Stripe: "S", Workday: "W",
+        HubSpot: "HS", Okta: "O", Outreach: "OR", Notion: "N",
+      };
+
+      // ─── Categorical chip configs per flow ──────────────────
+      // Generic chips used for any flow + flow-specific overrides
+      const GENERIC_CHIPS = [
+        { key: "scope",      icon: "filter",       label: "scope",       options: ["This week's items", "All open", "Owned by me", "Anything flagged urgent"] },
+        { key: "guardrails", icon: "shield-check", label: "guard rails", options: ["Pause before each write", "Require approval for amounts > $10k", "Stop on first error", "None"] },
+        { key: "output",     icon: "send",         label: "output",      options: ["Email me a summary", "Post to #seek-runs in Slack", "Save as report", "Don't notify"] },
+      ];
+      const FLOW_CHIPS = {
+        "Update Opportunity Stage": [
+          { key: "records",    icon: "filter",       label: "records",      options: ["All Q3 closing this week", "Stage = Proposal/Quote", "Owned by Sarah Chen", "Recently updated"] },
+          { key: "target",     icon: "target",       label: "target stage", options: ["Closed Won", "Closed Lost", "Negotiation", "Proposal/Quote"] },
+          { key: "guardrails", icon: "shield-check", label: "guard rails",  options: ["Pause before each save", "Require approval for amounts > $100k", "Stop on first error", "None"] },
+          { key: "output",     icon: "send",         label: "output",       options: ["Notify Sales Ops in Slack", "Email account owner", "Append to weekly digest", "Don't notify"] },
+        ],
+        "Triage Zendesk Ticket": [
+          { key: "tickets",    icon: "filter",       label: "tickets",     options: ["Today's new tickets", "Pending > 2h response", "VIP customers only", "All unassigned"] },
+          { key: "criteria",   icon: "list-checks", label: "criteria",    options: ["Severity then SLA", "Revenue tier then severity", "VIP first", "Round-robin"] },
+          { key: "guardrails", icon: "shield-check", label: "guard rails", options: ["Pause before assigning", "Notify owner before reassign", "Stop on missing tags", "None"] },
+          { key: "output",     icon: "send",         label: "output",      options: ["Notify Support lead in Slack", "Email queue summary", "Update Kanban board", "Don't notify"] },
+        ],
+        "Reconcile Stripe Payouts": [
+          { key: "range",      icon: "calendar",     label: "date range",    options: ["Yesterday", "Last 7 days", "This month", "Last billing cycle"] },
+          { key: "account",    icon: "wallet",       label: "GL account",    options: ["Stripe Clearing", "Operating revenue", "International revenue", "Trial cohort"] },
+          { key: "guardrails", icon: "shield-check", label: "guard rails",   options: ["Stop if delta > $500", "Pause on each mismatch", "Auto-correct ≤ $50", "None"] },
+          { key: "output",     icon: "send",         label: "output",        options: ["Email Finance team", "Post to #finance-ops Slack", "Save reconciliation report", "Don't notify"] },
+        ],
+        "Export Pipeline Report": [
+          { key: "range",      icon: "calendar",   label: "time range", options: ["This week", "This month", "This quarter", "Last 90 days"] },
+          { key: "dimension",  icon: "layers",     label: "grouped by", options: ["Stage", "Owner", "Industry", "Source"] },
+          { key: "recipient",  icon: "mail",       label: "recipient",  options: ["revops@acme.com", "Sales leadership distribution", "My direct report", "All managers"] },
+          { key: "output",     icon: "file-text",  label: "format",     options: ["Spreadsheet (.xlsx)", "PDF", "Inline email", "Shared Notion page"] },
+        ],
+      };
+      function chipsForFlow(name) {
+        return FLOW_CHIPS[name] || GENERIC_CHIPS;
+      }
+
+      // ─── Flow Picker modal ─────────────────────────────────
+      const modal       = document.getElementById("flow-modal-backdrop");
+      const modalClose  = document.getElementById("flow-modal-close");
+      const modalCancel = document.getElementById("flow-modal-cancel");
+      const modalAttach = document.getElementById("flow-modal-attach");
+      const modalStatus = document.getElementById("flow-modal-status");
+      const modalList   = document.getElementById("flow-list");
+      const modalSearch = document.getElementById("flow-search");
+      let modalSelectedId = null;
+      let modalFilter = "all";
+
+      function renderFlowList() {
+        const q = (modalSearch.value || "").toLowerCase().trim();
+        const filtered = FLOWS.filter((f) => {
+          if (modalFilter === "recent" && !f.tags.includes("recent")) return false;
+          if (modalFilter === "mine"   && !f.tags.includes("mine")) return false;
+          if (q && !f.name.toLowerCase().includes(q) && !f.app.toLowerCase().includes(q) && !f.description.toLowerCase().includes(q)) return false;
+          return true;
+        });
+        modalList.innerHTML = filtered.map((f) => `
+          <div class="flow-row${f.id === modalSelectedId ? ' selected' : ''}" data-flow-id="${f.id}">
+            <div class="flow-main">
+              <div class="flow-glyph"><i data-lucide="${f.icon}" class="w-[16px] h-[16px]"></i></div>
+              <div class="flow-text">
+                <div class="flow-name">${f.name}</div>
+                <div class="flow-desc">${f.description}</div>
+              </div>
+            </div>
+            <div class="flow-app-cell">
+              <span class="flow-app-glyph">${APP_GLYPHS[f.app] || "?"}</span>
+              <span>${f.app}</span>
+            </div>
+            <i data-lucide="check" class="w-[16px] h-[16px] selected-check"></i>
+          </div>
+        `).join("");
+        lucide.createIcons();
+        modalList.querySelectorAll(".flow-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            modalSelectedId = parseInt(row.dataset.flowId);
+            renderFlowList();
+            modalAttach.disabled = false;
+            modalStatus.textContent = `Selected: ${FLOWS.find((x) => x.id === modalSelectedId).name}`;
+          });
+        });
+      }
+
+      function openFlowModal() {
+        modalSelectedId = null;
+        modalAttach.disabled = true;
+        modalStatus.textContent = "Select a flow to attach";
+        modalSearch.value = "";
+        document.querySelectorAll('[data-flow-filter]').forEach((c) => c.classList.toggle('active', c.dataset.flowFilter === 'all'));
+        modalFilter = "all";
+        renderFlowList();
+        modal.classList.add("open");
+        setTimeout(() => modalSearch.focus(), 100);
+      }
+      function closeFlowModal() {
+        modal.classList.remove("open");
+      }
+      modalClose.addEventListener("click", closeFlowModal);
+      modalCancel.addEventListener("click", closeFlowModal);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closeFlowModal(); });
+      modalSearch.addEventListener("input", renderFlowList);
+      document.querySelectorAll("[data-flow-filter]").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll("[data-flow-filter]").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          modalFilter = chip.dataset.flowFilter;
+          renderFlowList();
+        });
+      });
+      modalAttach.addEventListener("click", () => {
+        const flow = FLOWS.find((f) => f.id === modalSelectedId);
+        if (!flow) return;
+        closeFlowModal();
+        attachFlow(flow);
+      });
+
+      // Wire the paperclip menu → opens modal (intercept the <a> click)
+      document.getElementById("am-flow").addEventListener("click", (e) => {
+        e.preventDefault();
+        attachMenu.classList.add("hidden-flex");
+        openFlowModal();
+      });
+
+      // ─── Flow attached state (chip + prefilled prompt with categorical chips) ───
+      const flowChip      = document.getElementById("flow-chip");
+      const flowChipName  = document.getElementById("flow-chip-name");
+      const flowChipClose = document.getElementById("flow-chip-close");
+      const prefill       = document.getElementById("prefill");
+      const flowHint      = document.getElementById("flow-hint");
+      const chipPopover   = document.getElementById("chip-popover");
+
+      // Per-flow prefilled-prompt templates referencing chip keys with {chip:key}
+      const PROMPT_TEMPLATES = {
+        "Update Opportunity Stage": "Run this flow on {chip:records} to move them to {chip:target}. Apply {chip:guardrails}. {chip:output}.",
+        "Triage Zendesk Ticket":    "Triage {chip:tickets} by {chip:criteria}. Apply {chip:guardrails}. {chip:output}.",
+        "Reconcile Stripe Payouts": "Reconcile {chip:range} payouts against {chip:account}. Apply {chip:guardrails}. {chip:output}.",
+        "Export Pipeline Report":   "Export pipeline for {chip:range} grouped by {chip:dimension} as {chip:output} and send to {chip:recipient}.",
+      };
+      const GENERIC_TEMPLATE = "Run this flow on {chip:scope}. Apply {chip:guardrails}. {chip:output}.";
+
+      function chipHTML(spec) {
+        return `<span class="cat-chip" data-chip-key="${spec.key}" data-chip-label="${spec.label}" data-chip-value="">
+          <i data-lucide="${spec.icon}" class="cat-chip-icon w-[11px] h-[11px]"></i><span class="cat-chip-text">${spec.label}</span><i data-lucide="chevron-down" class="cat-chip-caret w-[10px] h-[10px]"></i>
+        </span>`;
+      }
+      function renderPrompt(flowName) {
+        const template = PROMPT_TEMPLATES[flowName] || GENERIC_TEMPLATE;
+        const specs = chipsForFlow(flowName);
+        const specByKey = Object.fromEntries(specs.map((s) => [s.key, s]));
+        return template.replace(/\{chip:([a-z]+)\}/g, (_, key) => {
+          const spec = specByKey[key];
+          if (!spec) return key;
+          return chipHTML(spec);
+        });
+      }
+
+      function attachFlow(flow) {
+        flowChipName.textContent = flow.name;
+        flowChip.hidden = false;
+
+        prefill.innerHTML = renderPrompt(flow.name);
+        prefill.hidden = false;
+
+        const duration = "~40s"; // placeholder; could be per-flow
+        flowHint.innerHTML = `
+          <i data-lucide="info" class="w-[12px] h-[12px]"></i>
+          <span>Runs in <strong style="color: var(--color-ink-900)">${flow.app}</strong></span>
+          <span class="dot">·</span>
+          <span><strong style="color: var(--color-ink-900)">${flow.steps} steps</strong></span>
+          <span class="dot">·</span>
+          <span>${duration}</span>
+          <span class="dot">·</span>
+          <button class="customize-btn">Customize</button>
+        `;
+        flowHint.hidden = false;
+
+        input.style.display = "none";
+
+        // Wire chip clicks
+        prefill.querySelectorAll(".cat-chip").forEach((chip) => {
+          chip.addEventListener("click", (e) => {
+            e.stopPropagation();
+            openChipPopover(chip, flow.name);
+          });
+        });
+
+        lucide.createIcons();
+        refreshSend();
+      }
+
+      function detachFlow() {
+        flowChip.hidden = true;
+        prefill.hidden = true;
+        flowHint.hidden = true;
+        prefill.innerHTML = "";
+        input.style.display = "";
+        input.focus();
+        refreshSend();
+        closeChipPopover();
+      }
+      flowChipClose.addEventListener("click", detachFlow);
+
+      // ─── Chip option popover ───────────────────────────────
+      let popoverChipEl = null;
+      function openChipPopover(chipEl, flowName) {
+        closeChipPopover();
+        popoverChipEl = chipEl;
+        const key = chipEl.dataset.chipKey;
+        const specs = chipsForFlow(flowName);
+        const spec  = specs.find((s) => s.key === key);
+        if (!spec) return;
+        const currentValue = chipEl.dataset.chipValue;
+        chipPopover.innerHTML = `
+          <div class="pop-label">${spec.label}</div>
+          ${spec.options.map((opt) => `
+            <div class="pop-option${opt === currentValue ? ' selected' : ''}" data-opt="${opt}">
+              <span>${opt}</span>
+              <i data-lucide="check" class="check w-[14px] h-[14px]"></i>
+            </div>
+          `).join("")}
+          <div class="pop-divider"></div>
+          <div class="pop-custom">
+            <input id="pop-custom-input" placeholder="Or write something custom…" value="${currentValue && !spec.options.includes(currentValue) ? currentValue : ''}" />
+          </div>
+        `;
+        // Position
+        const rect = chipEl.getBoundingClientRect();
+        chipPopover.hidden = false;
+        const popH = chipPopover.offsetHeight;
+        const top = rect.bottom + 6;
+        chipPopover.style.top = `${(top + popH > window.innerHeight - 20 ? rect.top - popH - 6 : top)}px`;
+        chipPopover.style.left = `${Math.min(rect.left, window.innerWidth - chipPopover.offsetWidth - 16)}px`;
+
+        lucide.createIcons();
+
+        chipPopover.querySelectorAll(".pop-option").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            fillChip(chipEl, opt.dataset.opt);
+            closeChipPopover();
+          });
+        });
+        const customInput = chipPopover.querySelector("#pop-custom-input");
+        customInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const val = customInput.value.trim();
+            if (val) {
+              fillChip(chipEl, val);
+              closeChipPopover();
+            }
+          }
+        });
+      }
+      function closeChipPopover() {
+        chipPopover.hidden = true;
+        chipPopover.innerHTML = "";
+        popoverChipEl = null;
+      }
+      function fillChip(chipEl, value) {
+        chipEl.dataset.chipValue = value;
+        chipEl.classList.add("filled");
+        chipEl.querySelector(".cat-chip-text").textContent = value;
+        refreshSend();
+      }
+      document.addEventListener("click", (e) => {
+        if (chipPopover.hidden) return;
+        if (chipPopover.contains(e.target)) return;
+        if (popoverChipEl && popoverChipEl.contains(e.target)) return;
+        closeChipPopover();
+      });
+
+      // refreshSend respecting prefill state
+      function refreshSend() {
+        if (!prefill.hidden) {
+          const chips = prefill.querySelectorAll(".cat-chip");
+          const allFilled = Array.from(chips).every((c) => c.classList.contains("filled"));
+          sendBtn.disabled = !allFilled;
+        } else {
+          sendBtn.disabled = input.value.trim().length === 0;
+        }
+      }
+
+      // Autofocus + load-time URL params
+      window.addEventListener("load", () => {
+        const params = new URLSearchParams(window.location.search);
+        const taskParam = params.get("task");
+        if (taskParam) {
+          input.value = decodeURIComponent(taskParam);
+          refreshSend();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+        input.focus();
+      });
+    </script>
+  </body>
+</html>

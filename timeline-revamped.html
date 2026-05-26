@@ -1,0 +1,3639 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440, initial-scale=1" />
+    <title>Video AI · Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --font-serif: "Source Serif 4", ui-serif, Georgia, serif;
+
+        --color-bg: #F6F6F9;
+        --color-surface: #FFFFFF;
+        --color-surface-2: #F2F2F8;
+        --color-surface-dark: #1A1A2A;
+
+        --color-ink-900: #1F1F32;
+        --color-ink-800: #3D3C52;
+        --color-ink-700: #525066;
+        --color-ink-500: #7B7891;
+        --color-ink-400: #9A98AD;
+        --color-ink-300: #C1BFD0;
+        --color-ink-200: #ECECF3;
+        --color-ink-100: #F2F2F8;
+
+        --color-fire-50:  #FFF8F5;
+        --color-fire-100: #FEE2D6;
+        --color-fire-300: #FF8447;
+        --color-fire-400: #C74900;
+        --color-fire-500: #9E4100;
+        --color-fire-600: #873B00;
+
+        --color-ch-a: #5A6FB0;   /* indigo */
+        --color-ch-b: #C28C4F;   /* amber */
+        --color-ch-c: #4F9077;   /* emerald */
+        --color-ch-d: #B26597;   /* rose */
+
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+
+        --r-sm: 4px;
+        --r-md: 8px;
+        --r-lg: 12px;
+        --r-xl: 16px;
+        --r-pill: 999px;
+
+        --shadow-sm: 0 1px 2px rgba(15,15,25,0.04), 0 0 0 1px rgba(15,15,25,0.04);
+        --shadow-md: 0 4px 12px rgba(15,15,25,0.06), 0 0 0 1px rgba(15,15,25,0.04);
+        --shadow-lg: 0 12px 32px rgba(15,15,25,0.08), 0 0 0 1px rgba(15,15,25,0.04);
+      }
+
+      html, body {
+        background: var(--color-bg);
+        color: var(--color-ink-900);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+      svg.lucide { stroke-width: 1.5; }
+      *:focus-visible { outline: 2px solid var(--color-fire-400); outline-offset: 2px; border-radius: 2px; }
+
+      /* ───────── App shell ───────── */
+      .app-frame {
+        display: grid;
+        grid-template-rows: 56px 1fr;
+        height: 100vh;
+      }
+      .app-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 var(--space-5);
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-ink-200);
+      }
+      .breadcrumb {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; color: var(--color-ink-500);
+      }
+      .breadcrumb a { color: var(--color-ink-500); text-decoration: none; }
+      .breadcrumb a:hover { color: var(--color-ink-900); }
+      .breadcrumb .sep { color: var(--color-ink-300); }
+      .doc-title {
+        font-size: 15px; font-weight: 600; color: var(--color-ink-900);
+        letter-spacing: -0.01em;
+      }
+      .pill-editing {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 3px 8px; border-radius: var(--r-pill);
+        background: rgba(199,73,0,0.08); color: var(--color-fire-500);
+        font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+      }
+      .pill-editing .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(199,73,0,0.12);
+      }
+
+      .app-body {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        min-height: 0;
+      }
+
+      /* ───────── Left nav rail ───────── */
+      .nav-rail {
+        background: var(--color-surface-dark);
+        display: flex; flex-direction: column; align-items: center;
+        padding: var(--space-3) 0;
+        gap: var(--space-1);
+      }
+      .nav-rail .brand {
+        width: 36px; height: 36px; border-radius: var(--r-md);
+        background: var(--color-fire-400);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #FFF; font-weight: 700; font-size: 14px;
+        margin-bottom: var(--space-4);
+      }
+      .nav-rail .nav-btn {
+        width: 36px; height: 36px; border-radius: var(--r-md);
+        color: rgba(255,255,255,0.55);
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: background-color 120ms, color 120ms;
+        border: 0; background: transparent;
+      }
+      .nav-rail .nav-btn:hover { background: rgba(255,255,255,0.06); color: #FFF; }
+      .nav-rail .nav-btn.active { background: rgba(255,255,255,0.10); color: #FFF; }
+      .nav-rail .spacer { flex: 1; }
+
+      /* ─────────────────────────────────────────────────────────
+       *  Workspace layout  — two columns + status bar.
+       *    │ AI panel │ Composite box │
+       *  The composite box is one visual surface that holds:
+       *    top row:  Narration (left) | Preview (right)
+       *    bottom:   Timeline (spans full width of the box)
+       *  This unifies the narration, video, and timeline so they
+       *  read as one editor surface, not three islands.
+       * ─────────────────────────────────────────────────────────*/
+      .workspace {
+        display: grid;
+        grid-template-columns:
+          minmax(320px, 0.75fr)
+          minmax(700px, 1.85fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        min-height: 0;
+        background: var(--color-bg);
+      }
+      .ai-panel {
+        grid-row: 1; grid-column: 1;
+        margin: var(--space-3) 0 var(--space-3) var(--space-3);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        display: flex; flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .composite-box {
+        grid-row: 1; grid-column: 2;
+        margin: var(--space-3);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .composite-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        min-height: 0;
+      }
+      .composite-top > .narration {
+        border-right: 1px solid var(--color-ink-200);
+      }
+      .status-bar { grid-row: 2; grid-column: 1 / -1; }
+
+      /* ─────────────────────────────────────────────────────────
+       *  AI PANEL — primary verb surface. Cursor context at top,
+       *  suggestion chips, conversation when AI asks something,
+       *  input at the bottom. Replaces the inline action picker
+       *  flow as the *primary* way to add effects, split, blur, etc.
+       *  Direct controls in the narration block remain as a power-user
+       *  fast path.
+       * ─────────────────────────────────────────────────────────*/
+      .ap-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: var(--space-3) var(--space-4);
+        border-bottom: 1px solid var(--color-ink-200);
+        flex: 0 0 auto;
+      }
+      .ap-title {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 13px; font-weight: 600; color: var(--color-ink-900);
+      }
+      .ap-title .ap-sparkle {
+        width: 22px; height: 22px; border-radius: 6px;
+        background: linear-gradient(135deg, var(--color-fire-300), var(--color-fire-400));
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #FFF;
+        box-shadow: 0 0 12px -2px rgba(255,132,71,0.35);
+      }
+      .ap-title .ap-sparkle svg { width: 13px; height: 13px; }
+      .ap-title .ap-shortcut {
+        margin-left: 6px;
+        font-size: 10.5px; font-weight: 600;
+        padding: 1px 5px; border-radius: 3px;
+        background: var(--color-ink-100); color: var(--color-ink-700);
+      }
+
+      /* Cursor-context strip — shows where the AI thinks "here" is */
+      .ap-context {
+        flex: 0 0 auto;
+        margin: var(--space-3) var(--space-4) 0;
+        padding: 10px 12px;
+        background: linear-gradient(135deg, var(--color-fire-50), var(--color-surface));
+        border: 1px solid var(--color-fire-100);
+        border-radius: var(--r-md);
+      }
+      .ap-context .ap-ctx-label {
+        font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-fire-500);
+        margin-bottom: 4px;
+        display: inline-flex; align-items: center; gap: 5px;
+      }
+      .ap-context .ap-ctx-label svg { width: 11px; height: 11px; }
+      .ap-context .ap-ctx-where {
+        font-size: 13px; font-weight: 600;
+        color: var(--color-ink-900);
+        line-height: 1.35;
+      }
+      .ap-context .ap-ctx-where .ch-dot {
+        display: inline-block;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--color-accent, var(--color-ink-300));
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+      .ap-context .ap-ctx-when {
+        font-size: 11.5px;
+        color: var(--color-ink-500);
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      .ap-context .ap-ctx-when .word-anchor {
+        color: var(--color-ink-700);
+        background: rgba(199,73,0,0.10);
+        padding: 0 5px; border-radius: 3px;
+        font-family: var(--font-sans);
+      }
+
+      .ap-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: var(--space-3) var(--space-4);
+      }
+      .ap-body::-webkit-scrollbar { width: 8px; }
+      .ap-body::-webkit-scrollbar-thumb { background: var(--color-ink-200); border-radius: var(--r-pill); }
+
+      .ap-section-title {
+        font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-ink-500);
+        margin: var(--space-2) 0 var(--space-2);
+      }
+
+      .ap-suggestions {
+        display: flex; flex-direction: column; gap: 6px;
+      }
+      .ap-suggest {
+        display: flex; align-items: center; gap: 10px;
+        padding: 9px 11px;
+        text-align: left;
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-md);
+        color: var(--color-ink-800);
+        font-size: 12.5px; font-weight: 500;
+        cursor: pointer;
+        transition: background 120ms, border-color 120ms, transform 120ms;
+      }
+      .ap-suggest:hover {
+        background: var(--color-fire-50);
+        border-color: var(--color-fire-100);
+      }
+      .ap-suggest:active { transform: scale(0.99); }
+      .ap-suggest .ap-s-icon {
+        width: 24px; height: 24px; border-radius: var(--r-sm);
+        background: var(--color-ink-100);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        flex-shrink: 0;
+      }
+      .ap-suggest .ap-s-icon svg { width: 13px; height: 13px; }
+      .ap-suggest.media .ap-s-icon     { background: #EEF2FB; color: #3A4F7A; }
+      .ap-suggest.blur .ap-s-icon      { background: #F0EEF7; color: #4F4470; }
+      .ap-suggest.highlight .ap-s-icon { background: #FFF6E3; color: #8A6A1F; }
+      .ap-suggest.timing .ap-s-icon    { background: rgba(199,73,0,0.12); color: var(--color-fire-500); }
+      .ap-suggest.structure .ap-s-icon { background: rgba(79,144,119,0.14); color: #2F6249; }
+      .ap-suggest .ap-s-body { flex: 1; min-width: 0; }
+      .ap-suggest .ap-s-title { display: block; }
+      .ap-suggest .ap-s-shortcut {
+        font-size: 10px; color: var(--color-ink-400);
+        margin-left: auto;
+        padding: 1px 5px; border-radius: 3px;
+        background: var(--color-ink-100);
+        font-weight: 600;
+      }
+
+      /* Conversation when AI asks a clarifying question */
+      .ap-convo {
+        margin-top: var(--space-4);
+        padding-top: var(--space-4);
+        border-top: 1px dashed var(--color-ink-200);
+        display: none;
+      }
+      .ap-convo.active { display: block; }
+      .ap-turn {
+        display: flex; gap: 8px;
+        margin-bottom: 10px;
+        animation: turn-in 200ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes turn-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .ap-turn .ap-avatar {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: var(--color-ink-100); color: var(--color-ink-700);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 10px; font-weight: 700;
+        flex-shrink: 0;
+      }
+      .ap-turn.ai .ap-avatar {
+        background: linear-gradient(135deg, var(--color-fire-300), var(--color-fire-400));
+        color: #FFF;
+      }
+      .ap-turn .ap-msg {
+        flex: 1; min-width: 0;
+        font-size: 12.5px;
+        color: var(--color-ink-800);
+        line-height: 1.45;
+      }
+      .ap-turn .ap-msg .ap-quick-replies {
+        display: flex; gap: 6px; flex-wrap: wrap;
+        margin-top: 6px;
+      }
+      .ap-turn .ap-msg .ap-qr {
+        padding: 4px 9px; border-radius: var(--r-pill);
+        background: var(--color-surface);
+        border: 1px solid var(--color-fire-100);
+        color: var(--color-fire-500);
+        font-size: 11.5px; font-weight: 500;
+        cursor: pointer;
+        transition: background 120ms;
+      }
+      .ap-turn .ap-msg .ap-qr:hover { background: var(--color-fire-50); }
+      .ap-thinking {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--color-ink-500); font-size: 12px;
+      }
+      .ap-thinking .dots span {
+        display: inline-block;
+        width: 4px; height: 4px;
+        border-radius: 50%;
+        background: var(--color-fire-400);
+        margin: 0 1px;
+        animation: dot-bounce 1.2s infinite ease-in-out;
+      }
+      .ap-thinking .dots span:nth-child(2) { animation-delay: 0.15s; }
+      .ap-thinking .dots span:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes dot-bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-3px); opacity: 1; }
+      }
+
+      /* Input at the bottom */
+      .ap-input-wrap {
+        flex: 0 0 auto;
+        border-top: 1px solid var(--color-ink-200);
+        padding: var(--space-3) var(--space-4);
+        background: var(--color-surface);
+      }
+      .ap-input {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 8px 8px 12px;
+        background: var(--color-ink-100);
+        border-radius: var(--r-md);
+        border: 1px solid transparent;
+        transition: border-color 140ms, background 140ms;
+      }
+      .ap-input:focus-within {
+        background: var(--color-surface);
+        border-color: var(--color-fire-300);
+        box-shadow: 0 0 0 3px rgba(255,132,71,0.10);
+      }
+      .ap-input textarea {
+        flex: 1; min-width: 0;
+        border: 0; outline: 0; background: transparent;
+        font-family: var(--font-sans);
+        font-size: 13px; line-height: 1.4;
+        color: var(--color-ink-900);
+        resize: none;
+        min-height: 18px; max-height: 90px;
+      }
+      .ap-input textarea::placeholder { color: var(--color-ink-400); }
+      .ap-send {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--color-fire-400); color: #FFF;
+        border: 0; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: background 120ms, transform 120ms;
+      }
+      .ap-send:hover { background: var(--color-fire-500); }
+      .ap-send:active { transform: scale(0.92); }
+      .ap-send svg { width: 14px; height: 14px; }
+      .ap-send:disabled {
+        background: var(--color-ink-300);
+        cursor: not-allowed;
+      }
+      .ap-footnote {
+        margin-top: 6px;
+        font-size: 10.5px; color: var(--color-ink-400);
+        display: flex; align-items: center; gap: 8px;
+      }
+      .ap-footnote kbd {
+        font-family: var(--font-sans);
+        font-size: 9.5px; font-weight: 600;
+        padding: 1px 4px; border-radius: 2px;
+        background: var(--color-ink-100); color: var(--color-ink-700);
+      }
+
+      /* ─────────────────────────────────────────────────────────
+       *  NARRATION PANEL  — the primary authoring surface.
+       *  Lives inside the composite box; no individual card
+       *  chrome of its own — the box owns the visual boundary.
+       * ─────────────────────────────────────────────────────────*/
+      .narration {
+        background: var(--color-surface);
+        display: flex; flex-direction: column;
+        min-height: 0;
+      }
+      .narration-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: var(--space-4) var(--space-5);
+        border-bottom: 1px solid var(--color-ink-200);
+      }
+      .narration-head h2 {
+        font-size: 13px; font-weight: 600; letter-spacing: -0.005em;
+        color: var(--color-ink-900);
+        display: inline-flex; align-items: center; gap: 8px;
+      }
+      .narration-head h2 .count {
+        font-size: 11px; font-weight: 500;
+        color: var(--color-ink-500);
+        padding: 2px 6px; border-radius: var(--r-sm);
+        background: var(--color-ink-100);
+      }
+      .voice-picker {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px; border-radius: var(--r-pill);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        font-size: 12px; font-weight: 500; color: var(--color-ink-800);
+        cursor: pointer; transition: border-color 120ms, background 120ms;
+      }
+      .voice-picker:hover { border-color: var(--color-ink-300); background: var(--color-ink-100); }
+      .voice-picker .avatar {
+        width: 18px; height: 18px; border-radius: 50%;
+        background: linear-gradient(135deg, #FFB68A 0%, #C74900 100%);
+      }
+      .narration-body {
+        flex: 1 1 auto; min-height: 0; overflow-y: auto;
+        padding: var(--space-4) var(--space-5) var(--space-6);
+      }
+      .narration-body::-webkit-scrollbar { width: 8px; }
+      .narration-body::-webkit-scrollbar-thumb { background: var(--color-ink-200); border-radius: var(--r-pill); }
+      .narration-body::-webkit-scrollbar-thumb:hover { background: var(--color-ink-300); }
+
+      /* — Chapter block — */
+      .block {
+        position: relative;
+        padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+        border-radius: var(--r-md);
+        margin-bottom: var(--space-4);
+        cursor: text;
+        transition: background-color 140ms, box-shadow 140ms;
+      }
+      .block::before {
+        content: ""; position: absolute;
+        left: 6px; top: 16px; bottom: 16px; width: 4px;
+        border-radius: var(--r-pill);
+        background: var(--color-accent, var(--color-ink-300));
+        opacity: 0.85;
+        transition: opacity 180ms, width 180ms cubic-bezier(.2,.7,.2,1),
+                    background-color 180ms, box-shadow 180ms;
+      }
+      .block:hover { background: var(--color-ink-100); }
+      .block:hover::before { width: 5px; opacity: 1; }
+
+      .block.selected {
+        background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+        box-shadow:
+          inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent),
+          0 1px 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+      }
+      .block.selected::before {
+        background: var(--color-accent);
+        width: 6px;
+        opacity: 1;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent);
+      }
+      .block.selected.bump { animation: block-bump 360ms cubic-bezier(.2,.7,.2,1); }
+      @keyframes block-bump {
+        0%   { transform: translateX(0); }
+        30%  { transform: translateX(2px); }
+        100% { transform: translateX(0); }
+      }
+      .block-head {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .block-title {
+        font-size: 13.5px; font-weight: 600; color: var(--color-ink-900);
+        outline: 0; border: 0; background: transparent;
+        padding: 3px 6px; margin-left: -6px;
+        border-radius: var(--r-sm);
+        border-bottom: 1px dashed transparent;
+        cursor: text;
+        transition: background-color 140ms, border-bottom-color 140ms, box-shadow 140ms;
+        max-width: 100%;
+      }
+      /* Editability hint at rest — a barely-there dashed underline says "input" */
+      .block-title:not(:focus):hover { border-bottom-color: var(--color-ink-300); }
+      .block-title:focus {
+        background: var(--color-surface);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, var(--color-ink-200));
+        border-bottom-color: transparent;
+      }
+
+      .block-meta {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 11px; color: var(--color-ink-500); font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .block-meta .ch-tag {
+        font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--color-accent, var(--color-ink-500));
+      }
+
+      /* — Editable narration paragraph — looks like a document field, not static text — */
+      .block-text {
+        font-family: var(--font-serif);
+        font-size: 16px; line-height: 1.7;
+        color: var(--color-ink-800);
+        outline: 0; border: 0;
+        width: 100%;
+        padding: 6px 8px; margin: 0 -8px;
+        border-radius: var(--r-sm);
+        background: rgba(15,15,25,0.012);
+        cursor: text;
+        white-space: pre-wrap;
+        word-break: break-word;
+        transition: background-color 140ms, box-shadow 140ms;
+        min-height: 1.7em;
+        isolation: isolate;   /* keep .word::before below the text, above the bg */
+      }
+      .block-text:empty::before {
+        content: attr(data-placeholder);
+        color: var(--color-ink-400);
+        font-style: italic;
+      }
+      .block:hover .block-text { background: rgba(15,15,25,0.030); }
+      .block-text:focus {
+        background: var(--color-surface);
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, var(--color-ink-200)),
+          0 2px 8px rgba(15,15,25,0.04);
+      }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Karaoke word highlight — orange rectangle wipes over the
+       *  word as the playhead crosses it. Same brand orange as the
+       *  playhead so the temporal "now" reads consistently.
+       *
+       *  - .word is a positioning context for the rectangle.
+       *  - ::before sits behind the text (z-index: -1, inside the
+       *    block-text's isolation context), scales from left to right
+       *    when the word becomes active.
+       *  - Text turns white once the rectangle has covered it.
+       *  - .played words dim to signal "already read."
+       * ───────────────────────────────────────────────────────────*/
+      .word {
+        position: relative;
+        z-index: 0;
+        border-radius: 3px;
+        padding: 1px 2px;
+        margin: 0 -1px;
+        color: var(--color-ink-800);
+        transition: color 100ms ease-out 80ms;
+      }
+      .word::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--color-fire-400);
+        border-radius: 3px;
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 220ms cubic-bezier(.2,.7,.2,1);
+        z-index: -1;
+        pointer-events: none;
+      }
+      .word.active::before { transform: scaleX(1); }
+      .word.active {
+        color: #FFF;
+        transition: color 100ms ease-out 60ms;
+      }
+      .word.played {
+        color: var(--color-ink-400);
+      }
+
+      /* Disable karaoke while editing — no distractions, plain text */
+      .block-text:focus .word::before { transform: scaleX(0) !important; }
+      .block-text:focus .word { color: inherit !important; }
+
+      /* Clip flash when its duration changes due to a script edit */
+      .clip.resized {
+        animation: clip-resize-flash 600ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes clip-resize-flash {
+        0%   { box-shadow: 0 0 0 0 rgba(199,73,0,0.0); }
+        45%  { box-shadow: 0 0 0 3px rgba(199,73,0,0.45); }
+        100% { box-shadow: 0 0 0 0 rgba(199,73,0,0.0); }
+      }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Pending-changes notice  — appears inline below an edited
+       *  chapter. Explicit Regenerate CTA (the AI work is gated on
+       *  this click, not on every keystroke). Undo restores the
+       *  chapter to its pre-edit text + duration.
+       *
+       *  Two-line layout to make the *why* explicit:
+       *    Title:  "Audio out of sync with script"
+       *    Detail: "Regenerate to re-record voiceover…" + delta
+       * ───────────────────────────────────────────────────────────*/
+      .pending-notice {
+        display: flex; align-items: center;
+        gap: var(--space-3);
+        margin-top: var(--space-3);
+        padding: 11px 12px 11px 14px;
+        background: var(--color-fire-50);
+        border: 1px solid var(--color-fire-100);
+        border-left: 4px solid var(--color-fire-400);
+        border-radius: var(--r-md);
+        animation: pn-in 240ms cubic-bezier(.2,.7,.2,1);
+      }
+      .pending-notice.out { animation: pn-out 160ms cubic-bezier(.2,.7,.2,1) forwards; }
+      @keyframes pn-in {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pn-out {
+        from { opacity: 1; transform: translateY(0); }
+        to   { opacity: 0; transform: translateY(-4px); }
+      }
+      .pn-iconwrap {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--color-fire-400);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #FFF;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 4px rgba(199,73,0,0.10);
+      }
+      .pn-iconwrap svg { width: 14px; height: 14px; }
+      .pn-body { flex: 1; min-width: 0; }
+      .pn-title {
+        font-size: 13px; font-weight: 600;
+        color: var(--color-fire-500);
+        line-height: 1.3;
+      }
+      .pn-detail {
+        font-size: 11.5px;
+        color: color-mix(in srgb, var(--color-fire-500) 80%, #000);
+        line-height: 1.4;
+        margin-top: 2px;
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      }
+      .pn-detail .pn-delta {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        background: rgba(199,73,0,0.12);
+        color: var(--color-fire-500);
+        padding: 1px 7px; border-radius: 3px;
+        font-size: 10.5px;
+        letter-spacing: 0.01em;
+      }
+      .pn-actions { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
+      .pn-undo {
+        font-size: 12px; color: var(--color-fire-500); font-weight: 500;
+        background: transparent; border: 0; padding: 6px 10px;
+        border-radius: var(--r-sm); cursor: pointer;
+        transition: background 120ms;
+      }
+      .pn-undo:hover { background: rgba(199,73,0,0.10); }
+      .pn-regen {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12.5px; font-weight: 600; color: #FFF;
+        background: var(--color-fire-400); border: 0;
+        padding: 7px 13px; border-radius: var(--r-md);
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(199,73,0,0.20);
+        transition: background 120ms, transform 120ms, box-shadow 120ms;
+      }
+      .pn-regen:hover { background: var(--color-fire-500); box-shadow: 0 2px 8px rgba(199,73,0,0.28); }
+      .pn-regen:active { background: var(--color-fire-600); transform: scale(0.98); }
+      .pn-regen svg { width: 13px; height: 13px; }
+      .pn-regen.regenerating { background: var(--color-fire-300); cursor: wait; }
+      .pn-regen.regenerating svg { animation: spin 0.9s linear infinite; }
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+      /* Subtle text-selection styling inside the editable narration
+         so selections feel like a Word document (warm tinted highlight). */
+      .block-text ::selection {
+        background: color-mix(in srgb, var(--color-fire-400) 35%, transparent);
+        color: var(--color-ink-900);
+      }
+      .block-text:focus { caret-color: var(--color-fire-400); }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Effect chips — show below narration when the user has
+       *  added media / blur / highlight effects to the chapter.
+       *  Each chip carries the effect label and a remove (×).
+       * ───────────────────────────────────────────────────────────*/
+      .effects-row {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: var(--space-2);
+      }
+      .effect-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 4px 4px 8px;
+        border-radius: var(--r-pill);
+        font-size: 11.5px; font-weight: 500;
+        background: var(--color-ink-100);
+        border: 1px solid transparent;
+        animation: chip-in 200ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes chip-in {
+        from { opacity: 0; transform: scale(0.92); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      .effect-chip svg { width: 12px; height: 12px; }
+      .effect-chip.media     { background: #EEF2FB; color: #3A4F7A; border-color: #D7E0F2; }
+      .effect-chip.blur      { background: #F0EEF7; color: #4F4470; border-color: #DCD7E8; }
+      .effect-chip.highlight { background: #FFF6E3; color: #8A6A1F; border-color: #F2E2B0; }
+      .ec-remove {
+        background: transparent; border: 0; padding: 0;
+        width: 16px; height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        color: currentColor;
+        opacity: 0.5;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: opacity 120ms, background 120ms;
+      }
+      .ec-remove:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+      .ec-remove svg { width: 10px; height: 10px; }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Picker popover  — opens off a structural action button
+       *  (Media / Blur / Highlight). Same visual language as ai-menu
+       *  but neutral-toned (these aren't AI generations).
+       * ───────────────────────────────────────────────────────────*/
+      .picker-menu {
+        position: absolute;
+        margin-top: 6px;
+        min-width: 260px;
+        background: var(--color-surface);
+        border-radius: var(--r-md);
+        border: 1px solid var(--color-ink-200);
+        box-shadow: 0 16px 40px rgba(15,15,25,0.16), 0 0 0 1px rgba(15,15,25,0.04);
+        padding: var(--space-1);
+        z-index: 50;
+        animation: menu-in 160ms cubic-bezier(.2,.7,.2,1);
+      }
+      .picker-head {
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 10px 8px;
+        font-size: 10.5px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--color-ink-500);
+        border-bottom: 1px solid var(--color-ink-100);
+      }
+      .picker-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 10px;
+        border-radius: var(--r-sm);
+        cursor: pointer;
+      }
+      .picker-item:hover { background: var(--color-ink-100); }
+      .picker-item .pk-icon {
+        width: 28px; height: 28px; border-radius: var(--r-sm);
+        background: var(--color-ink-100);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+        flex-shrink: 0;
+      }
+      .picker-item .pk-icon svg { width: 14px; height: 14px; }
+      .picker-item.media     .pk-icon { background: #EEF2FB; color: #3A4F7A; }
+      .picker-item.blur      .pk-icon { background: #F0EEF7; color: #4F4470; }
+      .picker-item.highlight .pk-icon { background: #FFF6E3; color: #8A6A1F; }
+      .picker-item .pk-body { flex: 1; min-width: 0; }
+      .picker-item .pk-title { font-size: 13px; font-weight: 500; color: var(--color-ink-900); }
+      .picker-item .pk-desc  { font-size: 11.5px; color: var(--color-ink-500); margin-top: 1px; }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Effect badges on the preview  — small overlays that hint
+       *  at the visual treatment the chapter will receive.
+       *  Sits on the dashboard render so the user sees the impact.
+       * ───────────────────────────────────────────────────────────*/
+      .preview-effects {
+        position: absolute; right: 12px; bottom: 12px;
+        z-index: 6;
+        display: flex; flex-direction: column-reverse; gap: 6px;
+        align-items: flex-end;
+        pointer-events: none;
+      }
+      .pe-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 8px;
+        border-radius: var(--r-pill);
+        font-size: 10.5px; font-weight: 600;
+        background: rgba(15,15,25,0.78);
+        backdrop-filter: blur(8px);
+        color: #FFF;
+        box-shadow: 0 2px 8px rgba(15,15,25,0.18);
+        animation: chip-in 240ms cubic-bezier(.2,.7,.2,1);
+      }
+      .pe-badge svg { width: 10px; height: 10px; }
+      .pe-badge.media     { background: rgba(58,79,122,0.92); }
+      .pe-badge.blur      { background: rgba(79,68,112,0.92); }
+      .pe-badge.highlight { background: rgba(138,106,31,0.92); }
+
+      /* Inline simulated blur overlay on the preview when blur effects exist */
+      .preview-frame.has-blur .preview-stage::after {
+        content: "";
+        position: absolute;
+        left: 16%; top: 38%; width: 22%; height: 8%;
+        background: linear-gradient(135deg, rgba(150,150,170,0.85), rgba(180,180,200,0.95));
+        backdrop-filter: blur(6px);
+        border-radius: 3px;
+        box-shadow: inset 0 0 0 1px rgba(80,70,100,0.18);
+        z-index: 4;
+        pointer-events: none;
+      }
+      /* Inline simulated highlight ring on the preview */
+      .preview-frame.has-highlight .preview-stage::before {
+        content: "";
+        position: absolute;
+        left: 36%; top: 38%; width: 11%; height: 8%;
+        border: 2px solid #C99B3A;
+        background: rgba(255,232,160,0.18);
+        border-radius: 4px;
+        box-shadow: 0 0 0 4px rgba(201,155,58,0.18);
+        z-index: 5;
+        pointer-events: none;
+        animation: hl-pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes hl-pulse {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(201,155,58,0.18); }
+        50%      { box-shadow: 0 0 0 7px rgba(201,155,58,0.00); }
+      }
+
+      /* ───────────────────────────────────────────────────────────
+       *  Timeline clip effect dots — tiny markers along the top of
+       *  the clip showing how many effects this chapter carries.
+       * ───────────────────────────────────────────────────────────*/
+      .clip-effects {
+        position: absolute; left: 6px; top: 4px;
+        display: flex; gap: 3px;
+        z-index: 2; pointer-events: none;
+      }
+      .clip-effect-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
+      }
+      .clip-effect-dot.media     { background: #6A87C2; }
+      .clip-effect-dot.blur      { background: #7F6FB0; }
+      .clip-effect-dot.highlight { background: #D6AB4A; }
+
+      /* Sync indicator: pending variant + count + inline regen-all button */
+      .sync-state.pending {
+        background: rgba(199,73,0,0.10);
+        color: var(--color-fire-500);
+        cursor: pointer;
+        padding-right: 4px;
+      }
+      .sync-state.pending:hover { background: rgba(199,73,0,0.16); }
+      .sync-state.pending .dot {
+        background: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(199,73,0,0.16);
+      }
+      .sync-state .regen-all {
+        margin-left: 6px;
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 8px;
+        background: var(--color-fire-400);
+        color: #FFF; border-radius: var(--r-pill);
+        font-size: 10.5px; font-weight: 600;
+      }
+      .sync-state .regen-all svg { width: 10px; height: 10px; }
+
+      /* — Inline action row, appears on hover/selected — */
+      .block-actions {
+        display: flex; align-items: center; gap: var(--space-2);
+        margin-top: var(--space-3);
+        opacity: 0;
+        transform: translateY(-2px);
+        transition: opacity 160ms cubic-bezier(.2,.7,.2,1),
+                    transform 160ms cubic-bezier(.2,.7,.2,1);
+        pointer-events: none;
+      }
+      .block:hover .block-actions,
+      .block.selected .block-actions {
+        opacity: 1; transform: translateY(0); pointer-events: auto;
+      }
+      .action-cluster {
+        display: inline-flex; align-items: center;
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        border-radius: var(--r-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+      }
+      .block-action {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 9px;
+        font-size: 11.5px; font-weight: 500;
+        color: var(--color-ink-700);
+        background: transparent; border: 0; cursor: pointer;
+        transition: background-color 120ms, color 120ms;
+      }
+      .action-cluster .block-action + .block-action {
+        border-left: 1px solid var(--color-ink-100);
+      }
+      .block-action:hover { background: var(--color-ink-100); color: var(--color-ink-900); }
+      .block-action .icon { width: 13px; height: 13px; }
+
+      /* AI trigger — its own cluster, prominent */
+      .ai-trigger {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 11px;
+        font-size: 11.5px; font-weight: 600;
+        color: var(--color-fire-500);
+        background: var(--color-surface);
+        border: 1px solid var(--color-fire-100);
+        border-radius: var(--r-md);
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        transition: background 120ms, border-color 120ms, color 120ms;
+      }
+      .ai-trigger:hover {
+        background: var(--color-fire-50);
+        border-color: var(--color-fire-300);
+        color: var(--color-fire-500);
+      }
+      .ai-trigger .sparkle { width: 12px; height: 12px; color: var(--color-fire-400); }
+      .ai-trigger .caret { width: 11px; height: 11px; color: var(--color-fire-400); opacity: 0.7; }
+
+      .block-action.danger {
+        color: var(--color-ink-400);
+        margin-left: auto;
+        padding: 5px 8px;
+      }
+      .block-action.danger:hover { color: #B14040; background: rgba(177,64,64,0.06); }
+
+      /* AI popover menu */
+      .ai-menu {
+        position: absolute;
+        margin-top: 6px;
+        min-width: 220px;
+        background: var(--color-surface);
+        border-radius: var(--r-md);
+        border: 1px solid var(--color-ink-200);
+        box-shadow: 0 16px 40px rgba(15,15,25,0.16), 0 0 0 1px rgba(15,15,25,0.04);
+        padding: var(--space-1);
+        z-index: 50;
+        animation: menu-in 160ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes menu-in {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .ai-menu-item {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 10px;
+        border-radius: var(--r-sm);
+        font-size: 12.5px; color: var(--color-ink-900);
+        cursor: pointer;
+      }
+      .ai-menu-item:hover { background: var(--color-fire-50); }
+      .ai-menu-item .ami-icon {
+        width: 14px; height: 14px; color: var(--color-fire-400);
+      }
+      .ai-menu-item .ami-desc {
+        font-size: 11px; color: var(--color-ink-500); margin-top: 1px;
+      }
+      .ai-menu-divider {
+        height: 1px; background: var(--color-ink-100);
+        margin: var(--space-1) var(--space-2);
+      }
+
+      /* — Add chapter between blocks — */
+      .add-chapter {
+        position: relative;
+        height: 14px;
+        margin: 0 var(--space-4);
+        display: flex; align-items: center;
+        opacity: 0;
+        transition: opacity 160ms;
+        cursor: pointer;
+      }
+      .add-chapter::before {
+        content: ""; position: absolute; left: 0; right: 0; top: 50%;
+        height: 1px; background: var(--color-fire-400);
+        transform: scaleX(0.6); transform-origin: center;
+        opacity: 0.7;
+      }
+      .add-chapter .pill {
+        position: relative; z-index: 2;
+        margin: 0 auto;
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 9px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-fire-300);
+        color: var(--color-fire-500);
+        border-radius: var(--r-pill);
+        font-size: 11px; font-weight: 600;
+        box-shadow: var(--shadow-sm);
+      }
+      .narration-body:hover .add-chapter { opacity: 1; }
+      .add-chapter:hover .pill { background: var(--color-fire-400); color: #FFF; border-color: var(--color-fire-400); }
+
+      /* ─────────────────────────────────────────────────────────
+       *  PREVIEW PANEL — auditioning surface. Lives in the right
+       *  half of the composite box, sharing the box's chrome with
+       *  narration and timeline.
+       * ─────────────────────────────────────────────────────────*/
+      .preview {
+        background: var(--color-surface);
+        display: flex; flex-direction: column;
+        min-height: 0;
+        height: 100%;
+      }
+      .preview-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: var(--space-3) var(--space-4);
+        border-bottom: 1px solid var(--color-ink-200);
+      }
+      .preview-head h2 {
+        font-size: 13px; font-weight: 600; color: var(--color-ink-900);
+      }
+      .sync-state {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 500;
+        color: var(--color-ink-500);
+        padding: 4px 8px; border-radius: var(--r-pill);
+        background: var(--color-ink-100);
+        transition: background 200ms, color 200ms;
+      }
+      .sync-state .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #4F9077;
+        box-shadow: 0 0 0 3px rgba(79,144,119,0.16);
+      }
+      .sync-state.regenerating { background: rgba(199,73,0,0.10); color: var(--color-fire-500); }
+      .sync-state.regenerating .dot {
+        background: var(--color-fire-400);
+        box-shadow: 0 0 0 3px rgba(199,73,0,0.16);
+        animation: pulse-warm 1.4s infinite;
+      }
+      .sync-state.stale { background: rgba(180,140,40,0.10); color: #8A6A1F; }
+      .sync-state.stale .dot { background: #C99B3A; box-shadow: 0 0 0 3px rgba(201,155,58,0.18); }
+      @keyframes pulse-warm {
+        0%, 100% { box-shadow: 0 0 0 3px rgba(199,73,0,0.16); }
+        50%      { box-shadow: 0 0 0 6px rgba(199,73,0,0.00); }
+      }
+
+      .preview-body {
+        flex: 1 1 auto; min-height: 0;
+        padding: var(--space-4);
+        display: flex; flex-direction: column;
+        gap: var(--space-3);
+      }
+      .preview-frame {
+        position: relative;
+        flex: 1 1 auto; min-height: 0;
+        border-radius: var(--r-md);
+        background: var(--color-bg);
+        overflow: hidden;
+        border: 6px solid var(--color-accent, var(--color-ink-200));
+        transition: border-color 320ms cubic-bezier(.2,.7,.2,1),
+                    box-shadow 320ms cubic-bezier(.2,.7,.2,1);
+        box-shadow: 0 0 0 0 transparent;
+      }
+      .preview-frame.regenerating {
+        box-shadow:
+          0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent),
+          0 0 24px 0 color-mix(in srgb, var(--color-accent) 35%, transparent);
+        animation: frame-pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes frame-pulse {
+        0%, 100% { filter: brightness(1); }
+        50%      { filter: brightness(1.04); }
+      }
+      .preview-frame.bump { animation: frame-bump 320ms cubic-bezier(.2,.7,.2,1); }
+      @keyframes frame-bump {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.008); }
+        100% { transform: scale(1); }
+      }
+
+      /* Realistic dashboard render inside preview */
+      .preview-stage {
+        position: absolute; inset: 0;
+        background: #FAFBFD;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 36px 1fr;
+      }
+      .preview-stage .ps-rail {
+        background: #25243A;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 6px 0; gap: 4px;
+      }
+      .preview-stage .ps-rail-icon {
+        width: 22px; height: 22px; border-radius: 4px;
+        background: rgba(255,255,255,0.08);
+      }
+      .preview-stage .ps-rail-icon.active { background: var(--color-fire-400); }
+      .preview-stage .ps-main { display: flex; flex-direction: column; min-width: 0; }
+      .preview-stage .ps-topbar {
+        height: 26px; padding: 0 10px;
+        display: flex; align-items: center; gap: 6px;
+        border-bottom: 1px solid #E8E8EE;
+        background: #FFFFFF;
+      }
+      .preview-stage .ps-search {
+        flex: 1; height: 16px; max-width: 180px;
+        background: #F0F0F5; border-radius: 8px;
+      }
+      .preview-stage .ps-pill {
+        width: 38px; height: 14px; border-radius: 7px; background: #E2E2EA;
+      }
+      .preview-stage .ps-pill.brand {
+        background: color-mix(in srgb, var(--color-accent) 40%, #E8E8EE);
+      }
+      .preview-stage .ps-body {
+        flex: 1; padding: 12px;
+        display: flex; flex-direction: column; gap: 10px;
+        overflow: hidden;
+      }
+      .preview-stage .ps-greeting {
+        font-size: 11px; font-weight: 600; color: #2A2A3F;
+        letter-spacing: -0.01em;
+      }
+      .preview-stage .ps-cards {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+      }
+      .preview-stage .ps-card {
+        height: 38px; border-radius: 5px;
+        background: #FFFFFF;
+        box-shadow: 0 1px 0 rgba(15,15,25,0.04), inset 0 0 0 1px rgba(15,15,25,0.04);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        gap: 3px;
+      }
+      .preview-stage .ps-card-icon {
+        width: 14px; height: 14px; border-radius: 4px;
+        background: linear-gradient(135deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 60%, #000) 100%);
+      }
+      .preview-stage .ps-card-label {
+        width: 22px; height: 4px; border-radius: 2px; background: #D6D6DE;
+      }
+      .preview-stage .ps-section-title {
+        font-size: 9.5px; font-weight: 600; color: #555370;
+        margin-top: 2px;
+      }
+      .preview-stage .ps-rows {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+        flex: 1; min-height: 0;
+      }
+      .preview-stage .ps-col { display: flex; flex-direction: column; gap: 4px; }
+      .preview-stage .ps-row {
+        height: 24px; border-radius: 4px;
+        background: #FFFFFF;
+        box-shadow: 0 1px 0 rgba(15,15,25,0.04), inset 0 0 0 1px rgba(15,15,25,0.04);
+        display: flex; align-items: center; padding: 0 6px; gap: 6px;
+      }
+      .preview-stage .ps-row .dot {
+        width: 8px; height: 8px; border-radius: 2px;
+        background: color-mix(in srgb, var(--color-accent) 50%, #BBB8C8);
+      }
+      .preview-stage .ps-row .bar {
+        flex: 1; height: 4px; border-radius: 2px; background: #E2E2EA;
+      }
+
+      .preview-frame .cursor {
+        position: absolute; left: 38%; top: 44%;
+        width: 22px; height: 22px;
+        z-index: 5;
+        filter: drop-shadow(0 2px 3px rgba(15,15,25,0.32));
+        transition: left 480ms cubic-bezier(.2,.7,.2,1), top 480ms cubic-bezier(.2,.7,.2,1);
+      }
+      .preview-frame .cursor svg { width: 100%; height: 100%; }
+      .preview-frame .chapter-label {
+        position: absolute; left: 50%; top: 14px;
+        transform: translateX(-50%);
+        z-index: 6;
+        padding: 5px 12px 5px 10px; border-radius: var(--r-pill);
+        background: var(--color-accent);
+        color: #FFF; font-size: 11px; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px;
+        box-shadow: 0 4px 12px rgba(15,15,25,0.18), 0 0 0 2px rgba(255,255,255,0.85);
+        letter-spacing: 0.01em;
+      }
+      .preview-frame .chapter-label .ch-dot {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: rgba(255,255,255,0.92);
+      }
+
+      /* Shimmer overlay during regeneration */
+      .preview-frame .shimmer {
+        position: absolute; inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        opacity: 0;
+        background: linear-gradient(
+          110deg,
+          transparent 30%,
+          color-mix(in srgb, var(--color-accent) 18%, transparent) 50%,
+          transparent 70%
+        );
+        background-size: 220% 100%;
+        transition: opacity 280ms;
+      }
+      .preview-frame.regenerating .shimmer {
+        opacity: 1;
+        animation: shimmer-slide 1.6s linear infinite;
+      }
+      @keyframes shimmer-slide {
+        from { background-position: 120% 0; }
+        to   { background-position: -120% 0; }
+      }
+      .preview-controls {
+        display: flex; align-items: center; gap: var(--space-3);
+      }
+      .scrubber {
+        flex: 1 1 auto; height: 4px;
+        background: var(--color-ink-200);
+        border-radius: var(--r-pill);
+        position: relative;
+        cursor: pointer;
+      }
+      .scrubber .fill {
+        position: absolute; left: 0; top: 0; bottom: 0;
+        width: 25%; background: var(--color-fire-400);
+        border-radius: var(--r-pill);
+      }
+      .scrubber .pin {
+        position: absolute; top: 50%; left: 25%;
+        width: 12px; height: 12px; border-radius: 50%;
+        background: #FFF;
+        box-shadow: 0 0 0 2px var(--color-fire-400), 0 2px 6px rgba(15,15,25,0.18);
+        transform: translate(-50%, -50%);
+      }
+      .time-readout {
+        display: inline-flex; align-items: baseline; gap: 3px;
+        font-variant-numeric: tabular-nums; font-size: 12px;
+      }
+      .time-readout .cur { color: var(--color-ink-900); font-weight: 600; }
+      .time-readout .slash { color: var(--color-ink-300); }
+      .time-readout .tot { color: var(--color-ink-500); }
+
+      /* ─────────────────────────────────────────────────────────
+       *  TIMELINE — anchored to the bottom of the composite box,
+       *  spanning the full width beneath narration + preview.
+       *  Borders only on top (the composite box owns the outer
+       *  chrome).
+       * ─────────────────────────────────────────────────────────*/
+      .timeline-panel {
+        background: var(--color-surface);
+        border-top: 1px solid var(--color-ink-200);
+        flex-shrink: 0;
+        transition: padding 280ms cubic-bezier(.2,.7,.2,1);
+        overflow: hidden;
+      }
+      .timeline-panel.focused {
+        box-shadow: 0 -8px 24px rgba(15,15,25,0.06);
+      }
+      .tl-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: var(--space-2) var(--space-5);
+        height: 40px;
+        border-bottom: 1px solid var(--color-ink-100);
+      }
+      .tl-head-left { display: inline-flex; align-items: center; gap: var(--space-3); }
+      .tl-head-left .title {
+        font-size: 12px; font-weight: 600; color: var(--color-ink-900);
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .tl-head-left .hint {
+        font-size: 11px; color: var(--color-ink-500);
+      }
+      .tl-head-right { display: inline-flex; align-items: center; gap: 2px; }
+
+      /* Ghost icon button */
+      .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: var(--r-sm);
+        color: var(--color-ink-700); background: transparent; border: 0;
+        cursor: pointer; transition: background-color 120ms, color 120ms;
+      }
+      .btn-ghost:hover { background: var(--color-ink-100); color: var(--color-ink-900); }
+      .btn-ghost:active { background: var(--color-ink-200); }
+
+      /* Primary play */
+      .btn-play {
+        width: 32px; height: 32px; border-radius: var(--r-pill);
+        background: var(--color-fire-400); color: #FFF;
+        display: inline-flex; align-items: center; justify-content: center;
+        border: 0; cursor: pointer;
+        box-shadow: 0 1px 2px rgba(199,73,0,0.24), 0 3px 8px rgba(199,73,0,0.16);
+        transition: transform 120ms cubic-bezier(.2,.7,.2,1), background-color 120ms;
+      }
+      .btn-play:hover { background: var(--color-fire-500); transform: scale(1.04); }
+      .btn-play:active { background: var(--color-fire-600); transform: scale(0.96); }
+
+      .tl-stage {
+        padding: var(--space-3) var(--space-4);
+        height: 168px;
+        transition: height 280ms cubic-bezier(.2,.7,.2,1);
+      }
+      .timeline-panel.focused .tl-stage { height: 240px; }
+
+      .tl-grid {
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        column-gap: var(--space-3);
+        height: 100%;
+      }
+      .tl-labels {
+        display: grid;
+        grid-template-rows: 18px 48px 28px;
+        row-gap: var(--space-2);
+        align-items: center;
+        transition: grid-template-rows 280ms cubic-bezier(.2,.7,.2,1);
+      }
+      .timeline-panel.focused .tl-labels {
+        grid-template-rows: 18px 96px 36px;
+      }
+      .tl-label {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-ink-500);
+        height: 100%;
+        padding-right: var(--space-2);
+        border-right: 1px dashed var(--color-ink-200);
+      }
+      .tl-label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-ink-300); }
+
+      .tl-tracks { position: relative; --tl-zoom: 1; height: 100%; }
+
+      /* Ruler */
+      .ruler { position: relative; height: 18px; }
+      .ruler .axis {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+        background: var(--color-ink-200);
+      }
+      .ruler .label {
+        position: absolute; bottom: 6px; font-size: 10.5px; font-weight: 500;
+        color: var(--color-ink-500); font-variant-numeric: tabular-nums;
+        transform: translateX(-50%);
+      }
+      .ruler .label.first { transform: translateX(0); }
+      .ruler .label.last  { transform: translateX(-100%); }
+      .ruler .tick-major {
+        position: absolute; bottom: 0; width: 1px; height: 5px;
+        background: var(--color-ink-300); transform: translateX(-0.5px);
+      }
+      .ruler .tick-minor {
+        position: absolute; bottom: 0; width: 1px; height: 3px;
+        background: var(--color-ink-200); transform: translateX(-0.5px);
+      }
+
+      /* Clip track */
+      .track {
+        position: relative;
+        height: 48px;
+        margin-top: var(--space-2);
+        transition: height 280ms cubic-bezier(.2,.7,.2,1);
+      }
+      .timeline-panel.focused .track { height: 96px; }
+      .clip {
+        position: absolute; top: 0; bottom: 0;
+        border-radius: var(--r-sm);
+        background: var(--color-ink-200);
+        overflow: hidden; cursor: pointer;
+        transition: transform 160ms cubic-bezier(.2,.7,.2,1),
+                    box-shadow 160ms,
+                    outline-color 160ms,
+                    filter 160ms;
+        outline: 0 solid transparent;
+      }
+      .clip .thumb {
+        position: absolute; inset: 0;
+        background: linear-gradient(180deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #000));
+        opacity: 0.92;
+      }
+      .clip .label {
+        position: absolute; left: 6px; bottom: 4px;
+        max-width: calc(100% - 12px);
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 2px 6px; border-radius: 3px;
+        background: rgba(15, 15, 25, 0.55);
+        backdrop-filter: blur(6px);
+        color: #FFF; font-size: 10.5px; font-weight: 600; line-height: 1.2;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .clip .label .dur {
+        font-variant-numeric: tabular-nums;
+        color: rgba(255,255,255,0.72);
+        font-weight: 500;
+      }
+      .timeline-panel:not(.focused) .clip .label .ttl {
+        /* Title hidden in compact mode — only duration shows */
+        display: none;
+      }
+      .clip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31,31,50,0.10); }
+      .clip.selected {
+        outline: 2px solid var(--color-fire-400);
+        outline-offset: 0;
+        box-shadow: 0 4px 16px rgba(199,73,0,0.20);
+        z-index: 2;
+      }
+      /* Trim handles */
+      .clip .handle {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        width: 3px; height: 60%; border-radius: 2px;
+        background: rgba(255,255,255,0.85);
+        opacity: 0;
+        cursor: ew-resize;
+        transition: opacity 140ms;
+      }
+      .clip .handle.left  { left: 3px; }
+      .clip .handle.right { right: 3px; }
+      .clip:hover .handle, .clip.selected .handle { opacity: 0.9; }
+      .clip.selected .handle { background: var(--color-fire-400); }
+
+      /* Motion lane */
+      .motion {
+        position: relative;
+        height: 28px;
+        margin-top: var(--space-2);
+        background:
+          linear-gradient(to right, var(--color-ink-100) 1px, transparent 1px) 0 0 / 8.333% 100% repeat-x;
+        border-radius: var(--r-sm);
+        transition: height 280ms cubic-bezier(.2,.7,.2,1);
+      }
+      .timeline-panel.focused .motion { height: 36px; }
+      .motion::before {
+        content: ""; position: absolute; left: 0; right: 0; top: 50%;
+        height: 1px; background: var(--color-ink-200); transform: translateY(-0.5px);
+      }
+      .seg {
+        position: absolute; top: 2px; bottom: 2px;
+        border-radius: var(--r-sm);
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        display: flex; align-items: center; gap: 4px;
+        padding: 0 8px;
+        overflow: hidden;
+        cursor: grab;
+        user-select: none;
+        transition: border-color 140ms, box-shadow 140ms;
+      }
+      .seg.moving { cursor: grabbing; box-shadow: 0 6px 16px rgba(31,31,50,0.20); z-index: 4; }
+      .seg:hover { border-color: var(--color-ink-300); box-shadow: 0 2px 8px rgba(31,31,50,0.10); }
+      .seg .handle {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        width: 3px; height: 16px; border-radius: 2px;
+        background: rgba(15,15,25,0.55); opacity: 0; cursor: ew-resize;
+        transition: opacity 140ms; z-index: 3;
+      }
+      .seg .handle.left  { left: 2px; }
+      .seg .handle.right { right: 2px; }
+      .seg:hover .handle { opacity: 0.85; }
+      .seg.zoom { background: linear-gradient(180deg, #EEF2FB 0%, #FFFFFF 100%); border-color: #D7E0F2; }
+      .seg.zoom .seg-chip { background: #D7E0F2; color: #3A4F7A; }
+      .seg.pan  { background: linear-gradient(180deg, #EEF7F2 0%, #FFFFFF 100%); border-color: #CFE3D7; }
+      .seg.pan  .seg-chip { background: #CFE3D7; color: #2F6249; }
+      .seg .seg-chip {
+        display: inline-flex; align-items: center; gap: 3px;
+        padding: 1px 5px; border-radius: 2px;
+        font-size: 9px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .seg .seg-curve { flex: 1 1 auto; height: 12px; opacity: 0.95; }
+      .seg.zoom .seg-curve { color: #3A4F7A; }
+      .seg.pan  .seg-curve { color: #2F6249; }
+
+      /* Playhead — vertical line stays fire (canonical "now"); head tip inherits
+         current chapter's color, so the playhead reads as "now × this chapter" */
+      .playhead {
+        position: absolute; top: 0; bottom: 0;
+        width: 2px;
+        background: var(--color-fire-400);
+        z-index: 10; cursor: ew-resize;
+        will-change: transform;
+        --playhead-ch: var(--color-fire-400);
+        transition: --playhead-ch 320ms;
+      }
+      .playhead::before {
+        content: ""; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+        width: 10px; height: 10px;
+        background: var(--playhead-ch);
+        clip-path: polygon(50% 100%, 0 30%, 0 0, 100% 0, 100% 30%);
+        transition: background-color 320ms cubic-bezier(.2,.7,.2,1);
+      }
+      .playhead::after {
+        content: ""; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+        width: 8px; height: 3px; border-radius: 1px;
+        background: var(--playhead-ch);
+        transition: background-color 320ms cubic-bezier(.2,.7,.2,1);
+      }
+
+      /* Insert slot */
+      .insert-slot {
+        position: absolute; top: -4px; bottom: -4px;
+        width: 24px;
+        transform: translateX(-50%);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 4; pointer-events: none;
+      }
+      .insert-slot .ins-line {
+        position: absolute; top: 4px; bottom: 4px; left: 50%; width: 2px;
+        background: var(--color-fire-400);
+        transform: translateX(-50%);
+        opacity: 0; transition: opacity 140ms;
+      }
+      .insert-slot .ins-btn {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--color-surface);
+        border: 1px solid var(--color-ink-200);
+        color: var(--color-ink-700);
+        display: inline-flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(31,31,50,0.12);
+        opacity: 0; transform: scale(0.85);
+        transition: opacity 140ms, transform 140ms, color 140ms, background-color 140ms;
+        cursor: pointer;
+      }
+      .insert-slot.visible { pointer-events: auto; }
+      .insert-slot.visible .ins-line { opacity: 0.7; }
+      .insert-slot.visible .ins-btn { opacity: 1; transform: scale(1); }
+      .insert-slot .ins-btn:hover {
+        color: #FFF; background: var(--color-fire-400); border-color: var(--color-fire-400);
+      }
+
+      /* ─────────────────────────────────────────────────────────
+       *  STATUS BAR — autosave left, Cmd+K + Publish right
+       * ─────────────────────────────────────────────────────────*/
+      .status-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 var(--space-5);
+        height: 52px;
+        background: var(--color-surface);
+        border-top: 1px solid var(--color-ink-200);
+      }
+      .save-indicator {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; color: var(--color-ink-500);
+      }
+      .save-indicator .icon { color: #4F9077; }
+      .kbd-hint {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11.5px; color: var(--color-ink-500);
+        padding: 5px 10px; border-radius: var(--r-pill);
+        background: var(--color-ink-100);
+        cursor: pointer;
+        transition: background 120ms;
+      }
+      .kbd-hint:hover { background: var(--color-ink-200); color: var(--color-ink-700); }
+      .kbd-hint kbd {
+        font-family: var(--font-sans);
+        font-size: 10.5px; font-weight: 600;
+        padding: 1px 5px; border-radius: 3px;
+        background: var(--color-surface); color: var(--color-ink-700);
+        box-shadow: inset 0 -1px 0 var(--color-ink-200);
+      }
+
+      /* AI entry point — promoted surface with subtle sparkle glow */
+      .ai-entry {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 6px 12px 6px 10px;
+        border-radius: var(--r-pill);
+        background: linear-gradient(135deg, var(--color-fire-50) 0%, #FFF 100%);
+        border: 1px solid var(--color-fire-100);
+        color: var(--color-fire-500);
+        font-size: 12px; font-weight: 600;
+        cursor: pointer;
+        box-shadow:
+          0 1px 2px rgba(199,73,0,0.06),
+          0 0 12px -2px rgba(255,132,71,0.20);
+        transition: background 160ms, border-color 160ms, box-shadow 160ms, transform 120ms;
+      }
+      .ai-entry:hover {
+        background: var(--color-fire-50);
+        border-color: var(--color-fire-300);
+        box-shadow:
+          0 1px 2px rgba(199,73,0,0.08),
+          0 0 16px -2px rgba(255,132,71,0.32);
+      }
+      .ai-entry:active { transform: scale(0.98); }
+      .ai-entry .sparkle {
+        width: 14px; height: 14px; color: var(--color-fire-400);
+        filter: drop-shadow(0 0 4px rgba(255,132,71,0.5));
+      }
+      .ai-entry kbd {
+        font-family: var(--font-sans);
+        font-size: 10.5px; font-weight: 600;
+        padding: 1px 5px; border-radius: 3px;
+        background: var(--color-surface);
+        color: var(--color-fire-500);
+        box-shadow: inset 0 -1px 0 var(--color-fire-100), 0 0 0 1px var(--color-fire-100);
+      }
+      .btn-publish {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: var(--r-md);
+        background: var(--color-fire-400); color: #FFF;
+        border: 0; cursor: pointer;
+        font-size: 13px; font-weight: 600;
+        box-shadow: 0 1px 2px rgba(199,73,0,0.24), 0 4px 12px rgba(199,73,0,0.14);
+        transition: background 120ms, transform 120ms;
+      }
+      .btn-publish:hover { background: var(--color-fire-500); }
+      .btn-publish:active { background: var(--color-fire-600); transform: scale(0.98); }
+
+      /* ─────────────────────────────────────────────────────────
+       *  CMD+K command palette
+       * ─────────────────────────────────────────────────────────*/
+      .palette-overlay {
+        position: fixed; inset: 0; z-index: 100;
+        background: rgba(15,15,25,0.32);
+        backdrop-filter: blur(4px);
+        display: flex; align-items: flex-start; justify-content: center;
+        padding-top: 14vh;
+        animation: fade-in 180ms;
+      }
+      @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+      .palette {
+        width: min(560px, 92vw);
+        background: var(--color-surface);
+        border-radius: var(--r-xl);
+        box-shadow: 0 24px 64px rgba(15,15,25,0.24), 0 0 0 1px rgba(15,15,25,0.06);
+        overflow: hidden;
+        animation: scale-in 220ms cubic-bezier(.2,.7,.2,1);
+      }
+      @keyframes scale-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      .palette-input {
+        display: flex; align-items: center; gap: var(--space-3);
+        padding: var(--space-4) var(--space-5);
+        border-bottom: 1px solid var(--color-ink-200);
+      }
+      .palette-input input {
+        flex: 1; border: 0; outline: 0; background: transparent;
+        font-size: 15px; font-family: var(--font-sans);
+        color: var(--color-ink-900);
+      }
+      .palette-input input::placeholder { color: var(--color-ink-400); }
+      .palette-input .esc {
+        font-size: 10.5px; font-weight: 600;
+        padding: 2px 6px; border-radius: 3px;
+        background: var(--color-ink-100); color: var(--color-ink-700);
+      }
+      .palette-section {
+        padding: var(--space-2) 0;
+      }
+      .palette-section-title {
+        font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+        text-transform: uppercase; color: var(--color-ink-500);
+        padding: 6px var(--space-5);
+      }
+      .palette-item {
+        display: flex; align-items: center; gap: var(--space-3);
+        padding: 8px var(--space-5);
+        cursor: pointer;
+        transition: background 100ms;
+      }
+      .palette-item:hover, .palette-item.active { background: var(--color-fire-50); }
+      .palette-item .pi-icon {
+        width: 28px; height: 28px; border-radius: var(--r-sm);
+        background: var(--color-ink-100);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--color-ink-700);
+      }
+      .palette-item.active .pi-icon { background: var(--color-fire-100); color: var(--color-fire-500); }
+      .palette-item .pi-text { flex: 1; }
+      .palette-item .pi-title { font-size: 13px; font-weight: 500; color: var(--color-ink-900); }
+      .palette-item .pi-desc  { font-size: 11.5px; color: var(--color-ink-500); margin-top: 1px; }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-frame">
+
+      <!-- ═════════════════ TOP HEADER ═════════════════ -->
+      <header class="app-header">
+        <div class="flex items-center gap-4">
+          <nav class="breadcrumb">
+            <a href="#">All content</a>
+            <span class="sep">/</span>
+            <a href="#">Video</a>
+            <span class="sep">/</span>
+            <span style="color: var(--color-ink-700)">Editing</span>
+          </nav>
+          <span style="width:1px;height:18px;background:var(--color-ink-200);"></span>
+          <span class="doc-title">Understanding Whatfix guidance</span>
+          <span class="pill-editing"><span class="dot"></span>Editing</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn-ghost" title="Comments"><i data-lucide="message-square" class="w-4 h-4"></i></button>
+          <button class="btn-ghost" title="Version history"><i data-lucide="history" class="w-4 h-4"></i></button>
+          <span style="width:1px;height:18px;background:var(--color-ink-200);margin:0 4px;"></span>
+          <button class="ai-entry" id="open-palette" title="Open AI command palette">
+            <i data-lucide="sparkles" class="sparkle"></i>
+            Ask AI
+            <kbd>⌘K</kbd>
+          </button>
+          <button class="btn-ghost" title="More"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+        </div>
+      </header>
+
+      <!-- ═════════════════ BODY (rail + workspace) ═════════════════ -->
+      <div class="app-body">
+
+        <!-- Left nav rail -->
+        <nav class="nav-rail">
+          <div class="brand">V</div>
+          <button class="nav-btn" title="Home"><i data-lucide="home" class="w-5 h-5"></i></button>
+          <button class="nav-btn active" title="Content"><i data-lucide="film" class="w-5 h-5"></i></button>
+          <button class="nav-btn" title="Library"><i data-lucide="library" class="w-5 h-5"></i></button>
+          <button class="nav-btn" title="Templates"><i data-lucide="layout-template" class="w-5 h-5"></i></button>
+          <button class="nav-btn" title="Analytics"><i data-lucide="bar-chart-3" class="w-5 h-5"></i></button>
+          <div class="spacer"></div>
+          <button class="nav-btn" title="Help"><i data-lucide="help-circle" class="w-5 h-5"></i></button>
+          <button class="nav-btn" title="Settings"><i data-lucide="settings" class="w-5 h-5"></i></button>
+        </nav>
+
+        <!-- Workspace -->
+        <div class="workspace" id="workspace">
+
+          <!-- ═════ AI PANEL (left) — the verb surface ═════ -->
+          <aside class="ai-panel" aria-label="AI assistant">
+            <header class="ap-head">
+              <span class="ap-title">
+                <span class="ap-sparkle"><i data-lucide="sparkles"></i></span>
+                AI
+                <span class="ap-shortcut">⌘K</span>
+              </span>
+              <div class="flex items-center" style="gap:2px;">
+                <button class="btn-ghost" title="History"><i data-lucide="history" class="w-4 h-4"></i></button>
+                <button class="btn-ghost" title="Settings"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i></button>
+              </div>
+            </header>
+
+            <!-- Cursor-context strip -->
+            <div class="ap-context" id="ap-context">
+              <div class="ap-ctx-label">
+                <i data-lucide="map-pin"></i>
+                Cursor at
+              </div>
+              <div class="ap-ctx-where" id="ap-ctx-where">
+                <span class="ch-dot"></span>
+                <span class="ap-ctx-chapter">Whatfix guidance</span>
+              </div>
+              <div class="ap-ctx-when" id="ap-ctx-when">
+                0:14 · before <span class="word-anchor">deal</span>
+              </div>
+            </div>
+
+            <div class="ap-body" id="ap-body">
+              <div class="ap-section-title">Suggested at this moment</div>
+              <div class="ap-suggestions" id="ap-suggestions">
+                <!-- Suggestion chips injected by JS based on cursor context -->
+              </div>
+
+              <div class="ap-convo" id="ap-convo">
+                <!-- Conversation turns appear here when AI asks a clarifying question -->
+              </div>
+            </div>
+
+            <div class="ap-input-wrap">
+              <form class="ap-input" id="ap-form">
+                <textarea id="ap-input" rows="1" placeholder="Tell AI what to do here…"></textarea>
+                <button class="ap-send" type="submit" id="ap-send" title="Send (⏎)" disabled>
+                  <i data-lucide="arrow-up"></i>
+                </button>
+              </form>
+              <div class="ap-footnote">
+                <kbd>⏎</kbd> send
+                <span style="opacity:.4">·</span>
+                <kbd>/</kbd> commands
+                <span style="opacity:.4">·</span>
+                <kbd>⌘K</kbd> focus
+              </div>
+            </div>
+          </aside>
+
+          <!-- ═════ COMPOSITE BOX — Narration | Preview / Timeline below ═════ -->
+          <div class="composite-box">
+            <div class="composite-top">
+
+              <!-- NARRATION (left of composite, primary authoring) -->
+              <section class="narration" aria-label="Narration script">
+                <header class="narration-head">
+                  <h2>
+                    <i data-lucide="mic" class="w-4 h-4" style="color:var(--color-ink-500)"></i>
+                    Narration
+                    <span class="count" id="ch-count">4 chapters · 1:00</span>
+                  </h2>
+                  <button class="voice-picker" title="Change AI voice">
+                    <span class="avatar"></span>
+                    <span>Camille</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5" style="color:var(--color-ink-500)"></i>
+                  </button>
+                </header>
+                <div class="narration-body" id="narration-body">
+                  <!-- Blocks injected by JS -->
+                </div>
+              </section>
+
+              <!-- PREVIEW (right of composite, auditioning) -->
+              <section class="preview" aria-label="Video preview">
+              <header class="preview-head">
+                <h2>Preview</h2>
+                <span class="sync-state" id="sync-state">
+                  <span class="dot"></span>
+                  <span class="text">Synced</span>
+                </span>
+              </header>
+              <div class="preview-body">
+                <div class="preview-frame" id="preview-frame">
+                  <div class="preview-stage">
+                    <div class="ps-rail">
+                      <div class="ps-rail-icon active"></div>
+                      <div class="ps-rail-icon"></div>
+                      <div class="ps-rail-icon"></div>
+                      <div class="ps-rail-icon"></div>
+                      <div class="ps-rail-icon"></div>
+                    </div>
+                    <div class="ps-main">
+                      <div class="ps-topbar">
+                        <div class="ps-pill brand"></div>
+                        <div class="ps-search"></div>
+                        <div style="flex:1"></div>
+                        <div class="ps-pill"></div>
+                        <div class="ps-pill" style="width:14px;background:var(--color-accent);border-radius:50%;height:14px;"></div>
+                      </div>
+                      <div class="ps-body">
+                        <div class="ps-greeting">Good morning, Sam Lee</div>
+                        <div class="ps-cards">
+                          <div class="ps-card"><div class="ps-card-icon"></div><div class="ps-card-label"></div></div>
+                          <div class="ps-card"><div class="ps-card-icon"></div><div class="ps-card-label"></div></div>
+                          <div class="ps-card"><div class="ps-card-icon"></div><div class="ps-card-label"></div></div>
+                          <div class="ps-card"><div class="ps-card-icon"></div><div class="ps-card-label"></div></div>
+                          <div class="ps-card"><div class="ps-card-icon"></div><div class="ps-card-label"></div></div>
+                        </div>
+                        <div class="ps-section-title">Latest from the library</div>
+                        <div class="ps-rows">
+                          <div class="ps-col">
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                          </div>
+                          <div class="ps-col">
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                            <div class="ps-row"><span class="dot"></span><span class="bar"></span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="shimmer" aria-hidden="true"></span>
+                  <span class="chapter-label" id="preview-chapter">
+                    <span class="ch-dot"></span>
+                    <span class="ch-name">Whatfix guidance</span>
+                  </span>
+                  <div class="cursor" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="white" stroke="rgba(15,15,25,0.6)" stroke-width="1.5">
+                      <path d="M5 3 L5 19 L9 15 L12 21 L15 20 L12 14 L19 13 Z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="preview-controls">
+                  <button class="btn-play" id="play-btn" title="Play (Space)">
+                    <i data-lucide="play" class="fill-current" style="width:14px;height:14px;margin-left:2px;"></i>
+                  </button>
+                  <div class="scrubber" id="scrubber">
+                    <div class="fill" id="scrub-fill"></div>
+                    <div class="pin" id="scrub-pin"></div>
+                  </div>
+                  <span class="time-readout">
+                    <span class="cur" id="time-cur">0:14</span>
+                    <span class="slash">/</span>
+                    <span class="tot" id="time-tot">1:00</span>
+                  </span>
+                  <button class="btn-ghost" title="Volume"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                  <button class="btn-ghost" title="Fullscreen"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                </div>
+              </div>
+            </section>
+
+            </div>
+            <!-- ═════ /composite-top ═════ -->
+
+            <!-- ───── Timeline (anchored to the full bottom of the composite box) ───── -->
+            <section class="timeline-panel" id="timeline-panel" aria-label="Timeline">
+              <header class="tl-head">
+                <div class="tl-head-left">
+                  <span class="title">
+                    <i data-lucide="layers" class="w-3.5 h-3.5" style="color:var(--color-ink-500)"></i>
+                    Timeline
+                  </span>
+                  <span class="hint" id="tl-hint">Drag clips · scrub playhead · effects dot the clip</span>
+                </div>
+                <div class="tl-head-right">
+                  <button class="btn-ghost" title="Add media"><i data-lucide="image-plus" class="w-4 h-4"></i></button>
+                  <button class="btn-ghost" title="Add motion"><i data-lucide="move-diagonal" class="w-4 h-4"></i></button>
+                  <span style="width:1px;height:16px;background:var(--color-ink-200);margin:0 4px;"></span>
+                  <button class="btn-ghost" id="tl-toggle" title="Expand timeline"><i data-lucide="chevrons-up" class="w-4 h-4"></i></button>
+                </div>
+              </header>
+              <div class="tl-stage">
+                <div class="tl-grid">
+                  <div class="tl-labels">
+                    <span></span>
+                    <span class="tl-label"><span class="dot" style="background:var(--color-fire-400)"></span>Clips</span>
+                    <span class="tl-label"><i data-lucide="move-diagonal" class="w-3 h-3"></i>Motion</span>
+                  </div>
+                  <div class="tl-tracks" id="tl-root">
+                    <div class="ruler" id="ruler"></div>
+                    <div class="track" id="track"></div>
+                    <div class="motion" id="motion-lane"></div>
+                    <div id="playhead" class="playhead" style="left: 23.3%;"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <!-- ═════ /COMPOSITE BOX ═════ -->
+
+          <!-- ───── Status bar ───── -->
+          <footer class="status-bar">
+            <span class="save-indicator">
+              <i data-lucide="check-circle-2" class="icon w-3.5 h-3.5"></i>
+              <span id="save-text">All changes saved</span>
+            </span>
+            <div class="flex items-center gap-3">
+              <span style="font-size:11px;color:var(--color-ink-500);">
+                <kbd style="font-family:var(--font-sans);font-size:10px;padding:1px 4px;border-radius:3px;background:var(--color-ink-100);color:var(--color-ink-700);">⌘B</kbd>
+                split &nbsp;·&nbsp;
+                <kbd style="font-family:var(--font-sans);font-size:10px;padding:1px 4px;border-radius:3px;background:var(--color-ink-100);color:var(--color-ink-700);">Space</kbd>
+                play
+              </span>
+              <button class="btn-publish">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                Publish
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════ CMD+K PALETTE ═════════════════ -->
+    <div class="palette-overlay" id="palette-overlay" hidden>
+      <div class="palette" role="dialog" aria-label="Command palette">
+        <div class="palette-input">
+          <i data-lucide="sparkles" class="w-4 h-4" style="color:var(--color-fire-400)"></i>
+          <input id="palette-input-field" placeholder="Ask AI or run a command…" autofocus />
+          <span class="esc">esc</span>
+        </div>
+        <div class="palette-section">
+          <div class="palette-section-title">Suggested for this chapter</div>
+          <div class="palette-item active">
+            <span class="pi-icon"><i data-lucide="scissors" class="w-3.5 h-3.5"></i></span>
+            <div class="pi-text">
+              <div class="pi-title">Shorten this chapter by 5 seconds</div>
+              <div class="pi-desc">Tighten phrasing without losing meaning</div>
+            </div>
+          </div>
+          <div class="palette-item">
+            <span class="pi-icon"><i data-lucide="smile" class="w-3.5 h-3.5"></i></span>
+            <div class="pi-text">
+              <div class="pi-title">Rewrite in a friendlier tone</div>
+              <div class="pi-desc">Casual, conversational voice</div>
+            </div>
+          </div>
+          <div class="palette-item">
+            <span class="pi-icon"><i data-lucide="eye-off" class="w-3.5 h-3.5"></i></span>
+            <div class="pi-text">
+              <div class="pi-title">Blur all email addresses on screen</div>
+              <div class="pi-desc">Apply privacy mask across all chapters</div>
+            </div>
+          </div>
+        </div>
+        <div class="palette-section" style="border-top:1px solid var(--color-ink-200);">
+          <div class="palette-section-title">Commands</div>
+          <div class="palette-item">
+            <span class="pi-icon"><i data-lucide="plus" class="w-3.5 h-3.5"></i></span>
+            <div class="pi-text">
+              <div class="pi-title">Add a new chapter</div>
+              <div class="pi-desc">Describe what it should cover</div>
+            </div>
+          </div>
+          <div class="palette-item">
+            <span class="pi-icon"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i></span>
+            <div class="pi-text">
+              <div class="pi-title">Regenerate motion across the video</div>
+              <div class="pi-desc">Re-run zoom &amp; pan suggestions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ───────────────────────────────────────────────────────────
+      //  DATA — Chapters are the source of truth. Each carries:
+      //    title, duration, narration text, accent color (propagates
+      //    to timeline + preview frame border).
+      // ───────────────────────────────────────────────────────────
+      const CH_COLORS = ['ch-a', 'ch-b', 'ch-c', 'ch-d'];
+      const CH_COLOR_VAR = {
+        'ch-a': 'var(--color-ch-a)',
+        'ch-b': 'var(--color-ch-b)',
+        'ch-c': 'var(--color-ch-c)',
+        'ch-d': 'var(--color-ch-d)',
+      };
+
+      const CHAPTERS = [
+        {
+          id: 'c1',
+          title: 'Introduction to Whatfix',
+          dur: 10,
+          color: 'ch-a',
+          narration: 'Whatfix turns any web app into one that explains itself — step-by-step help, right where your team is already working.',
+        },
+        {
+          id: 'c2',
+          title: 'Whatfix guidance',
+          dur: 22,
+          color: 'ch-b',
+          narration: 'A Guidance Flow walks someone through a task — creating a deal in Salesforce, filing an expense, onboarding a new hire. You build it once by clicking through the task yourself, and Whatfix records every step. The result is a live walkthrough that anyone on that page can launch. Flows update themselves when the app changes — so your training never goes stale.',
+        },
+        {
+          id: 'c3',
+          title: 'Styling in guidance',
+          dur: 14,
+          color: 'ch-c',
+          narration: 'Every callout, popup, and tip can be styled to match your brand. Change the highlight colour, font, and corner radius from the Theme panel, then have that look as a brand kit and apply it across every Flow.',
+        },
+        {
+          id: 'c4',
+          title: 'Setting up Whatfix',
+          dur: 14,
+          color: 'ch-d',
+          narration: 'Drop a single line of script onto your app, and Whatfix is ready. Connect your identity provider, set permissions, and you can start building Flows immediately.',
+        },
+      ];
+
+      const totalDuration = () => CHAPTERS.reduce((s, c) => s + c.dur, 0);
+      function clipStartTime(idx) { let t = 0; for (let i = 0; i < idx; i++) t += CHAPTERS[i].dur; return t; }
+      let nextClipNum = 100;
+      const newClipId = () => `c${++nextClipNum}`;
+
+      const fmtZoom = (v) => v.toFixed(2) + '×';
+      const fmtPan  = (v) => (v >= 0 ? '+' : '') + Math.round(v) + 'px';
+      const MOTION = [
+        { id: 'm1', type: 'zoom', start:  8, end: 14, from: 1.00, to: 1.50, fmt: fmtZoom },
+        { id: 'm2', type: 'pan',  start: 20, end: 28, from:    0, to: -120, fmt: fmtPan  },
+        { id: 'm3', type: 'zoom', start: 32, end: 42, from: 1.00, to: 1.20, fmt: fmtZoom },
+        { id: 'm4', type: 'pan',  start: 46, end: 56, from:    0, to:  +80, fmt: fmtPan  },
+      ];
+
+      // ───────────────────────────────────────────────────────────
+      //  DOM + state
+      // ───────────────────────────────────────────────────────────
+      const ruler          = document.getElementById('ruler');
+      const track          = document.getElementById('track');
+      const motionLane     = document.getElementById('motion-lane');
+      const playhead       = document.getElementById('playhead');
+      const tlRoot         = document.getElementById('tl-root');
+      const timeCur        = document.getElementById('time-cur');
+      const timeTot        = document.getElementById('time-tot');
+      const playBtn        = document.getElementById('play-btn');
+      const narrationBody  = document.getElementById('narration-body');
+      const previewFrame   = document.getElementById('preview-frame');
+      const previewChapter = document.getElementById('preview-chapter');
+      const syncState      = document.getElementById('sync-state');
+      const chCount        = document.getElementById('ch-count');
+      const tlPanel        = document.getElementById('timeline-panel');
+      const tlToggle       = document.getElementById('tl-toggle');
+      const tlHint         = document.getElementById('tl-hint');
+      const paletteOverlay = document.getElementById('palette-overlay');
+      const paletteInput   = document.getElementById('palette-input-field');
+      const openPaletteBtn = document.getElementById('open-palette');
+      const scrubber       = document.getElementById('scrubber');
+      const scrubFill      = document.getElementById('scrub-fill');
+      const scrubPin       = document.getElementById('scrub-pin');
+      const saveText       = document.getElementById('save-text');
+
+      let selectedId   = 'c2';
+      let currentTime  = 14;
+      let playing      = false;
+      let scrubbing    = false;
+      let segResizing  = null;
+      let segMoving    = null;
+      let clipResizing = null;
+      let saveTimer    = null;
+
+      const MOTION_MIN_DUR = 2;
+      const CLIP_MIN_DUR   = 2;
+      const PROXIMITY_PX   = 28;
+      // Typical AI voiceover pace — words per second.
+      // When the user edits a chapter's script, we re-derive its duration
+      // from word count using this rate, so the timeline reflects what the
+      // AI will actually generate.
+      const WORDS_PER_SECOND = 2.4;
+
+      function chapterDurationFromText(text) {
+        const wc = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+        return Math.max(CLIP_MIN_DUR, Math.round(wc / WORDS_PER_SECOND));
+      }
+
+      const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.round(s) % 60).padStart(2, '0')}`;
+      const selectedClipIndex = () => CHAPTERS.findIndex(c => c.id === selectedId);
+      function playheadInSelectedClip() {
+        const i = selectedClipIndex();
+        if (i < 0) return false;
+        const s = clipStartTime(i), e = s + CHAPTERS[i].dur;
+        return currentTime > s + CLIP_MIN_DUR && currentTime < e - CLIP_MIN_DUR;
+      }
+      function curveSVG(from, to) {
+        const min = Math.min(from, to), max = Math.max(from, to);
+        const range = max - min || 1;
+        const a = (from - min) / range, b = (to - min) / range;
+        const y = (v) => 10 - v * 8;
+        return `<svg class="seg-curve" viewBox="0 0 60 12" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 ${y(a).toFixed(1)} C 20 ${y(a).toFixed(1)}, 40 ${y(b).toFixed(1)}, 60 ${y(b).toFixed(1)}"
+                fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+                vector-effect="non-scaling-stroke" />
+        </svg>`;
+      }
+      const chipLabel = (m) => m.type === 'zoom' ? 'Zoom' : 'Pan';
+      function motionNeighbors(id) {
+        const sorted = [...MOTION].sort((a, b) => a.start - b.start);
+        const i = sorted.findIndex(x => x.id === id);
+        return { prev: sorted[i - 1], next: sorted[i + 1] };
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  RENDER — narration blocks
+      // ───────────────────────────────────────────────────────────
+      function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      function tokenizeWords(text, chapterStart, chapterDur) {
+        const tokens = text.split(/(\s+)/);
+        const wordCount = tokens.filter(t => t.trim().length > 0).length || 1;
+        const wordDur = chapterDur / wordCount;
+        let wIdx = 0;
+        return tokens.map(tok => {
+          if (tok.length === 0) return '';
+          if (tok.trim().length === 0) return escapeHtml(tok);
+          const start = chapterStart + wIdx * wordDur;
+          const end   = chapterStart + (wIdx + 1) * wordDur;
+          wIdx++;
+          return `<span class="word" data-start="${start.toFixed(3)}" data-end="${end.toFixed(3)}">${escapeHtml(tok)}</span>`;
+        }).join('');
+      }
+
+      function renderNarration() {
+        // DOM is recreated — invalidate cached references
+        lastActiveWord = null;
+        narrationBody.innerHTML = '';
+        let cursorT = 0;
+        CHAPTERS.forEach((c, i) => {
+          const block = document.createElement('div');
+          block.className = `block${c.id === selectedId ? ' selected' : ''}`;
+          block.dataset.id = c.id;
+          block.style.setProperty('--color-accent', CH_COLOR_VAR[c.color]);
+          const chapterStart = cursorT;
+          cursorT += c.dur;
+
+          block.innerHTML = `
+            <div class="block-head">
+              <input class="block-title" value="${escapeHtml(c.title)}" data-id="${c.id}" />
+              <span class="block-meta">
+                <span class="ch-tag" style="color:${CH_COLOR_VAR[c.color]}">Ch ${i + 1}</span>
+                <span>·</span>
+                <span>${Math.round(c.dur)}s</span>
+              </span>
+            </div>
+            <div class="block-text" contenteditable="plaintext-only" data-id="${c.id}" data-placeholder="Describe what happens here…">${tokenizeWords(c.narration, chapterStart, c.dur)}</div>
+            <div class="block-actions">
+              <div class="action-cluster">
+                <button class="block-action" data-action="split" title="Split at playhead"><i data-lucide="scissors" class="icon"></i>Split</button>
+                <button class="block-action" data-action="media" title="Insert media"><i data-lucide="image-plus" class="icon"></i>Media</button>
+                <button class="block-action" data-action="blur" title="Blur a region"><i data-lucide="eye-off" class="icon"></i>Blur</button>
+                <button class="block-action" data-action="highlight" title="Highlight"><i data-lucide="highlighter" class="icon"></i>Highlight</button>
+              </div>
+              <button class="ai-trigger" data-action="ai-menu" title="AI actions">
+                <i data-lucide="sparkles" class="sparkle"></i>AI<i data-lucide="chevron-down" class="caret"></i>
+              </button>
+              <button class="block-action danger" data-action="delete" title="Delete chapter"><i data-lucide="trash-2" class="icon"></i></button>
+            </div>
+          `;
+          narrationBody.appendChild(block);
+
+          if (i < CHAPTERS.length - 1) {
+            const add = document.createElement('div');
+            add.className = 'add-chapter';
+            add.dataset.idx = i;
+            add.innerHTML = `<span class="pill"><i data-lucide="plus" style="width:11px;height:11px;"></i>Add chapter</span>`;
+            add.addEventListener('click', (e) => { e.stopPropagation(); insertChapterAt(i + 1); });
+            narrationBody.appendChild(add);
+          }
+        });
+
+        // Wire interactions
+        narrationBody.querySelectorAll('.block').forEach(el => {
+          el.addEventListener('click', (e) => {
+            if (e.target.closest('.block-action') || e.target.closest('.ai-trigger') || e.target.closest('.add-chapter')) return;
+            const prev = selectedId;
+            selectedId = el.dataset.id;
+            renderAll();
+            if (prev !== selectedId) bumpSelection();
+          });
+        });
+        narrationBody.querySelectorAll('.block-title').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const id = e.target.dataset.id;
+            const ch = CHAPTERS.find(c => c.id === id);
+            if (!ch) return;
+            const prevTitle = ch.title;
+            const prevNar = ch.narration;
+            const prevDur = ch.dur;
+            ch.title = e.target.value;
+            if (prevTitle !== ch.title) {
+              markChapterDirty(ch, prevNar, prevDur);
+              ensurePendingNotice(ch);
+              updateSyncState();
+            }
+            saveAutoText();
+          });
+          input.addEventListener('focus', () => { selectedId = input.dataset.id; updateSelectionStates(); updatePreviewBindings(); });
+        });
+        narrationBody.querySelectorAll('.block-text').forEach(ce => {
+          ce.addEventListener('input', () => {
+            const id = ce.dataset.id;
+            const ch = CHAPTERS.find(c => c.id === id);
+            if (!ch) return;
+            // Snapshot pre-edit state once, on first edit since last regen
+            const preNar = ch.oldNarration ?? ch.narration;
+            const preDur = ch.oldDur ?? ch.dur;
+            markChapterDirty(ch, preNar, preDur);
+            saveAutoText();
+            // Debounced duration recalc + pending-notice refresh
+            clearTimeout(ce._editTimer);
+            ce._editTimer = setTimeout(() => {
+              liveRecalc(ce, ch);
+              ensurePendingNotice(ch);
+              updateSyncState();
+            }, 500);
+            // Immediate pending notice + sync state (delta updates after recalc)
+            ensurePendingNotice(ch);
+            updateSyncState();
+            // Read latest text from the editable element into the model
+            ch.narration = ce.innerText;
+          });
+          ce.addEventListener('focus', () => {
+            selectedId = ce.dataset.id;
+            updateSelectionStates();
+            updatePreviewBindings();
+          });
+          ce.addEventListener('blur', () => {
+            // Definitive recompute on blur — re-tokenize with the
+            // newly-correct duration so karaoke timings stay accurate.
+            clearTimeout(ce._editTimer);
+            const id = ce.dataset.id;
+            const idx = CHAPTERS.findIndex(c => c.id === id);
+            if (idx < 0) return;
+            const ch = CHAPTERS[idx];
+            const oldDur = ch.dur;
+            ch.dur = chapterDurationFromText(ch.narration);
+            const start = clipStartTime(idx);
+            ce.innerHTML = tokenizeWords(ch.narration, start, ch.dur);
+            if (ch.dur !== oldDur) {
+              renderRuler();
+              renderClipTrack();
+              renderMotionLane();
+              renderPlayhead();
+              updateChapterMetaInline(idx);
+              flashClipResize(ch.id);
+            }
+            updateActiveWord();
+          });
+        });
+        narrationBody.querySelectorAll('.block-action').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const blockEl = btn.closest('.block');
+            selectedId = blockEl.dataset.id;
+            updateSelectionStates();
+            updatePreviewBindings();
+            handleBlockAction(action, btn);
+          });
+        });
+        narrationBody.querySelectorAll('.ai-trigger').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const blockEl = btn.closest('.block');
+            selectedId = blockEl.dataset.id;
+            updateSelectionStates();
+            updatePreviewBindings();
+            if (aiMenuEl) { closeAiMenu(); return; }
+            openAiMenu(btn);
+          });
+        });
+      }
+
+      // Re-trigger selection bump on selectedId change
+      function bumpSelection() {
+        const el = narrationBody.querySelector(`.block.selected`);
+        if (!el) return;
+        el.classList.remove('bump');
+        void el.offsetWidth;
+        el.classList.add('bump');
+      }
+
+      function updateSelectionStates() {
+        narrationBody.querySelectorAll('.block').forEach(el => {
+          el.classList.toggle('selected', el.dataset.id === selectedId);
+        });
+        track.querySelectorAll('.clip').forEach(el => {
+          el.classList.toggle('selected', el.dataset.id === selectedId);
+        });
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  PREVIEW bindings — chapter color → preview frame border + label
+      // ───────────────────────────────────────────────────────────
+      function updatePreviewBindings() {
+        const ch = CHAPTERS.find(c => c.id === selectedId);
+        if (!ch) return;
+        const color = CH_COLOR_VAR[ch.color];
+        previewFrame.style.setProperty('--color-accent', color);
+        previewChapter.style.setProperty('--color-accent', color);
+        previewChapter.querySelector('.ch-name').textContent = ch.title;
+        // Bump animation on the preview frame to confirm selection moved
+        previewFrame.classList.remove('bump');
+        void previewFrame.offsetWidth;
+        previewFrame.classList.add('bump');
+        // Refresh the preview's effect badges to match the newly selected chapter
+        if (typeof renderPreviewEffects === 'function') renderPreviewEffects();
+        if (typeof updateAiContext === 'function') updateAiContext();
+      }
+
+      // Playhead color follows the chapter under the playhead.
+      // Called whenever currentTime changes.
+      function updatePlayheadChapterColor() {
+        const ch = chapterAtTime(currentTime);
+        if (!ch) return;
+        playhead.style.setProperty('--playhead-ch', CH_COLOR_VAR[ch.color]);
+      }
+
+      function chapterAtTime(t) {
+        let cum = 0;
+        for (const c of CHAPTERS) {
+          if (t <= cum + c.dur) return c;
+          cum += c.dur;
+        }
+        return CHAPTERS[CHAPTERS.length - 1];
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  Script editing → timeline reflows
+      //
+      //  When the user adds or removes text, the chapter's duration
+      //  is re-derived from word count at the AI's typical pace
+      //  (WORDS_PER_SECOND). The timeline clip resizes live, the
+      //  total duration updates, and downstream chapters shift right
+      //  or left as needed. We avoid re-rendering the narration block
+      //  itself during editing (which would lose the user's caret).
+      // ───────────────────────────────────────────────────────────
+      function liveRecalc(ce, ch) {
+        const idx = CHAPTERS.findIndex(c => c.id === ch.id);
+        if (idx < 0) return;
+        const newDur = chapterDurationFromText(ch.narration);
+        if (newDur === ch.dur) return;
+        ch.dur = newDur;
+        renderRuler();
+        renderClipTrack();
+        renderMotionLane();
+        renderPlayhead();
+        updateChapterMetaInline(idx);
+        flashClipResize(ch.id);
+      }
+
+      function updateChapterMetaInline(idx) {
+        // Update only the duration text in the block meta — no full re-render,
+        // so the user's caret in the textarea stays put.
+        const blocks = narrationBody.querySelectorAll('.block');
+        const block = blocks[idx];
+        if (!block) return;
+        const ch = CHAPTERS[idx];
+        const durSpan = block.querySelector('.block-meta span:last-child');
+        if (durSpan) durSpan.textContent = `${ch.dur}s`;
+      }
+
+      function flashClipResize(chId) {
+        const clip = track.querySelector(`.clip[data-id="${chId}"]`);
+        if (!clip) return;
+        clip.classList.remove('resized');
+        void clip.offsetWidth;
+        clip.classList.add('resized');
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  Karaoke word highlighting
+      //  - Finds the word span whose [start, end) range contains currentTime
+      //  - Adds .active to it, .played to all earlier words in the same block
+      //  - Auto-scrolls the narration body to keep the active word visible
+      //  - When playhead crosses chapter boundary, switches selection
+      //    (unless user is editing — don't steal focus)
+      // ───────────────────────────────────────────────────────────
+      let lastActiveWord = null;
+      let lastActiveChapter = null;
+      function updateActiveWord() {
+        const wordEls = narrationBody.querySelectorAll('.word');
+        if (wordEls.length === 0) return;
+        let activeEl = null;
+        // Find active by data-start/end
+        wordEls.forEach(w => {
+          const s = +w.dataset.start;
+          const e = +w.dataset.end;
+          if (currentTime >= s && currentTime < e) activeEl = w;
+        });
+        // Edge case: at very end, mark last word active
+        if (!activeEl && currentTime >= totalDuration() - 0.05) {
+          activeEl = wordEls[wordEls.length - 1];
+        }
+        if (activeEl === lastActiveWord) return;
+
+        // Mark played / active across all blocks
+        wordEls.forEach(w => {
+          const s = +w.dataset.start;
+          w.classList.remove('active');
+          w.classList.toggle('played', s < currentTime - 0.001);
+        });
+        if (activeEl) {
+          activeEl.classList.add('active');
+          activeEl.classList.remove('played');
+        }
+        lastActiveWord = activeEl;
+
+        // Auto-select active chapter (without stealing focus from editor)
+        const ch = chapterAtTime(currentTime);
+        if (ch && ch.id !== lastActiveChapter) {
+          lastActiveChapter = ch.id;
+          const editing = document.activeElement && document.activeElement.classList?.contains('block-text');
+          if (!editing && ch.id !== selectedId) {
+            selectedId = ch.id;
+            updateSelectionStates();
+            updatePreviewBindings();
+          }
+        }
+
+        // Auto-scroll active word into view
+        if (activeEl && playing) {
+          const blockEl = activeEl.closest('.block');
+          if (blockEl) {
+            const bodyRect = narrationBody.getBoundingClientRect();
+            const wordRect = activeEl.getBoundingClientRect();
+            const margin = 80;
+            if (wordRect.top < bodyRect.top + margin || wordRect.bottom > bodyRect.bottom - margin) {
+              const targetTop = activeEl.offsetTop - narrationBody.clientHeight / 2;
+              narrationBody.scrollTo({ top: targetTop, behavior: 'smooth' });
+            }
+          }
+        }
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  SYNC state — when narration changes, preview goes stale
+      //  until regenerate happens (or autosave triggers a re-gen)
+      // ───────────────────────────────────────────────────────────
+      // ───────────────────────────────────────────────────────────
+      //  Edit → pending → explicit Regenerate
+      //
+      //  Two distinct feedback channels:
+      //    1) IMMEDIATE & STRUCTURAL — typing updates ch.narration
+      //       and the timeline reflows live (saveAutoText + liveRecalc).
+      //       Cheap; happens on every edit.
+      //    2) DEFERRED & GENERATIVE — the AI regenerating the actual
+      //       video preview waits for an explicit Regenerate click.
+      //       Per-chapter notice inline, plus a roll-up "Regenerate all"
+      //       affordance on the sync indicator when 2+ are pending.
+      //
+      //  Each dirty chapter snapshots its pre-edit narration + dur so
+      //  Undo can restore it without involving the AI.
+      // ───────────────────────────────────────────────────────────
+      function saveAutoText() {
+        clearTimeout(saveTimer);
+        saveText.textContent = 'Saving…';
+        saveTimer = setTimeout(() => { saveText.textContent = 'All changes saved'; }, 700);
+      }
+
+      function markChapterDirty(ch, preEditNarration, preEditDur) {
+        if (!ch.dirty) {
+          ch.dirty = true;
+          ch.oldNarration = preEditNarration;
+          ch.oldDur = preEditDur;
+        }
+      }
+
+      function pendingCount() { return CHAPTERS.filter(c => c.dirty).length; }
+
+      function updateSyncState() {
+        const n = pendingCount();
+        syncState.classList.remove('stale', 'regenerating');
+        if (n === 0) {
+          syncState.classList.remove('pending');
+          syncState.querySelector('.text').textContent = 'Synced';
+          // Remove any inline regen-all chip
+          const ra = syncState.querySelector('.regen-all');
+          if (ra) ra.remove();
+        } else {
+          syncState.classList.add('pending');
+          syncState.querySelector('.text').textContent =
+            n === 1 ? '1 change pending' : `${n} changes pending`;
+          // Inline regen-all chip when multiple are pending
+          let ra = syncState.querySelector('.regen-all');
+          if (n >= 2) {
+            if (!ra) {
+              ra = document.createElement('span');
+              ra.className = 'regen-all';
+              ra.innerHTML = `<i data-lucide="refresh-cw"></i>Regenerate all`;
+              syncState.appendChild(ra);
+              lucide.createIcons();
+            }
+          } else if (ra) {
+            ra.remove();
+          }
+        }
+      }
+
+      // Click on the sync indicator while pending → regenerate all dirty
+      syncState.addEventListener('click', () => {
+        if (syncState.classList.contains('pending')) regenerateAllDirty();
+      });
+
+      function ensurePendingNotice(ch) {
+        const block = narrationBody.querySelector(`.block[data-id="${ch.id}"]`);
+        if (!block) return;
+        let notice = block.querySelector('.pending-notice');
+        const delta = ch.dur - (ch.oldDur ?? ch.dur);
+        const deltaPill = delta !== 0
+          ? `<span class="pn-delta">${delta > 0 ? '+' : ''}${delta}s · ${ch.oldDur}s → ${ch.dur}s</span>`
+          : `<span class="pn-delta">Same duration</span>`;
+        const html = `
+          <div class="pn-iconwrap"><i data-lucide="audio-waveform"></i></div>
+          <div class="pn-body">
+            <div class="pn-title">Audio out of sync with script</div>
+            <div class="pn-detail">
+              <span>Regenerate to re-record the AI voiceover and re-align the video.</span>
+              ${deltaPill}
+            </div>
+          </div>
+          <div class="pn-actions">
+            <button class="pn-undo" type="button" title="Discard edits to this chapter">Undo edit</button>
+            <button class="pn-regen" type="button" title="Re-record audio and re-render video for this chapter">
+              <i data-lucide="refresh-cw"></i>Regenerate
+            </button>
+          </div>`;
+        if (notice) {
+          notice.innerHTML = html;
+        } else {
+          notice = document.createElement('div');
+          notice.className = 'pending-notice';
+          notice.dataset.blockId = ch.id;
+          notice.innerHTML = html;
+          block.appendChild(notice);
+        }
+        notice.querySelector('.pn-undo').onclick = (e) => { e.stopPropagation(); undoChapter(ch.id); };
+        notice.querySelector('.pn-regen').onclick = (e) => { e.stopPropagation(); regenerateChapter(ch.id, notice); };
+        lucide.createIcons();
+      }
+
+      function removePendingNotice(chId) {
+        const block = narrationBody.querySelector(`.block[data-id="${chId}"]`);
+        if (!block) return;
+        const notice = block.querySelector('.pending-notice');
+        if (!notice) return;
+        notice.classList.add('out');
+        setTimeout(() => notice.remove(), 160);
+      }
+
+      function regenerateChapter(chId, notice) {
+        const ch = CHAPTERS.find(c => c.id === chId);
+        if (!ch) return;
+        // Show the regenerate-in-progress state on the button
+        if (notice) {
+          const btn = notice.querySelector('.pn-regen');
+          if (btn) {
+            btn.classList.add('regenerating');
+            btn.innerHTML = `<i data-lucide="refresh-cw"></i>Regenerating…`;
+            lucide.createIcons();
+          }
+        }
+        // Trigger preview shimmer + sync indicator
+        previewFrame.classList.add('regenerating');
+        syncState.classList.add('regenerating');
+        syncState.querySelector('.text').textContent = 'Regenerating…';
+        setTimeout(() => {
+          ch.dirty = false;
+          delete ch.oldNarration;
+          delete ch.oldDur;
+          previewFrame.classList.remove('regenerating');
+          removePendingNotice(chId);
+          updateSyncState();
+        }, 1600);
+      }
+
+      function regenerateAllDirty() {
+        const dirty = CHAPTERS.filter(c => c.dirty);
+        if (dirty.length === 0) return;
+        previewFrame.classList.add('regenerating');
+        syncState.classList.add('regenerating');
+        syncState.querySelector('.text').textContent = `Regenerating ${dirty.length}…`;
+        setTimeout(() => {
+          dirty.forEach(ch => {
+            ch.dirty = false;
+            delete ch.oldNarration;
+            delete ch.oldDur;
+          });
+          previewFrame.classList.remove('regenerating');
+          // Remove all pending notices
+          document.querySelectorAll('.pending-notice').forEach(n => {
+            n.classList.add('out');
+            setTimeout(() => n.remove(), 160);
+          });
+          updateSyncState();
+        }, 1900);
+      }
+
+      function undoChapter(chId) {
+        const ch = CHAPTERS.find(c => c.id === chId);
+        if (!ch || !ch.oldNarration) return;
+        ch.narration = ch.oldNarration;
+        ch.dur = ch.oldDur;
+        ch.dirty = false;
+        delete ch.oldNarration;
+        delete ch.oldDur;
+        renderAll();
+        updateSyncState();
+      }
+
+      // Generic "the user changed something the AI needs to regenerate" —
+      // used for structural changes (insert, split, delete, clip resize)
+      // and inline action-row buttons. Marks the selected chapter dirty
+      // so the inline Regenerate CTA appears.
+      function noteUserChange() {
+        const ch = CHAPTERS.find(c => c.id === selectedId);
+        saveAutoText();
+        if (!ch) return;
+        const preNar = ch.oldNarration ?? ch.narration;
+        const preDur = ch.oldDur ?? ch.dur;
+        markChapterDirty(ch, preNar, preDur);
+        ensurePendingNotice(ch);
+        updateSyncState();
+      }
+      // Back-compat shim so any remaining call sites still compile.
+      // Routes them through the new pending-CTA flow.
+      const triggerStaleSync = noteUserChange;
+
+      // ───────────────────────────────────────────────────────────
+      //  AI MENU — popover off the per-block ✦ AI trigger
+      // ───────────────────────────────────────────────────────────
+      let aiMenuEl = null;
+      function closeAiMenu() {
+        if (aiMenuEl) { aiMenuEl.remove(); aiMenuEl = null; }
+      }
+      function openAiMenu(triggerEl) {
+        closeAiMenu();
+        const rect = triggerEl.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.className = 'ai-menu';
+        menu.innerHTML = `
+          <div class="ai-menu-item" data-ai="regen">
+            <i data-lucide="refresh-cw" class="ami-icon"></i>
+            <div>
+              <div>Regenerate this chapter</div>
+              <div class="ami-desc">Re-run AI with current narration</div>
+            </div>
+          </div>
+          <div class="ai-menu-item" data-ai="shorter">
+            <i data-lucide="minimize-2" class="ami-icon"></i>
+            <div>
+              <div>Make it shorter</div>
+              <div class="ami-desc">Tighten without losing meaning</div>
+            </div>
+          </div>
+          <div class="ai-menu-item" data-ai="friendlier">
+            <i data-lucide="smile" class="ami-icon"></i>
+            <div>
+              <div>Friendlier tone</div>
+              <div class="ami-desc">Casual, conversational</div>
+            </div>
+          </div>
+          <div class="ai-menu-divider"></div>
+          <div class="ai-menu-item" data-ai="custom">
+            <i data-lucide="message-square-plus" class="ami-icon"></i>
+            <div>
+              <div>Tell AI what to change…</div>
+              <div class="ami-desc">Opens ⌘K with this chapter focused</div>
+            </div>
+          </div>
+        `;
+        menu.style.left = `${rect.left}px`;
+        menu.style.top  = `${rect.bottom + window.scrollY}px`;
+        document.body.appendChild(menu);
+        aiMenuEl = menu;
+        lucide.createIcons();
+        menu.querySelectorAll('.ai-menu-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const ai = item.dataset.ai;
+            closeAiMenu();
+            if (ai === 'custom') { openPalette(); return; }
+            // Explicit AI request — mark dirty briefly, then regenerate immediately
+            const ch = CHAPTERS.find(c => c.id === selectedId);
+            if (!ch) return;
+            const preNar = ch.oldNarration ?? ch.narration;
+            const preDur = ch.oldDur ?? ch.dur;
+            markChapterDirty(ch, preNar, preDur);
+            ensurePendingNotice(ch);
+            updateSyncState();
+            setTimeout(() => {
+              const block = narrationBody.querySelector(`.block[data-id="${ch.id}"]`);
+              regenerateChapter(ch.id, block?.querySelector('.pending-notice'));
+            }, 200);
+          });
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!aiMenuEl) return;
+        if (e.target.closest('.ai-menu') || e.target.closest('.ai-trigger')) return;
+        closeAiMenu();
+      });
+
+      // ───────────────────────────────────────────────────────────
+      //  RENDER — timeline (ruler, clips, motion, playhead)
+      // ───────────────────────────────────────────────────────────
+      function renderRuler() {
+        const D = totalDuration();
+        const parts = [];
+        const lastMajor = Math.floor(D / 10) * 10;
+        for (let s = 0; s <= lastMajor; s += 5) {
+          const pct = (s / D) * 100, major = s % 10 === 0;
+          if (major) {
+            const cls = s === 0 ? 'label first' : (s === D ? 'label last' : 'label');
+            parts.push(`<span class="${cls}" style="left:${pct}%">${fmt(s)}</span>`);
+            parts.push(`<span class="tick-major" style="left:${pct}%"></span>`);
+          } else {
+            parts.push(`<span class="tick-minor" style="left:${pct}%"></span>`);
+          }
+        }
+        if (D !== lastMajor) {
+          parts.push(`<span class="label last" style="left:100%">${fmt(D)}</span>`);
+          parts.push(`<span class="tick-major" style="left:100%"></span>`);
+        }
+        parts.push('<span class="axis"></span>');
+        ruler.innerHTML = parts.join('');
+      }
+
+      function renderClipTrack() {
+        const D = totalDuration();
+        track.innerHTML = '';
+        let cursorT = 0;
+        CHAPTERS.forEach((c, i) => {
+          const leftPct  = (cursorT / D) * 100;
+          const widthPct = (c.dur / D) * 100;
+          cursorT += c.dur;
+          const el = document.createElement('button');
+          el.className = `clip${c.id === selectedId ? ' selected' : ''}`;
+          el.dataset.id  = c.id;
+          el.dataset.idx = i;
+          el.style.left  = `${leftPct}%`;
+          el.style.width = `calc(${widthPct}% - 4px)`;
+          el.style.marginLeft = '2px';
+          el.style.setProperty('--color-accent', CH_COLOR_VAR[c.color]);
+          el.setAttribute('aria-label', `${c.title}, ${Math.round(c.dur)} seconds`);
+          el.innerHTML = `
+            <div class="thumb"></div>
+            ${i === 0 ? '' : '<div class="handle left"></div>'}
+            <div class="handle right"></div>
+            <span class="label">
+              <span class="dur">${Math.round(c.dur)}s</span>
+              <span class="ttl" style="opacity:.7">·&nbsp;${c.title}</span>
+            </span>`;
+          track.appendChild(el);
+        });
+        // Insert slots
+        let cumT = 0;
+        for (let i = 0; i < CHAPTERS.length - 1; i++) {
+          cumT += CHAPTERS[i].dur;
+          const pct = (cumT / D) * 100;
+          const slot = document.createElement('div');
+          slot.className = 'insert-slot';
+          slot.dataset.boundary = i;
+          slot.style.left = `${pct}%`;
+          slot.innerHTML = `<span class="ins-line"></span>
+            <button class="ins-btn" title="Insert chapter here"><i data-lucide="plus" style="width:11px;height:11px;"></i></button>`;
+          slot.querySelector('.ins-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            insertChapterAt(i + 1);
+          });
+          track.appendChild(slot);
+        }
+      }
+
+      function renderMotionLane() {
+        const D = totalDuration();
+        motionLane.innerHTML = '';
+        MOTION.forEach((m) => {
+          if (m.end > D) m.end = D;
+          if (m.start > m.end - MOTION_MIN_DUR) m.start = Math.max(0, m.end - MOTION_MIN_DUR);
+          const el = document.createElement('div');
+          el.className = `seg ${m.type}`;
+          el.dataset.id = m.id;
+          el.style.left  = `${(m.start / D) * 100}%`;
+          el.style.width = `calc(${((m.end - m.start) / D) * 100}% - 2px)`;
+          el.style.marginLeft = '1px';
+          el.setAttribute('title', `${chipLabel(m)} · ${fmt(m.start)} → ${fmt(m.end)}`);
+          el.innerHTML = `
+            <span class="handle left"></span>
+            <span class="seg-chip">${chipLabel(m)}</span>
+            ${curveSVG(m.from, m.to)}
+            <span class="handle right"></span>`;
+          motionLane.appendChild(el);
+        });
+      }
+
+      function renderPlayhead() {
+        const D = totalDuration();
+        currentTime = Math.max(0, Math.min(D, currentTime));
+        playhead.style.left = `${(currentTime / D) * 100}%`;
+        timeCur.textContent = fmt(currentTime);
+        timeTot.textContent = fmt(D);
+        const pct = (currentTime / D) * 100;
+        scrubFill.style.width = `${pct}%`;
+        scrubPin.style.left  = `${pct}%`;
+        if (chCount) chCount.textContent = `${CHAPTERS.length} chapters · ${fmt(D)}`;
+        updatePlayheadChapterColor();
+        updateActiveWord();
+        if (typeof updateAiContext === 'function') updateAiContext();
+      }
+
+      function renderAll() {
+        renderNarration();
+        renderRuler();
+        renderClipTrack();
+        renderMotionLane();
+        renderPlayhead();
+        updatePreviewBindings();
+        lucide.createIcons();
+        updateActiveWord();
+        // Restore per-chapter effects on the rebuilt blocks + clips
+        CHAPTERS.forEach(ch => {
+          if (ch.effects && ch.effects.length) {
+            renderEffectsForBlock(ch);
+            renderClipEffects(ch);
+          }
+        });
+        renderPreviewEffects();
+        // Re-emit pending-change notices for any dirty chapters after re-render
+        CHAPTERS.forEach(ch => { if (ch.dirty) ensurePendingNotice(ch); });
+        updateSyncState();
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  Actions
+      // ───────────────────────────────────────────────────────────
+      function insertChapterAt(index) {
+        const id = newClipId();
+        const color = CH_COLORS[index % CH_COLORS.length];
+        CHAPTERS.splice(index, 0, {
+          id, title: 'New chapter', dur: 6, color,
+          narration: 'Describe what happens here, and the AI will regenerate this section.',
+        });
+        selectedId = id;
+        renderAll();
+        triggerStaleSync();
+      }
+
+      function splitSelectedChapterAtPlayhead() {
+        const i = selectedClipIndex();
+        if (i < 0) return;
+        const c = CHAPTERS[i];
+        const startT = clipStartTime(i);
+        const offset = currentTime - startT;
+        if (offset < CLIP_MIN_DUR || offset > c.dur - CLIP_MIN_DUR) return;
+        const left  = { ...c, id: newClipId(), dur: offset };
+        const right = { ...c, id: newClipId(), dur: c.dur - offset, title: c.title + ' (cont.)' };
+        CHAPTERS.splice(i, 1, left, right);
+        selectedId = left.id;
+        renderAll();
+        triggerStaleSync();
+      }
+
+      function deleteSelectedChapter() {
+        if (CHAPTERS.length <= 1) return;
+        const i = selectedClipIndex();
+        if (i < 0) return;
+        CHAPTERS.splice(i, 1);
+        selectedId = CHAPTERS[Math.min(i, CHAPTERS.length - 1)].id;
+        renderAll();
+        triggerStaleSync();
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  Effect picker — opens off Media / Blur / Highlight buttons.
+      //  Selecting an option adds an effect to the chapter, which:
+      //    - appears as a chip below the narration block
+      //    - shows as a badge in the preview frame
+      //    - marks a colored dot on the timeline clip
+      //    - flags the chapter dirty → Regenerate CTA appears
+      // ───────────────────────────────────────────────────────────
+      const PICKER_OPTIONS = {
+        media: {
+          heading: 'Insert media',
+          items: [
+            { value: 'image',  label: 'Image',          desc: 'PNG, JPG, or GIF',                  icon: 'image' },
+            { value: 'video',  label: 'Video clip',     desc: 'External MP4 inserted as B-roll',   icon: 'film' },
+            { value: 'intro',  label: 'Intro card',     desc: 'Title slide before this chapter',   icon: 'rectangle-horizontal' },
+            { value: 'outro',  label: 'Outro card',     desc: 'Closing slide after this chapter',  icon: 'rectangle-horizontal' },
+          ],
+        },
+        blur: {
+          heading: 'Blur sensitive content',
+          items: [
+            { value: 'emails',  label: 'Email addresses',     desc: 'Detected automatically',  icon: 'mail' },
+            { value: 'names',   label: 'User names',          desc: 'Detected automatically',  icon: 'user' },
+            { value: 'phones',  label: 'Phone numbers',       desc: 'Detected automatically',  icon: 'phone' },
+            { value: 'region',  label: 'A specific region',   desc: 'Draw on the preview',     icon: 'square-dashed' },
+          ],
+        },
+        highlight: {
+          heading: 'Add highlight',
+          items: [
+            { value: 'click',   label: 'Cursor click',        desc: 'Ring + ripple at the click point', icon: 'mouse-pointer-click' },
+            { value: 'element', label: 'UI element',          desc: 'Box around a button or control',   icon: 'square' },
+            { value: 'arrow',   label: 'Annotation arrow',    desc: 'Point at a feature on screen',     icon: 'arrow-up-right' },
+            { value: 'callout', label: 'Callout text',        desc: 'Floating tip with caption',        icon: 'message-square-text' },
+          ],
+        },
+      };
+
+      let pickerEl = null;
+      function closePicker() { if (pickerEl) { pickerEl.remove(); pickerEl = null; } }
+      function openPicker(triggerEl, kind) {
+        closePicker();
+        if (!triggerEl) return;
+        const config = PICKER_OPTIONS[kind];
+        if (!config) return;
+        const rect = triggerEl.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.className = 'picker-menu';
+        menu.innerHTML = `
+          <div class="picker-head">${escapeHtml(config.heading)}</div>
+          ${config.items.map(opt => `
+            <div class="picker-item ${kind}" data-value="${opt.value}">
+              <span class="pk-icon"><i data-lucide="${opt.icon}"></i></span>
+              <div class="pk-body">
+                <div class="pk-title">${escapeHtml(opt.label)}</div>
+                <div class="pk-desc">${escapeHtml(opt.desc)}</div>
+              </div>
+            </div>
+          `).join('')}
+        `;
+        menu.style.left = `${rect.left}px`;
+        menu.style.top  = `${rect.bottom + window.scrollY}px`;
+        document.body.appendChild(menu);
+        pickerEl = menu;
+        lucide.createIcons();
+        menu.querySelectorAll('.picker-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const opt = config.items.find(o => o.value === item.dataset.value);
+            closePicker();
+            addEffect(selectedId, kind, opt);
+          });
+        });
+      }
+      document.addEventListener('click', (e) => {
+        if (!pickerEl) return;
+        if (e.target.closest('.picker-menu') || e.target.closest('.block-action')) return;
+        closePicker();
+      });
+
+      function addEffect(chId, kind, opt) {
+        const ch = CHAPTERS.find(c => c.id === chId);
+        if (!ch) return;
+        if (!ch.effects) ch.effects = [];
+        ch.effects.push({
+          id: `e${Date.now().toString(36)}${Math.floor(Math.random()*1000)}`,
+          type: kind,
+          subtype: opt.value,
+          label: opt.label,
+          icon: opt.icon,
+        });
+        renderEffectsForBlock(ch);
+        renderPreviewEffects();
+        renderClipEffects(ch);
+        noteUserChange();
+      }
+
+      function removeEffect(chId, effectId) {
+        const ch = CHAPTERS.find(c => c.id === chId);
+        if (!ch || !ch.effects) return;
+        ch.effects = ch.effects.filter(e => e.id !== effectId);
+        renderEffectsForBlock(ch);
+        renderPreviewEffects();
+        renderClipEffects(ch);
+        noteUserChange();
+      }
+
+      function renderEffectsForBlock(ch) {
+        const block = narrationBody.querySelector(`.block[data-id="${ch.id}"]`);
+        if (!block) return;
+        let row = block.querySelector('.effects-row');
+        const effects = ch.effects || [];
+        if (effects.length === 0) { if (row) row.remove(); return; }
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'effects-row';
+          const actions = block.querySelector('.block-actions');
+          if (actions) block.insertBefore(row, actions);
+          else block.appendChild(row);
+        }
+        row.innerHTML = effects.map(e => `
+          <span class="effect-chip ${e.type}" data-effect-id="${e.id}">
+            <i data-lucide="${e.icon}"></i>
+            <span>${escapeHtml(e.label)}</span>
+            <button class="ec-remove" type="button" title="Remove">
+              <i data-lucide="x"></i>
+            </button>
+          </span>
+        `).join('');
+        row.querySelectorAll('.ec-remove').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const chip = btn.closest('.effect-chip');
+            removeEffect(ch.id, chip.dataset.effectId);
+          });
+        });
+        lucide.createIcons();
+      }
+
+      function renderPreviewEffects() {
+        const ch = CHAPTERS.find(c => c.id === selectedId);
+        if (!ch) return;
+        previewFrame.querySelector('.preview-effects')?.remove();
+        previewFrame.classList.remove('has-blur', 'has-highlight', 'has-media');
+        const effects = ch.effects || [];
+        if (effects.length === 0) return;
+
+        const types = new Set(effects.map(e => e.type));
+        if (types.has('blur'))      previewFrame.classList.add('has-blur');
+        if (types.has('highlight')) previewFrame.classList.add('has-highlight');
+        if (types.has('media'))     previewFrame.classList.add('has-media');
+
+        // One badge per type, with a count when more than one
+        const grouped = {};
+        effects.forEach(e => { grouped[e.type] = (grouped[e.type] || 0) + 1; });
+        const stack = document.createElement('div');
+        stack.className = 'preview-effects';
+        Object.keys(grouped).forEach(t => {
+          const icon = t === 'media' ? 'image' : t === 'blur' ? 'eye-off' : 'highlighter';
+          const count = grouped[t];
+          const label = t.charAt(0).toUpperCase() + t.slice(1);
+          const badge = document.createElement('span');
+          badge.className = `pe-badge ${t}`;
+          badge.innerHTML = `<i data-lucide="${icon}"></i>${label}${count > 1 ? ` · ${count}` : ''}`;
+          stack.appendChild(badge);
+        });
+        previewFrame.appendChild(stack);
+        lucide.createIcons();
+      }
+
+      function renderClipEffects(ch) {
+        const clip = track.querySelector(`.clip[data-id="${ch.id}"]`);
+        if (!clip) return;
+        clip.querySelector('.clip-effects')?.remove();
+        const effects = ch.effects || [];
+        if (effects.length === 0) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'clip-effects';
+        wrap.innerHTML = effects
+          .map(e => `<span class="clip-effect-dot ${e.type}" title="${escapeHtml(e.label)}"></span>`)
+          .join('');
+        clip.appendChild(wrap);
+      }
+
+      function handleBlockAction(action, triggerEl) {
+        if (action === 'split')    return splitSelectedChapterAtPlayhead();
+        if (action === 'delete')   return deleteSelectedChapter();
+        if (action === 'media' || action === 'blur' || action === 'highlight') {
+          return openPicker(triggerEl, action);
+        }
+        if (action === 'regen' || action === 'tone') return noteUserChange();
+      }
+
+      // ───────────────────────────────────────────────────────────
+      //  Clip resize (left handle = roll, right = ripple)
+      // ───────────────────────────────────────────────────────────
+      track.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.clip .handle');
+        if (!handle) return;
+        const clipEl = handle.closest('.clip');
+        const idx = +clipEl.dataset.idx;
+        const side = handle.classList.contains('left') ? 'start' : 'end';
+        if (side === 'start' && idx === 0) return;
+        e.stopPropagation(); e.preventDefault();
+        clipResizing = {
+          idx, side, startX: e.clientX,
+          origDur: CHAPTERS[idx].dur,
+          prevOrigDur: idx > 0 ? CHAPTERS[idx - 1].dur : null,
+        };
+        document.body.style.cursor = 'ew-resize';
+      });
+
+      track.addEventListener('click', (e) => {
+        if (clipResizing) return;
+        const clipEl = e.target.closest('.clip');
+        if (!clipEl) return;
+        if (e.target.closest('.handle') || e.target.closest('.insert-slot')) return;
+        const prev = selectedId;
+        selectedId = clipEl.dataset.id;
+        renderAll();
+        if (prev !== selectedId) bumpSelection();
+      });
+
+      // Motion segment resize / move
+      motionLane.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.handle');
+        const segEl  = e.target.closest('.seg');
+        if (!segEl) return;
+        const id = segEl.dataset.id;
+        const m  = MOTION.find(x => x.id === id);
+        if (handle) {
+          e.stopPropagation(); e.preventDefault();
+          segResizing = { id, side: handle.classList.contains('left') ? 'start' : 'end',
+            startX: e.clientX, origStart: m.start, origEnd: m.end };
+          document.body.style.cursor = 'ew-resize';
+          return;
+        }
+        e.stopPropagation(); e.preventDefault();
+        segMoving = { id, startX: e.clientX, origStart: m.start, origEnd: m.end };
+        segEl.classList.add('moving');
+        document.body.style.cursor = 'grabbing';
+      });
+
+      function positionSeg(m) {
+        const el = motionLane.querySelector(`.seg[data-id="${m.id}"]`);
+        if (!el) return;
+        const D = totalDuration();
+        el.style.left  = `${(m.start / D) * 100}%`;
+        el.style.width = `calc(${((m.end - m.start) / D) * 100}% - 2px)`;
+      }
+
+      // Unified mousemove
+      window.addEventListener('mousemove', (e) => {
+        if (clipResizing) {
+          const r = tlRoot.getBoundingClientRect();
+          const D = totalDuration();
+          const dxSec = ((e.clientX - clipResizing.startX) / r.width) * D;
+          const c = CHAPTERS[clipResizing.idx];
+          if (clipResizing.side === 'end') {
+            c.dur = Math.max(CLIP_MIN_DUR, Math.round(clipResizing.origDur + dxSec));
+          } else {
+            const prev = CHAPTERS[clipResizing.idx - 1];
+            let dPrev = clipResizing.prevOrigDur + dxSec;
+            let dCur  = clipResizing.origDur   - dxSec;
+            if (dPrev < CLIP_MIN_DUR) { const fix = CLIP_MIN_DUR - dPrev; dPrev += fix; dCur -= fix; }
+            if (dCur  < CLIP_MIN_DUR) { const fix = CLIP_MIN_DUR - dCur;  dCur  += fix; dPrev -= fix; }
+            prev.dur = Math.round(dPrev);
+            c.dur    = Math.round(dCur);
+          }
+          renderRuler(); renderClipTrack(); renderPlayhead();
+          // Update narration meta only (avoid full re-render to keep focus)
+          narrationBody.querySelectorAll('.block').forEach((el, i) => {
+            const meta = el.querySelector('.block-meta');
+            if (!meta || !CHAPTERS[i]) return;
+            meta.lastElementChild.textContent = `${Math.round(CHAPTERS[i].dur)}s`;
+          });
+          return;
+        }
+        if (segResizing) {
+          const r = motionLane.getBoundingClientRect();
+          const D = totalDuration();
+          const dxSec = ((e.clientX - segResizing.startX) / r.width) * D;
+          const m = MOTION.find(x => x.id === segResizing.id);
+          const { prev, next } = motionNeighbors(segResizing.id);
+          if (segResizing.side === 'start') {
+            const minS = prev ? prev.end : 0, maxS = m.end - MOTION_MIN_DUR;
+            m.start = Math.max(minS, Math.min(maxS, segResizing.origStart + dxSec));
+          } else {
+            const minE = m.start + MOTION_MIN_DUR, maxE = next ? next.start : D;
+            m.end = Math.max(minE, Math.min(maxE, segResizing.origEnd + dxSec));
+          }
+          positionSeg(m); return;
+        }
+        if (segMoving) {
+          const r = motionLane.getBoundingClientRect();
+          const D = totalDuration();
+          const dxSec = ((e.clientX - segMoving.startX) / r.width) * D;
+          const m = MOTION.find(x => x.id === segMoving.id);
+          const dur = segMoving.origEnd - segMoving.origStart;
+          const { prev, next } = motionNeighbors(segMoving.id);
+          const minS = prev ? prev.end : 0;
+          const maxS = (next ? next.start : D) - dur;
+          m.start = Math.max(minS, Math.min(maxS, segMoving.origStart + dxSec));
+          m.end = m.start + dur;
+          positionSeg(m); return;
+        }
+        if (scrubbing) setPlayheadFromX(e.clientX);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (clipResizing) { clipResizing = null; document.body.style.cursor = ''; triggerStaleSync(); }
+        if (segResizing)  { segResizing  = null; }
+        if (segMoving)    {
+          motionLane.querySelector(`.seg[data-id="${segMoving.id}"]`)?.classList.remove('moving');
+          segMoving = null;
+        }
+        if (scrubbing)    { scrubbing = false; }
+        document.body.style.cursor = '';
+      });
+
+      // Insert-slot proximity
+      track.addEventListener('mousemove', (e) => {
+        if (clipResizing || segResizing || segMoving) {
+          track.querySelectorAll('.insert-slot.visible').forEach(s => s.classList.remove('visible'));
+          return;
+        }
+        const r = track.getBoundingClientRect();
+        const x = e.clientX - r.left;
+        const D = totalDuration();
+        let cum = 0;
+        track.querySelectorAll('.insert-slot').forEach((slot, i) => {
+          cum += CHAPTERS[i].dur;
+          const bx = (cum / D) * r.width;
+          slot.classList.toggle('visible', Math.abs(x - bx) < PROXIMITY_PX);
+        });
+      });
+      track.addEventListener('mouseleave', () => {
+        track.querySelectorAll('.insert-slot.visible').forEach(s => s.classList.remove('visible'));
+      });
+
+      // Playhead drag / scrub
+      function setPlayheadFromX(clientX) {
+        const r = tlRoot.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+        currentTime = Math.round(pct * totalDuration());
+        renderPlayhead();
+      }
+      playhead.addEventListener('mousedown', (e) => { scrubbing = true; e.preventDefault(); });
+      tlRoot.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.clip') || e.target.closest('.seg') || e.target.closest('.insert-slot')) return;
+        scrubbing = true; setPlayheadFromX(e.clientX);
+      });
+
+      // Scrubber on preview
+      scrubber.addEventListener('mousedown', (e) => {
+        const r = scrubber.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+        currentTime = Math.round(pct * totalDuration());
+        renderPlayhead();
+      });
+
+      // Play/pause with animation loop — advances currentTime in real time,
+      // which drives the playhead, karaoke highlight, and chapter auto-select.
+      let rafId = null;
+      let lastFrameTs = 0;
+      function tick(ts) {
+        if (!playing) return;
+        if (!lastFrameTs) lastFrameTs = ts;
+        const dt = (ts - lastFrameTs) / 1000;
+        lastFrameTs = ts;
+        currentTime += dt;
+        if (currentTime >= totalDuration()) {
+          currentTime = totalDuration();
+          renderPlayhead();
+          stopPlay();
+          return;
+        }
+        renderPlayhead();
+        rafId = requestAnimationFrame(tick);
+      }
+      function startPlay() {
+        playing = true;
+        lastFrameTs = 0;
+        lastActiveWord = null;
+        // If at end, restart
+        if (currentTime >= totalDuration() - 0.05) currentTime = 0;
+        playBtn.innerHTML = '<i data-lucide="pause" class="fill-current" style="width:14px;height:14px;"></i>';
+        lucide.createIcons();
+        rafId = requestAnimationFrame(tick);
+      }
+      function stopPlay() {
+        playing = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        playBtn.innerHTML = '<i data-lucide="play" class="fill-current" style="width:14px;height:14px;margin-left:2px;"></i>';
+        lucide.createIcons();
+      }
+      playBtn.addEventListener('click', () => {
+        if (playing) stopPlay(); else startPlay();
+      });
+
+      // ───────────────────────────────────────────────────────────
+      //  Timeline focus-shift (click anywhere in timeline to expand)
+      // ───────────────────────────────────────────────────────────
+      function setTimelineFocused(on) {
+        tlPanel.classList.toggle('focused', on);
+        const ic = tlToggle.querySelector('i');
+        if (ic) ic.setAttribute('data-lucide', on ? 'chevrons-down' : 'chevrons-up');
+        tlHint.textContent = on ? 'Click outside to collapse' : 'Click to expand';
+        lucide.createIcons();
+      }
+      tlToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setTimelineFocused(!tlPanel.classList.contains('focused'));
+      });
+      tlPanel.addEventListener('click', (e) => {
+        if (e.target.closest('#tl-toggle')) return;
+        if (!tlPanel.classList.contains('focused')) setTimelineFocused(true);
+      });
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('#timeline-panel') || e.target.closest('.preview-controls')) return;
+        if (tlPanel.classList.contains('focused')) setTimelineFocused(false);
+      });
+
+      // ───────────────────────────────────────────────────────────
+      //  Cmd+K palette
+      // ───────────────────────────────────────────────────────────
+      function openPalette() {
+        paletteOverlay.hidden = false;
+        setTimeout(() => paletteInput.focus(), 0);
+      }
+      function closePalette() { paletteOverlay.hidden = true; paletteInput.value = ''; }
+      openPaletteBtn.addEventListener('click', openPalette);
+      paletteOverlay.addEventListener('click', (e) => { if (e.target === paletteOverlay) closePalette(); });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          paletteOverlay.hidden ? openPalette() : closePalette();
+          return;
+        }
+        if (e.key === 'Escape' && !paletteOverlay.hidden) { closePalette(); return; }
+        if (paletteOverlay.hidden === false) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+        if (e.key === 'b' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); splitSelectedChapterAtPlayhead(); }
+        if (e.key === 'Backspace' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); deleteSelectedChapter(); }
+      });
+
+      // ═══════════════════════════════════════════════════════════
+      //  AI PANEL — cursor-context + suggestions + chat input
+      //
+      //  The cursor (in script or playhead in timeline) implies a
+      //  chapter + time + word anchor. The AI panel shows that
+      //  context, suggests verbs that make sense there, and gives
+      //  the user a single input to say what they want.
+      //
+      //  For the demo, "AI" is keyword-matched + canned clarifying
+      //  questions. Production would route this through an LLM with
+      //  the cursor context as system prompt.
+      // ═══════════════════════════════════════════════════════════
+      const apContext   = document.getElementById('ap-context');
+      const apCtxWhere  = document.getElementById('ap-ctx-where');
+      const apCtxWhen   = document.getElementById('ap-ctx-when');
+      const apSuggestionsEl = document.getElementById('ap-suggestions');
+      const apConvo     = document.getElementById('ap-convo');
+      const apInput     = document.getElementById('ap-input');
+      const apSend      = document.getElementById('ap-send');
+      const apForm      = document.getElementById('ap-form');
+
+      function updateAiContext() {
+        const ch = CHAPTERS.find(c => c.id === selectedId);
+        if (!ch) return;
+        // Find the word anchor — the word the playhead is currently in/before
+        const words = (ch.narration || '').trim().split(/\s+/).filter(Boolean);
+        const idx = CHAPTERS.findIndex(c => c.id === ch.id);
+        const chStart = clipStartTime(idx);
+        const wordDur = ch.dur / Math.max(words.length, 1);
+        const offset  = Math.max(0, currentTime - chStart);
+        const wIdx = Math.min(words.length - 1, Math.floor(offset / wordDur));
+        const anchorWord = words[wIdx] || '—';
+
+        const color = CH_COLOR_VAR[ch.color];
+        apContext.style.setProperty('--color-accent', color);
+        // Update the chapter-name span and re-attach the chapter color dot
+        apCtxWhere.innerHTML = `<span class="ch-dot"></span><span class="ap-ctx-chapter">${escapeHtml(ch.title)}</span>`;
+        apCtxWhen.innerHTML = `${fmt(currentTime)} · before <span class="word-anchor">${escapeHtml(anchorWord)}</span>`;
+
+        renderAiSuggestions(ch, anchorWord);
+      }
+
+      const SUGGEST_BASE = [
+        { id: 'media',     kind: 'media',     icon: 'image-plus',      title: 'Insert media here',     shortcut: null },
+        { id: 'blur',      kind: 'blur',      icon: 'eye-off',         title: 'Blur emails on screen', shortcut: null },
+        { id: 'highlight', kind: 'highlight', icon: 'highlighter',     title: 'Highlight a UI element',shortcut: null },
+        { id: 'pause',     kind: 'timing',    icon: 'pause',           title: 'Add a 2-second pause',  shortcut: null },
+        { id: 'split',     kind: 'structure', icon: 'scissors',        title: 'Split chapter here',    shortcut: '⌘B' },
+      ];
+
+      function renderAiSuggestions(ch, anchorWord) {
+        apSuggestionsEl.innerHTML = SUGGEST_BASE.map(s => `
+          <button class="ap-suggest ${s.kind}" data-suggest="${s.id}" type="button">
+            <span class="ap-s-icon"><i data-lucide="${s.icon}"></i></span>
+            <span class="ap-s-body"><span class="ap-s-title">${escapeHtml(s.title)}</span></span>
+            ${s.shortcut ? `<span class="ap-s-shortcut">${s.shortcut}</span>` : ''}
+          </button>
+        `).join('');
+        apSuggestionsEl.querySelectorAll('.ap-suggest').forEach(btn => {
+          btn.addEventListener('click', () => runAiAction(btn.dataset.suggest));
+        });
+        lucide.createIcons();
+      }
+
+      // The action layer — each suggestion or AI-interpreted intent
+      // maps to an existing function in the editor.
+      function runAiAction(id, opts) {
+        switch (id) {
+          case 'media':
+            return addEffect(selectedId, 'media',
+              PICKER_OPTIONS.media.items.find(i => i.value === (opts?.value || 'image')));
+          case 'blur':
+            return addEffect(selectedId, 'blur',
+              PICKER_OPTIONS.blur.items.find(i => i.value === (opts?.value || 'emails')));
+          case 'highlight':
+            return addEffect(selectedId, 'highlight',
+              PICKER_OPTIONS.highlight.items.find(i => i.value === (opts?.value || 'element')));
+          case 'pause': {
+            const ch = CHAPTERS.find(c => c.id === selectedId);
+            if (!ch) return;
+            ch.dur += 2;
+            renderRuler(); renderClipTrack(); renderMotionLane(); renderPlayhead();
+            updateChapterMetaInline(CHAPTERS.findIndex(c => c.id === ch.id));
+            flashClipResize(ch.id);
+            noteUserChange();
+            return;
+          }
+          case 'split':
+            return splitSelectedChapterAtPlayhead();
+        }
+      }
+
+      // Conversation turn helpers
+      function apAddTurn(role, htmlBody) {
+        apConvo.classList.add('active');
+        const turn = document.createElement('div');
+        turn.className = `ap-turn ${role}`;
+        turn.innerHTML = `
+          <span class="ap-avatar">${role === 'ai' ? '✦' : 'U'}</span>
+          <div class="ap-msg">${htmlBody}</div>`;
+        apConvo.appendChild(turn);
+        apConvo.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        lucide.createIcons();
+        return turn;
+      }
+      function apClearConvo() {
+        apConvo.innerHTML = '';
+        apConvo.classList.remove('active');
+      }
+
+      // Light keyword router so the demo feels responsive without an LLM.
+      // Real version would send the intent string + cursor context to a model.
+      function aiInterpret(text) {
+        const t = text.toLowerCase().trim();
+        if (/\b(blur|hide|mask|redact)\b/.test(t)) {
+          if (/email/.test(t))   return { action: 'blur',      opts: { value: 'emails' } };
+          if (/name/.test(t))    return { action: 'blur',      opts: { value: 'names' } };
+          if (/phone/.test(t))   return { action: 'blur',      opts: { value: 'phones' } };
+          return { needs: 'clarify', kind: 'blur' };
+        }
+        if (/\b(image|photo|picture|screenshot)\b/.test(t)) return { action: 'media', opts: { value: 'image' } };
+        if (/\b(video|clip|b[- ]?roll)\b/.test(t))           return { action: 'media', opts: { value: 'video' } };
+        if (/\b(highlight|ring|point at|annotate)\b/.test(t))return { action: 'highlight', opts: { value: 'element' } };
+        if (/\bsplit\b/.test(t)) return { action: 'split' };
+        if (/\b(pause|wait|extend audio|gap)\b/.test(t)) return { action: 'pause' };
+        if (/\b(shorter|trim|cut down)\b/.test(t)) return { needs: 'inform', message: 'To shorten the chapter, delete words from the script on the right — duration auto-adjusts and the Regenerate CTA appears.' };
+        if (/\b(slow(er)? down|reduce speed)\b/.test(t)) return { needs: 'inform', message: 'In the demo, slow-down isn\'t wired yet. Add it via the timeline\'s motion lane.' };
+        return { needs: 'unknown' };
+      }
+
+      function aiSubmit(text) {
+        if (!text.trim()) return;
+        apAddTurn('user', escapeHtml(text));
+        // Simulated thinking pause
+        const thinking = apAddTurn('ai', `<span class="ap-thinking"><span class="dots"><span></span><span></span><span></span></span>Thinking…</span>`);
+        setTimeout(() => {
+          const interp = aiInterpret(text);
+          thinking.remove();
+          if (interp.action) {
+            apAddTurn('ai', `Got it — applying <strong>${escapeHtml(interp.action)}</strong> at the cursor.`);
+            runAiAction(interp.action, interp.opts);
+          } else if (interp.needs === 'clarify' && interp.kind === 'blur') {
+            apAddTurn('ai', `What should I blur?
+              <div class="ap-quick-replies">
+                <button class="ap-qr" data-clarify="emails">Email addresses</button>
+                <button class="ap-qr" data-clarify="names">User names</button>
+                <button class="ap-qr" data-clarify="phones">Phone numbers</button>
+                <button class="ap-qr" data-clarify="region">Specific region</button>
+              </div>`);
+            apConvo.querySelectorAll('.ap-qr').forEach(qr => {
+              qr.addEventListener('click', () => {
+                const val = qr.dataset.clarify;
+                runAiAction('blur', { value: val });
+                apAddTurn('ai', `Applied. <strong>${escapeHtml(qr.textContent)}</strong> will be blurred for this chapter.`);
+              });
+            });
+          } else if (interp.needs === 'inform') {
+            apAddTurn('ai', escapeHtml(interp.message));
+          } else {
+            apAddTurn('ai', `I'm not sure how to do that yet. Try one of the suggestions above, or say "blur this", "insert image", or "split here".`);
+          }
+        }, 550);
+      }
+
+      // Input wiring
+      apInput.addEventListener('input', () => {
+        apInput.style.height = 'auto';
+        apInput.style.height = Math.min(90, apInput.scrollHeight) + 'px';
+        apSend.disabled = apInput.value.trim().length === 0;
+      });
+      apInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          const v = apInput.value;
+          apInput.value = '';
+          apInput.style.height = 'auto';
+          apSend.disabled = true;
+          aiSubmit(v);
+        }
+      });
+      apForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const v = apInput.value;
+        apInput.value = '';
+        apInput.style.height = 'auto';
+        apSend.disabled = true;
+        aiSubmit(v);
+      });
+
+      // Focus the AI input on ⌘K instead of opening the old palette overlay
+      // (kept as fallback; the AI panel is now the primary verb surface)
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          apInput.focus();
+        }
+      });
+
+      // ───────────────────────────────────────────────────────────
+      //  Boot
+      // ───────────────────────────────────────────────────────────
+      renderAll();
+      updatePreviewBindings();
+      updateAiContext();
+
+      // Demo trigger: open with ?demo=pending to pre-edit Ch 2 and show
+      // the Regenerate CTA on initial render. Used for screenshots.
+      if (new URLSearchParams(location.search).get('demo') === 'pending') {
+        const ch = CHAPTERS[1];
+        ch.oldNarration = ch.narration;
+        ch.oldDur = ch.dur;
+        ch.narration = ch.narration.split('. ').slice(0, -1).join('. ') + '.';
+        ch.dur = chapterDurationFromText(ch.narration);
+        ch.dirty = true;
+        renderAll();
+      }
+      // ?demo=effects → seed a couple of effects so the chips/badges/dots show
+      if (new URLSearchParams(location.search).get('demo') === 'effects') {
+        const ch = CHAPTERS[1];
+        ch.effects = [
+          { id: 'e_demo_1', type: 'media',     subtype: 'image',   label: 'Image',         icon: 'image' },
+          { id: 'e_demo_2', type: 'blur',      subtype: 'emails',  label: 'Email addresses', icon: 'mail' },
+          { id: 'e_demo_3', type: 'highlight', subtype: 'element', label: 'UI element',    icon: 'square' },
+        ];
+        renderAll();
+      }
+    </script>
+  </body>
+</html>
