@@ -501,11 +501,13 @@
       .bar > * { transition: opacity 220ms ease-out; }
 
       /* ─── MY TASKS ACCORDION POPOVER ─── */
+      /* Positioned at runtime so the right edge lines up with whichever pill
+         opened it (My-tasks pill in Input, truncated task pill otherwise). */
       .mytasks-popover {
         position: fixed;
-        left: 50%;
         bottom: 96px;
-        transform: translateX(-50%) translateY(8px);
+        right: 50%;
+        transform: translateY(8px);
         width: 360px;
         background: var(--s-900);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -518,7 +520,7 @@
       }
       .mytasks-popover[data-open="true"] {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
         pointer-events: auto;
       }
       .mp-newtask {
@@ -567,6 +569,308 @@
       .mp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .mp-meta { font-size: 11px; color: var(--s-400); white-space: nowrap; }
       .mp-divider { height: 1px; background: rgba(255, 255, 255, 0.06); }
+
+      /* ─── ATTACH MENU POPOVER (above the paperclip) ─── */
+      .attach-menu {
+        position: fixed;
+        bottom: 100px;
+        right: auto;
+        background: var(--s-900);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 6px;
+        min-width: 240px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
+        opacity: 0; pointer-events: none;
+        transform: translateY(6px);
+        transition: opacity 200ms, transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 12;
+      }
+      .attach-menu[data-open="true"] {
+        opacity: 1; transform: translateY(0); pointer-events: auto;
+      }
+      .attach-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 9px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #fff;
+        font-size: 13px;
+      }
+      .attach-item:hover { background: rgba(255, 255, 255, 0.06); }
+      .attach-item-icon {
+        width: 26px; height: 26px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--s-300);
+        border-radius: 6px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+      .attach-item-icon i { width: 14px; height: 14px; }
+      .attach-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+        margin: 4px 6px;
+      }
+
+      /* ─── ATTACHMENT CHIPS (rendered above the bar, not inside it) ─── */
+      .attach-tray {
+        position: fixed;
+        bottom: 92px;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 760px;
+        width: max-content;
+        display: none;
+        flex-wrap: wrap;
+        gap: 6px;
+        z-index: 9;
+        pointer-events: none;
+      }
+      .attach-tray[data-on="true"] { display: flex; pointer-events: auto; }
+      .doc-chip {
+        display: inline-flex; align-items: center;
+        gap: 8px;
+        padding: 5px 6px 5px 5px;
+        background: var(--s-900);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        color: var(--s-100);
+        font-size: 12px;
+        max-width: 240px;
+      }
+      .doc-chip-thumb {
+        width: 26px; height: 26px;
+        background: var(--info-400);
+        border-radius: 4px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .doc-chip-thumb i { width: 13px; height: 13px; }
+      .doc-chip-text {
+        display: flex; flex-direction: column;
+        gap: 1px; min-width: 0;
+      }
+      .doc-chip-name {
+        font-size: 12px; font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 160px;
+        color: #fff;
+      }
+      .doc-chip-meta { font-size: 10px; color: var(--s-400); }
+      .doc-chip-close {
+        width: 18px; height: 18px;
+        background: transparent;
+        border: none;
+        color: var(--s-400);
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .doc-chip-close:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+      .doc-chip-close i { width: 12px; height: 12px; }
+
+      .flow-chip {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 6px 8px 6px 6px;
+        background: var(--s-900);
+        border: 1px solid var(--fire-400);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        color: #fff;
+        font-size: 12px;
+        max-width: 320px;
+      }
+      .flow-chip-icon {
+        width: 22px; height: 22px;
+        border-radius: 4px;
+        background: var(--fire-400);
+        color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+      }
+      .flow-chip-icon i { width: 12px; height: 12px; }
+      .flow-chip.prompt { border-color: var(--info-400); }
+      .flow-chip.prompt .flow-chip-icon { background: var(--info-400); }
+      .flow-chip-label {
+        font-size: 11px;
+        color: var(--s-400);
+        margin-right: 2px;
+      }
+      .flow-chip-name {
+        font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 200px;
+      }
+      .flow-chip-close {
+        width: 18px; height: 18px;
+        background: transparent;
+        border: none;
+        color: var(--s-400);
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .flow-chip-close:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+      .flow-chip-close i { width: 12px; height: 12px; }
+
+      /* ─── FLOW / PROMPT PICKER MODAL ─── */
+      .modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(15, 15, 26, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 30;
+        display: none;
+        align-items: center; justify-content: center;
+      }
+      .modal-backdrop[data-open="true"] { display: flex; animation: backdrop-in 200ms ease-out; }
+      @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+      .modal {
+        width: 480px;
+        max-height: 560px;
+        background: var(--s-900);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+        display: flex; flex-direction: column;
+        overflow: hidden;
+        animation: modal-in 280ms cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      @keyframes modal-in {
+        from { opacity: 0; transform: translateY(12px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .modal-header {
+        padding: 16px 18px 12px;
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .modal-title {
+        font-size: 14px; font-weight: 700;
+        color: #fff;
+      }
+      .modal-close {
+        width: 26px; height: 26px;
+        background: transparent;
+        border: none;
+        color: var(--s-300);
+        cursor: pointer;
+        border-radius: 5px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .modal-close:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+      .modal-search {
+        padding: 10px 14px;
+        position: relative;
+      }
+      .modal-search input {
+        width: 100%;
+        height: 34px;
+        padding: 0 12px 0 32px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 7px;
+        color: #fff;
+        font-size: 13px;
+        outline: none;
+        font-family: inherit;
+      }
+      .modal-search input:focus { border-color: var(--info-400); }
+      .modal-search input::placeholder { color: var(--s-400); }
+      .modal-search i {
+        position: absolute;
+        left: 24px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--s-400);
+        width: 14px; height: 14px;
+        pointer-events: none;
+      }
+      .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 8px 10px;
+      }
+      .modal-body::-webkit-scrollbar { width: 6px; }
+      .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; }
+      .picker-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+        color: var(--s-100);
+      }
+      .picker-row:hover { background: rgba(255, 255, 255, 0.04); }
+      .picker-row.selected {
+        background: rgba(9, 117, 215, 0.15);
+        outline: 1px solid var(--info-400);
+      }
+      .picker-icon {
+        width: 30px; height: 30px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 7px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--s-100);
+        flex-shrink: 0;
+      }
+      .picker-icon i { width: 14px; height: 14px; }
+      .picker-text { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 2px; }
+      .picker-name {
+        font-size: 13px; font-weight: 600;
+        color: #fff;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .picker-meta { font-size: 11px; color: var(--s-400); }
+      .picker-desc {
+        font-size: 11.5px;
+        color: var(--s-400);
+        line-height: 1.4;
+        margin-top: 2px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .modal-footer {
+        padding: 12px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .modal-status {
+        font-size: 11.5px; color: var(--s-400);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        flex: 1; min-width: 0;
+      }
+      .modal-btn {
+        height: 30px;
+        padding: 0 14px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 6px;
+        color: #fff;
+        font: inherit;
+        font-size: 12px; font-weight: 500;
+        cursor: pointer;
+      }
+      .modal-btn:hover { background: rgba(255, 255, 255, 0.06); }
+      .modal-btn.primary {
+        background: var(--fire-400);
+        border-color: var(--fire-400);
+        font-weight: 600;
+      }
+      .modal-btn.primary:hover { background: var(--fire-300); }
+      .modal-btn.primary:disabled {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.10);
+        color: rgba(255, 255, 255, 0.30);
+        cursor: not-allowed;
+      }
 
       /* ─── MODE CHANGER POPOVER ─── */
       .mode-popover {
@@ -814,13 +1118,13 @@
       </button>
 
       <!-- Attach (input + output) / Pause (in-progress) -->
-      <button class="icon-btn for-input" title="Attach">
+      <button class="icon-btn for-input" title="Attach" id="attach-btn-input">
         <i data-lucide="paperclip"></i>
       </button>
       <button class="icon-btn for-progress" title="Pause" id="pause-btn">
         <i data-lucide="pause"></i>
       </button>
-      <button class="icon-btn for-output" title="Attach">
+      <button class="icon-btn for-output" title="Attach" id="attach-btn-output">
         <i data-lucide="paperclip"></i>
       </button>
 
@@ -834,6 +1138,70 @@
       <button class="send-btn for-output" id="send-btn-out" title="Send a follow-up">
         <i data-lucide="arrow-up"></i>
       </button>
+    </div>
+
+    <!-- Attachment tray (doc chips + flow/prompt pill render here, above the bar) -->
+    <div class="attach-tray" id="attach-tray"></div>
+
+    <!-- Attach menu popover (opens above the paperclip when clicked) -->
+    <div class="attach-menu" id="attach-menu">
+      <div class="attach-item" data-attach="document">
+        <span class="attach-item-icon"><i data-lucide="file-text"></i></span>
+        <span>Upload document</span>
+      </div>
+      <div class="attach-item" data-attach="flow">
+        <span class="attach-item-icon"><i data-lucide="zap"></i></span>
+        <span>Attach Whatfix Flow</span>
+      </div>
+      <div class="attach-divider"></div>
+      <div class="attach-item" data-attach="library">
+        <span class="attach-item-icon"><i data-lucide="library-big"></i></span>
+        <span>From Prompt Library</span>
+      </div>
+    </div>
+
+    <!-- FLOW PICKER MODAL -->
+    <div class="modal-backdrop" id="flow-modal">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <span class="modal-title">Attach a Whatfix Flow</span>
+          <button class="modal-close" data-close="flow"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+        </div>
+        <div class="modal-search">
+          <i data-lucide="search"></i>
+          <input id="flow-search" type="search" placeholder="Search flows by name or app…" autocomplete="off" />
+        </div>
+        <div class="modal-body">
+          <ul id="flow-list" style="list-style: none; margin: 0; padding: 0;"></ul>
+        </div>
+        <div class="modal-footer">
+          <span class="modal-status" id="flow-status">Pick a flow to attach</span>
+          <button class="modal-btn" data-close="flow">Cancel</button>
+          <button class="modal-btn primary" id="flow-attach" disabled>Attach</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT LIBRARY MODAL -->
+    <div class="modal-backdrop" id="prompt-modal">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <span class="modal-title">From Prompt Library</span>
+          <button class="modal-close" data-close="prompt"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+        </div>
+        <div class="modal-search">
+          <i data-lucide="search"></i>
+          <input id="prompt-search" type="search" placeholder="Search prompts by name, app, or description…" autocomplete="off" />
+        </div>
+        <div class="modal-body">
+          <ul id="prompt-list" style="list-style: none; margin: 0; padding: 0;"></ul>
+        </div>
+        <div class="modal-footer">
+          <span class="modal-status" id="prompt-status">Pick a prompt to attach</span>
+          <button class="modal-btn" data-close="prompt">Cancel</button>
+          <button class="modal-btn primary" id="prompt-attach" disabled>Attach</button>
+        </div>
+      </div>
     </div>
 
     <!-- My tasks accordion popover (renders above the bar when open) -->
@@ -1006,20 +1374,43 @@
       // ─── My tasks accordion popover ───────────────────────────
       const mytasksPill = document.getElementById("mytasks-pill");
       const mytasksPopover = document.getElementById("mytasks-popover");
+      // Align the popover's right edge with the trigger's right edge,
+      // and its bottom 12px above the bar's top edge.
+      function alignPopoverTo(triggerEl) {
+        const triggerRect = triggerEl.getBoundingClientRect();
+        const barRect = bar.getBoundingClientRect();
+        mytasksPopover.style.right = (window.innerWidth - triggerRect.right) + "px";
+        mytasksPopover.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+      }
+      function togglePopover(triggerEl) {
+        const open = mytasksPopover.dataset.open === "true";
+        if (open) {
+          mytasksPopover.dataset.open = "false";
+        } else {
+          alignPopoverTo(triggerEl);
+          mytasksPopover.dataset.open = "true";
+        }
+      }
       mytasksPill.addEventListener("click", (e) => {
         e.stopPropagation();
-        const open = mytasksPopover.dataset.open === "true";
-        mytasksPopover.dataset.open = open ? "false" : "true";
+        togglePopover(mytasksPill);
       });
       // Task pill (in-progress / output) also opens the popover
       document.getElementById("task-pill").addEventListener("click", (e) => {
         e.stopPropagation();
-        const open = mytasksPopover.dataset.open === "true";
-        mytasksPopover.dataset.open = open ? "false" : "true";
+        togglePopover(document.getElementById("task-pill"));
       });
       document.addEventListener("click", (e) => {
         if (mytasksPopover.contains(e.target)) return;
         mytasksPopover.dataset.open = "false";
+      });
+      // Re-align if the window resizes while open
+      window.addEventListener("resize", () => {
+        if (mytasksPopover.dataset.open === "true") {
+          // Reuse the last trigger — fall back to mytasksPill in Input, task-pill otherwise
+          const trigger = bar.dataset.phase === "input" ? mytasksPill : document.getElementById("task-pill");
+          alignPopoverTo(trigger);
+        }
       });
 
       // ─── Mode changer popover ────────────────────────────────
@@ -1053,6 +1444,305 @@
 
       // Update tasks badge based on accordion content
       document.getElementById("mytasks-badge").style.display = "inline-flex";
+
+      // ─── Attach menu (Upload doc / Attach Flow / From Library) ─────
+      const attachMenu = document.getElementById("attach-menu");
+      const attachBtnInput = document.getElementById("attach-btn-input");
+      const attachBtnOutput = document.getElementById("attach-btn-output");
+      function openAttachMenu(trigger) {
+        const rect = trigger.getBoundingClientRect();
+        const barRect = bar.getBoundingClientRect();
+        attachMenu.style.right = (window.innerWidth - rect.right) + "px";
+        attachMenu.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+        attachMenu.dataset.open = "true";
+      }
+      function closeAttachMenu() { attachMenu.dataset.open = "false"; }
+      attachBtnInput.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = attachMenu.dataset.open === "true";
+        if (open) closeAttachMenu();
+        else openAttachMenu(attachBtnInput);
+      });
+      attachBtnOutput.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = attachMenu.dataset.open === "true";
+        if (open) closeAttachMenu();
+        else openAttachMenu(attachBtnOutput);
+      });
+      document.addEventListener("click", (e) => {
+        if (attachMenu.contains(e.target)) return;
+        if (attachBtnInput.contains(e.target) || attachBtnOutput.contains(e.target)) return;
+        closeAttachMenu();
+      });
+
+      // ─── Attachment tray (renders doc chips + flow/prompt pill above bar) ─
+      const attachTray = document.getElementById("attach-tray");
+      let attachedFlow = null;   // { name, app, icon, template }
+      let attachedPrompt = null; // { name, app, icon, desc }
+      const attachedDocs = [];
+
+      function refreshTray() {
+        const hasAny = attachedFlow || attachedPrompt || attachedDocs.length > 0;
+        attachTray.dataset.on = hasAny ? "true" : "false";
+        // Anchor the tray to the bar's left + bottom edges
+        const barRect = bar.getBoundingClientRect();
+        attachTray.style.left = (barRect.left) + "px";
+        attachTray.style.transform = "none";
+        attachTray.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+        // Render contents
+        let html = "";
+        attachedDocs.forEach((d, i) => {
+          html += `
+            <div class="doc-chip" data-doc-idx="${i}">
+              <span class="doc-chip-thumb"><i data-lucide="${d.icon}"></i></span>
+              <span class="doc-chip-text">
+                <span class="doc-chip-name">${d.name}</span>
+                <span class="doc-chip-meta">${d.type} · ${d.size}</span>
+              </span>
+              <button class="doc-chip-close" data-remove-doc="${i}" aria-label="Remove">
+                <i data-lucide="x"></i>
+              </button>
+            </div>`;
+        });
+        if (attachedFlow) {
+          html += `
+            <div class="flow-chip">
+              <span class="flow-chip-icon"><i data-lucide="${attachedFlow.icon}"></i></span>
+              <span class="flow-chip-label">Flow:</span>
+              <span class="flow-chip-name">${attachedFlow.name}</span>
+              <button class="flow-chip-close" data-remove-flow aria-label="Detach">
+                <i data-lucide="x"></i>
+              </button>
+            </div>`;
+        }
+        if (attachedPrompt) {
+          html += `
+            <div class="flow-chip prompt">
+              <span class="flow-chip-icon"><i data-lucide="${attachedPrompt.icon}"></i></span>
+              <span class="flow-chip-label">Prompt:</span>
+              <span class="flow-chip-name">${attachedPrompt.name}</span>
+              <button class="flow-chip-close" data-remove-prompt aria-label="Detach">
+                <i data-lucide="x"></i>
+              </button>
+            </div>`;
+        }
+        attachTray.innerHTML = html;
+        lucide.createIcons();
+        // Wire chip close buttons
+        attachTray.querySelectorAll("[data-remove-doc]").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.removeDoc);
+            attachedDocs.splice(idx, 1);
+            refreshTray();
+            refreshSendEnabled();
+          });
+        });
+        const removeFlow = attachTray.querySelector("[data-remove-flow]");
+        if (removeFlow) removeFlow.addEventListener("click", (e) => {
+          e.stopPropagation();
+          attachedFlow = null;
+          refreshTray();
+          refreshSendEnabled();
+          barInput.placeholder = "What can I help you with today?";
+        });
+        const removePrompt = attachTray.querySelector("[data-remove-prompt]");
+        if (removePrompt) removePrompt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          attachedPrompt = null;
+          refreshTray();
+          refreshSendEnabled();
+          barInput.placeholder = "What can I help you with today?";
+        });
+      }
+      window.addEventListener("resize", refreshTray);
+
+      // Enable Send if there's text OR an attachment
+      function refreshSendEnabled() {
+        const hasContent = barInput.value.trim() || attachedFlow || attachedPrompt || attachedDocs.length > 0;
+        sendBtn.disabled = !hasContent;
+      }
+      barInput.addEventListener("input", refreshSendEnabled);
+
+      // ─── Sample data ──────────────────────────────────────────────
+      const SAMPLE_DOCS = [
+        { name: "Vendor_Brief_Template.docx", type: "DOCX", size: "248 KB", icon: "file-text" },
+        { name: "Q4_Pipeline_Forecast.xlsx",  type: "XLSX", size: "1.2 MB", icon: "table" },
+        { name: "Renewal_Playbook_2026.pdf",  type: "PDF",  size: "3.4 MB", icon: "file-text" },
+      ];
+      let docCounter = 0;
+
+      const FLOWS = [
+        { id: 1, name: "Submit Purchase Requisition", icon: "file-text", app: "Dynamics 365", steps: 8 },
+        { id: 2, name: "Update Opportunity Stage",    icon: "circle-check-big", app: "Salesforce", steps: 7 },
+        { id: 3, name: "Triage Zendesk Ticket",       icon: "inbox",     app: "Zendesk",    steps: 5 },
+        { id: 4, name: "Reconcile Stripe Payouts",    icon: "scale",     app: "Stripe",     steps: 6 },
+        { id: 5, name: "Onboard New Hire to Okta",    icon: "user-plus", app: "Okta",       steps: 9 },
+      ];
+
+      const PROMPTS = [
+        { id: 1, name: "Weekly Pipeline Review", icon: "bar-chart-3", app: "Salesforce", uses: 47,
+          desc: "Pull this week's open opportunities and email a digest to Sales leadership." },
+        { id: 2, name: "Daily Stripe Reconciliation", icon: "scale", app: "Stripe", uses: 23,
+          desc: "Match yesterday's payouts against the GL and flag mismatches." },
+        { id: 3, name: "Triage VIP Zendesk Queue", icon: "inbox", app: "Zendesk", uses: 89,
+          desc: "Route today's high-priority tickets by severity and revenue tier." },
+        { id: 4, name: "Send Q4 Renewal Reminders", icon: "mail", app: "Outreach", uses: 31,
+          desc: "Email accounts with renewals in the next 60 days a personalized check-in." },
+        { id: 5, name: "Customer Health Audit", icon: "activity", app: "Salesforce", uses: 12,
+          desc: "Recalculate health score for accounts up for renewal in 90 days." },
+      ];
+
+      // ─── Attach menu item clicks ──────────────────────────────────
+      attachMenu.querySelectorAll(".attach-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const kind = item.dataset.attach;
+          closeAttachMenu();
+          if (kind === "document") attachDocument();
+          else if (kind === "flow") openFlowModal();
+          else if (kind === "library") openPromptModal();
+        });
+      });
+
+      function attachDocument() {
+        const doc = SAMPLE_DOCS[docCounter % SAMPLE_DOCS.length];
+        docCounter += 1;
+        attachedDocs.push({ ...doc, id: "doc_" + Date.now() });
+        refreshTray();
+        refreshSendEnabled();
+        if (!barInput.value.trim()) barInput.placeholder = "What should Seek do with this document?";
+        barInput.focus();
+      }
+
+      // ─── FLOW MODAL ────────────────────────────────────────────────
+      const flowModal = document.getElementById("flow-modal");
+      const flowList = document.getElementById("flow-list");
+      const flowSearch = document.getElementById("flow-search");
+      const flowAttachBtn = document.getElementById("flow-attach");
+      const flowStatusEl = document.getElementById("flow-status");
+      let selectedFlowId = null;
+
+      function renderFlowList() {
+        const q = flowSearch.value.toLowerCase().trim();
+        const filtered = FLOWS.filter((f) =>
+          !q || f.name.toLowerCase().includes(q) || f.app.toLowerCase().includes(q)
+        );
+        flowList.innerHTML = filtered.map((f) => `
+          <li class="picker-row${f.id === selectedFlowId ? " selected" : ""}" data-flow-id="${f.id}">
+            <span class="picker-icon"><i data-lucide="${f.icon}"></i></span>
+            <span class="picker-text">
+              <span class="picker-name">${f.name}</span>
+              <span class="picker-meta">${f.app} · ${f.steps} steps</span>
+            </span>
+          </li>
+        `).join("") || `<li style="padding:14px 12px;color:var(--s-400);font-size:13px;">No flows match.</li>`;
+        lucide.createIcons();
+        flowList.querySelectorAll(".picker-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            selectedFlowId = parseInt(row.dataset.flowId);
+            renderFlowList();
+            flowAttachBtn.disabled = false;
+            const f = FLOWS.find((x) => x.id === selectedFlowId);
+            flowStatusEl.textContent = `Selected: ${f.name}`;
+          });
+        });
+      }
+      function openFlowModal() {
+        selectedFlowId = null;
+        flowAttachBtn.disabled = true;
+        flowStatusEl.textContent = "Pick a flow to attach";
+        flowSearch.value = "";
+        renderFlowList();
+        flowModal.dataset.open = "true";
+        setTimeout(() => flowSearch.focus(), 80);
+      }
+      function closeFlowModal() { flowModal.dataset.open = "false"; }
+      flowSearch.addEventListener("input", renderFlowList);
+      flowAttachBtn.addEventListener("click", () => {
+        const f = FLOWS.find((x) => x.id === selectedFlowId);
+        if (!f) return;
+        attachedFlow = { name: f.name, app: f.app, icon: f.icon };
+        closeFlowModal();
+        refreshTray();
+        refreshSendEnabled();
+        barInput.placeholder = "Add a note for Seek (optional)…";
+        barInput.focus();
+      });
+
+      // ─── PROMPT MODAL ──────────────────────────────────────────────
+      const promptModal = document.getElementById("prompt-modal");
+      const promptList = document.getElementById("prompt-list");
+      const promptSearch = document.getElementById("prompt-search");
+      const promptAttachBtn = document.getElementById("prompt-attach");
+      const promptStatusEl = document.getElementById("prompt-status");
+      let selectedPromptId = null;
+
+      function renderPromptList() {
+        const q = promptSearch.value.toLowerCase().trim();
+        const filtered = PROMPTS.filter((p) =>
+          !q || p.name.toLowerCase().includes(q) || p.app.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
+        );
+        promptList.innerHTML = filtered.map((p) => `
+          <li class="picker-row${p.id === selectedPromptId ? " selected" : ""}" data-prompt-id="${p.id}">
+            <span class="picker-icon"><i data-lucide="${p.icon}"></i></span>
+            <span class="picker-text">
+              <span class="picker-name">${p.name}</span>
+              <span class="picker-meta">${p.app} · ${p.uses} uses</span>
+              <span class="picker-desc">${p.desc}</span>
+            </span>
+          </li>
+        `).join("") || `<li style="padding:14px 12px;color:var(--s-400);font-size:13px;">No prompts match.</li>`;
+        lucide.createIcons();
+        promptList.querySelectorAll(".picker-row").forEach((row) => {
+          row.addEventListener("click", () => {
+            selectedPromptId = parseInt(row.dataset.promptId);
+            renderPromptList();
+            promptAttachBtn.disabled = false;
+            const p = PROMPTS.find((x) => x.id === selectedPromptId);
+            promptStatusEl.textContent = `Selected: ${p.name}`;
+          });
+        });
+      }
+      function openPromptModal() {
+        selectedPromptId = null;
+        promptAttachBtn.disabled = true;
+        promptStatusEl.textContent = "Pick a prompt to attach";
+        promptSearch.value = "";
+        renderPromptList();
+        promptModal.dataset.open = "true";
+        setTimeout(() => promptSearch.focus(), 80);
+      }
+      function closePromptModal() { promptModal.dataset.open = "false"; }
+      promptSearch.addEventListener("input", renderPromptList);
+      promptAttachBtn.addEventListener("click", () => {
+        const p = PROMPTS.find((x) => x.id === selectedPromptId);
+        if (!p) return;
+        attachedPrompt = { name: p.name, app: p.app, icon: p.icon, desc: p.desc };
+        closePromptModal();
+        refreshTray();
+        refreshSendEnabled();
+        barInput.placeholder = "Add a note for Seek (optional)…";
+        barInput.focus();
+      });
+
+      // Close modals via × button or backdrop click or Escape
+      document.querySelectorAll("[data-close]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (btn.dataset.close === "flow") closeFlowModal();
+          if (btn.dataset.close === "prompt") closePromptModal();
+        });
+      });
+      [flowModal, promptModal].forEach((m) => {
+        m.addEventListener("click", (e) => {
+          if (e.target === m) m.dataset.open = "false";
+        });
+      });
+      window.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (flowModal.dataset.open === "true") closeFlowModal();
+        if (promptModal.dataset.open === "true") closePromptModal();
+      });
 
       // Auto-focus the input
       barInput.focus();
