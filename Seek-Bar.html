@@ -142,9 +142,9 @@
         left: 50%;
         bottom: 28px;
         transform: translateX(-50%);
-        height: 56px;
+        height: 72px;
         background: var(--s-800);
-        border-radius: 14px;
+        border-radius: 16px;
         box-shadow:
           0 1px 0 rgba(255,255,255,0.04) inset,
           0 12px 32px rgba(31, 31, 50, 0.35),
@@ -633,7 +633,7 @@
         gap: 8px;
         padding: 5px 6px 5px 5px;
         background: var(--s-900);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--s-600);
         border-radius: 8px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
         color: var(--s-100);
@@ -642,10 +642,10 @@
       }
       .doc-chip-thumb {
         width: 26px; height: 26px;
-        background: var(--info-400);
+        background: var(--s-700);
         border-radius: 4px;
         display: inline-flex; align-items: center; justify-content: center;
-        color: #fff;
+        color: var(--s-100);
         flex-shrink: 0;
       }
       .doc-chip-thumb i { width: 13px; height: 13px; }
@@ -677,7 +677,7 @@
         display: inline-flex; align-items: center; gap: 8px;
         padding: 6px 8px 6px 6px;
         background: var(--s-900);
-        border: 1px solid var(--fire-400);
+        border: 1px solid var(--s-600);
         border-radius: 8px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
         color: #fff;
@@ -687,15 +687,15 @@
       .flow-chip-icon {
         width: 22px; height: 22px;
         border-radius: 4px;
-        background: var(--fire-400);
+        background: var(--s-700);
         color: #fff;
         display: inline-flex; align-items: center; justify-content: center;
         flex-shrink: 0;
       }
       .flow-chip-icon i { width: 12px; height: 12px; }
-      .flow-chip.prompt { border-color: var(--info-400); }
-      .flow-chip.prompt .flow-chip-icon { background: var(--info-400); }
-      .flow-chip.context { border-color: rgba(255, 255, 255, 0.18); }
+      /* Variant tints come from the small icon tile, not the border. The
+         border itself stays Secondary-600 across all chip types so the tray
+         reads as a unified shelf rather than a rainbow of accents. */
       .flow-chip.context .flow-chip-icon { background: var(--s-700); }
       .flow-chip-label {
         font-size: 11px;
