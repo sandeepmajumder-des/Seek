@@ -684,11 +684,11 @@
       .doc-chip {
         display: inline-flex; align-items: center;
         gap: 8px;
-        padding: 5px 6px 5px 5px;
-        background: var(--s-900);
-        border: 1px solid var(--s-600);
-        border-radius: 8px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        padding: 5px 8px 5px 5px;
+        background: var(--s-800);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
         color: var(--s-100);
         font-size: 12px;
         max-width: 240px;
@@ -728,11 +728,11 @@
 
       .flow-chip {
         display: inline-flex; align-items: center; gap: 8px;
-        padding: 6px 8px 6px 6px;
-        background: var(--s-900);
-        border: 1px solid var(--s-600);
-        border-radius: 8px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        padding: 5px 10px 5px 5px;
+        background: var(--s-800);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
         color: #fff;
         font-size: 12px;
         max-width: 320px;
@@ -1519,7 +1519,7 @@
         const triggerRect = triggerEl.getBoundingClientRect();
         const barRect = bar.getBoundingClientRect();
         mytasksPopover.style.right = (window.innerWidth - triggerRect.right) + "px";
-        mytasksPopover.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+        mytasksPopover.style.bottom = (window.innerHeight - barRect.top + 8) + "px";
       }
       function togglePopover(triggerEl) {
         const open = mytasksPopover.dataset.open === "true";
@@ -1592,7 +1592,7 @@
         const rect = trigger.getBoundingClientRect();
         const barRect = bar.getBoundingClientRect();
         attachMenu.style.right = (window.innerWidth - rect.right) + "px";
-        attachMenu.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+        attachMenu.style.bottom = (window.innerHeight - barRect.top + 8) + "px";
         attachMenu.dataset.open = "true";
       }
       function closeAttachMenu() { attachMenu.dataset.open = "false"; }
@@ -1627,11 +1627,12 @@
         // attachments belong to the running task, not the next prompt.
         const showTray = hasAny && bar.dataset.phase === "input";
         attachTray.dataset.on = showTray ? "true" : "false";
-        // Anchor the tray to the bar's left + bottom edges
+        // Anchor the tray to the bar's left + bottom edges. 6 px gap reads as
+        // "shelf attached to the bar" rather than a separate floating thing.
         const barRect = bar.getBoundingClientRect();
         attachTray.style.left = (barRect.left) + "px";
         attachTray.style.transform = "none";
-        attachTray.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
+        attachTray.style.bottom = (window.innerHeight - barRect.top + 6) + "px";
         // Render contents
         let html = "";
         if (followupContext) {
