@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Whatfix Seek — Floating Bar (Iteration 3)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      :root {
+        --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+        /* Navi tokens */
+        --s-50:   #F6F6F9;
+        --s-100:  #F2F2F8;
+        --s-200:  #ECECF3;
+        --s-300:  #DFDDE7;
+        --s-400:  #8C899F;
+        --s-500:  #7B7891;
+        --s-600:  #6B697B;
+        --s-700:  #525066;
+        --s-800:  #3D3C52;
+        --s-900:  #2B2B40;
+        --white:  #FFFFFF;
+
+        --info-100: #D7EFFE;
+        --info-400: #0975D7;
+        --info-500: #0D59AB;
+
+        --warn-50:  #FEF6D9;
+        --warn-500: #946800;
+        --warn-700: #6B4D00;
+
+        --danger-50:  #FEEDEC;
+        --danger-500: #C7372F;
+        --danger-700: #8B2520;
+
+        --success-50:  #E8F6EE;
+        --success-500: #1E9B6A;
+        --success-700: #136B49;
+
+        --fire-400: #F55800;
+        --fire-300: #FBA450;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        height: 100%;
+        font-family: var(--font-sans);
+        color: var(--s-900);
+        -webkit-font-smoothing: antialiased;
+        background:
+          radial-gradient(circle at 20% 10%, rgba(239, 95, 0, 0.04), transparent 40%),
+          radial-gradient(circle at 80% 90%, rgba(9, 117, 215, 0.04), transparent 40%),
+          linear-gradient(180deg, #ECECF3 0%, #DFDFE8 100%);
+        overflow: hidden;
+      }
+      button { font-family: inherit; cursor: pointer; }
+
+      /* ─── Mock OS / SaaS app behind the bar (so "floating" reads) ─── */
+      .mock-os {
+        position: fixed; inset: 0;
+        padding: 24px 24px 120px;
+        display: flex; flex-direction: column;
+        gap: 16px;
+        pointer-events: none;
+      }
+      .mock-app {
+        flex: 1;
+        background: var(--white);
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+        overflow: hidden;
+        display: flex;
+      }
+      .mock-side {
+        width: 200px;
+        background: linear-gradient(180deg, #FAFAFC 0%, #F2F2F8 100%);
+        border-right: 1px solid var(--s-200);
+        padding: 16px 12px;
+        display: flex; flex-direction: column; gap: 8px;
+      }
+      .mock-side-brand {
+        height: 14px; width: 80px;
+        background: var(--s-900);
+        border-radius: 3px;
+        margin-bottom: 12px;
+      }
+      .mock-side-row {
+        height: 26px;
+        background: rgba(31,31,50,0.04);
+        border-radius: 5px;
+      }
+      .mock-side-row.active { background: rgba(9,117,215,0.10); }
+      .mock-side-row.faded { opacity: 0.6; height: 20px; }
+      .mock-body {
+        flex: 1;
+        padding: 20px 28px;
+        display: flex; flex-direction: column; gap: 14px;
+      }
+      .mock-h {
+        height: 22px; width: 240px;
+        background: var(--s-800);
+        border-radius: 4px;
+      }
+      .mock-sub {
+        height: 12px; width: 380px;
+        background: var(--s-300);
+        border-radius: 3px;
+      }
+      .mock-row {
+        height: 32px;
+        background: var(--s-100);
+        border-radius: 5px;
+        display: flex; align-items: center; gap: 14px;
+        padding: 0 14px;
+      }
+      .mock-row::before {
+        content: "";
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--success-500);
+      }
+      .mock-row::after {
+        content: "";
+        width: 40%; height: 7px;
+        background: var(--s-300);
+        border-radius: 2px;
+      }
+      .mock-row + .mock-row::before { background: var(--info-400); }
+      .mock-row:nth-child(4)::before { background: var(--warn-500); }
+      .mock-row:nth-child(6)::before { background: var(--danger-500); }
+
+      /* ─── THE SEEK BAR ───────────────────────────────────────── */
+      .bar {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translateX(-50%);
+        height: 56px;
+        background: var(--s-800);
+        border-radius: 14px;
+        box-shadow:
+          0 1px 0 rgba(255,255,255,0.04) inset,
+          0 12px 32px rgba(31, 31, 50, 0.35),
+          0 4px 12px rgba(31, 31, 50, 0.22),
+          0 0 0 1px rgba(255, 255, 255, 0.04);
+        display: flex; align-items: center;
+        padding: 0 6px 0 14px;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--s-100);
+        z-index: 10;
+        transition: width 320ms cubic-bezier(0.25, 1, 0.5, 1),
+                    box-shadow 320ms ease-out;
+        min-width: 480px;
+      }
+      .bar[data-phase="input"]       { width: 760px; }
+      .bar[data-phase="in-progress"] { width: 820px; }
+      .bar[data-phase="output"]      { width: 900px; }
+      .bar[data-state="needs-you"]   { box-shadow:
+          0 1px 0 rgba(255,255,255,0.04) inset,
+          0 0 0 2px rgba(245, 88, 0, 0.45),
+          0 12px 32px rgba(31, 31, 50, 0.35); }
+
+      /* Left state stripe — peripheral state communication */
+      .bar::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 10px; bottom: 10px;
+        width: 3px;
+        background: transparent;
+        border-radius: 0 2px 2px 0;
+        transition: background 280ms ease-out;
+      }
+      .bar[data-state="thinking"]::before     { background: var(--info-400); }
+      .bar[data-state="taking-action"]::before { background: var(--info-500); }
+      .bar[data-state="paused"]::before       { background: var(--warn-500); }
+      .bar[data-state="stopped"]::before      { background: var(--danger-500); }
+      .bar[data-state="needs-you"]::before    { background: var(--fire-400); }
+      .bar[data-state="completed"]::before    { background: var(--success-500); }
+
+      /* ─── SEEK MARK — the animated centerpiece ─── */
+      .seek-mark {
+        width: 28px; height: 28px;
+        flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        transform-origin: center;
+        will-change: transform, filter;
+        transition: filter 320ms ease-out;
+      }
+      .seek-mark svg { width: 26px; height: 26px; display: block; transform-origin: center; }
+      .seek-mark svg path { transform-origin: center; transform-box: fill-box; will-change: opacity, transform; }
+
+      /* State 1 — IDLE (waiting for input): patient breath */
+      .bar[data-state="idle"] .seek-mark { animation: seek-breath 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+      @keyframes seek-breath {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.04); }
+      }
+
+      /* State 2 — THINKING: cascading opacity wave through the 7 blocks */
+      .bar[data-state="thinking"] .seek-mark { animation: seek-bounce 1.4s ease-in-out infinite; }
+      .bar[data-state="thinking"] .seek-mark svg path {
+        animation: seek-wave 1.64s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(1) { animation-delay: 0s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(2) { animation-delay: 0.16s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(3) { animation-delay: 0.32s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(4) { animation-delay: 0.48s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(5) { animation-delay: 0.64s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(6) { animation-delay: 0.80s; }
+      .bar[data-state="thinking"] .seek-mark svg path:nth-child(7) { animation-delay: 0.96s; }
+      @keyframes seek-wave {
+        0%, 60%, 100% { opacity: 1; }
+        25%           { opacity: 0.40; }
+      }
+      @keyframes seek-bounce {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.03); }
+      }
+
+      /* State 3 — TAKING ACTION: rhythmic heartbeat + warm shimmer */
+      .bar[data-state="taking-action"] .seek-mark {
+        animation: seek-heartbeat 0.76s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+        filter: drop-shadow(0 0 6px rgba(245, 88, 0, 0.35));
+      }
+      @keyframes seek-heartbeat {
+        0%   { transform: scale(0.98); }
+        25%  { transform: scale(1.08); }
+        50%  { transform: scale(0.99); }
+        100% { transform: scale(1.00); }
+      }
+
+      /* State 4 — COMPLETED: squash & stretch celebration, settles into idle */
+      .bar[data-state="completed"] .seek-mark {
+        animation:
+          seek-celebrate 480ms cubic-bezier(0.34, 1.8, 0.64, 1) 1,
+          seek-breath 2.8s cubic-bezier(0.45, 0, 0.55, 1) 480ms infinite;
+        filter: drop-shadow(0 0 14px rgba(30, 155, 106, 0.45));
+      }
+      @keyframes seek-celebrate {
+        0%   { transform: scale(1.00); }
+        33%  { transform: scale(1.18); }
+        66%  { transform: scale(0.94); }
+        100% { transform: scale(1.00); }
+      }
+
+      /* State 5 — PAUSED: very slow breath, color drained */
+      .bar[data-state="paused"] .seek-mark {
+        animation: seek-paused-breath 6.4s ease-in-out infinite;
+        filter: saturate(0.55);
+      }
+      @keyframes seek-paused-breath {
+        0%, 100% { transform: scale(1.00); }
+        50%      { transform: scale(1.015); }
+      }
+
+      /* State 6 — STOPPED: no motion, heavy desaturation */
+      .bar[data-state="stopped"] .seek-mark {
+        filter: saturate(0.35) brightness(0.85);
+      }
+
+      /* Bonus — NEEDS YOU: lean toward action buttons + soft pulse */
+      .bar[data-state="needs-you"] .seek-mark {
+        animation: seek-lean 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        filter: drop-shadow(0 0 8px rgba(245, 88, 0, 0.55));
+      }
+      @keyframes seek-lean {
+        0%, 100% { transform: scale(1.00) rotate(0deg); }
+        50%      { transform: scale(1.06) rotate(4deg); }
+      }
+
+      /* ─── BAR INTERIOR ─────────────────────────────────────── */
+      .bar-divider {
+        width: 1px; height: 22px;
+        background: rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+      }
+
+      /* Mode pill (input only) */
+      .mode-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 30px;
+        padding: 0 10px 0 9px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 7px;
+        color: var(--s-100);
+        font-size: 12px; font-weight: 500;
+        flex-shrink: 0;
+      }
+      .mode-pill:hover { background: rgba(255, 255, 255, 0.10); }
+      .mode-pill i { width: 13px; height: 13px; color: var(--s-300); }
+
+      /* Center well — holds either the input or the thinker chip */
+      .bar-center {
+        flex: 1; min-width: 0;
+        display: flex; align-items: center;
+        gap: 10px;
+        position: relative;
+      }
+
+      /* Text input (input phase) */
+      .bar-input {
+        flex: 1; min-width: 0;
+        background: transparent;
+        border: none; outline: none;
+        font: inherit;
+        font-size: 14px;
+        color: #fff;
+        padding: 0 4px;
+      }
+      .bar-input::placeholder {
+        color: rgba(255, 255, 255, 0.42);
+        font-style: italic;
+      }
+
+      /* Thinker chip (in-progress + output) */
+      .thinker {
+        display: inline-flex; align-items: center; gap: 8px;
+        height: 28px;
+        padding: 0 12px 0 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 999px;
+        flex-shrink: 0;
+        color: #fff;
+        font-size: 12.5px; font-weight: 500;
+        white-space: nowrap;
+        transition: background 280ms ease-out, color 280ms ease-out;
+      }
+      .bar[data-state="thinking"]      .thinker { background: rgba(9, 117, 215, 0.18); color: var(--info-100); }
+      .bar[data-state="taking-action"] .thinker { background: rgba(9, 117, 215, 0.28); color: var(--info-100); }
+      .bar[data-state="paused"]        .thinker { background: rgba(148, 104, 0, 0.20); color: var(--warn-50); }
+      .bar[data-state="stopped"]       .thinker { background: rgba(199, 55, 47, 0.20); color: var(--danger-50); }
+      .bar[data-state="completed"]     .thinker { background: rgba(30, 155, 106, 0.22); color: var(--success-50); }
+      .bar[data-state="needs-you"]     .thinker { background: rgba(245, 88, 0, 0.20); color: #FFE4D0; }
+      .thinker-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.85;
+      }
+      .bar[data-state="thinking"] .thinker-dot,
+      .bar[data-state="taking-action"] .thinker-dot {
+        animation: pulse-dot 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 0.85; transform: scale(1); }
+        50%      { opacity: 0.45; transform: scale(0.75); }
+      }
+      .thinker-icon {
+        width: 13px; height: 13px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .thinker-icon i { width: 13px; height: 13px; }
+
+      /* Sub-status (rotating text below/beside thinker — inline here to keep 56px height) */
+      .sub-status {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.65);
+        white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
+        animation: substatus-fade 280ms ease-out;
+      }
+      @keyframes substatus-fade {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .sub-status.invitation { font-style: italic; color: rgba(255, 255, 255, 0.55); }
+
+      /* Truncated task pill with accordion (in-progress + output) */
+      .task-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 30px;
+        padding: 0 9px;
+        max-width: 220px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 7px;
+        color: #fff;
+        font-size: 12.5px; font-weight: 500;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .task-pill:hover { background: rgba(255, 255, 255, 0.08); }
+      .task-pill span {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .task-pill i { width: 12px; height: 12px; color: var(--s-300); flex-shrink: 0; }
+
+      /* My tasks pill (input phase) */
+      .mytasks-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 30px;
+        padding: 0 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 7px;
+        color: var(--s-100);
+        font-size: 12px; font-weight: 500;
+        flex-shrink: 0;
+      }
+      .mytasks-pill:hover { background: rgba(255, 255, 255, 0.08); }
+      .mytasks-pill i { width: 12px; height: 12px; color: var(--s-300); }
+      .mytasks-badge {
+        background: var(--fire-400);
+        color: #fff;
+        font-size: 10px; font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 999px;
+        line-height: 12px;
+      }
+
+      /* CTAs — textual buttons */
+      .cta-text {
+        display: inline-flex; align-items: center; gap: 5px;
+        height: 28px;
+        padding: 0 10px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        color: var(--s-100);
+        font-size: 12px; font-weight: 500;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .cta-text:hover { background: rgba(255, 255, 255, 0.08); }
+      .cta-text i { width: 12px; height: 12px; }
+      .cta-text.primary {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #fff;
+        font-weight: 600;
+      }
+      .cta-text.primary:hover { background: rgba(255, 255, 255, 0.18); }
+      .cta-text.fire {
+        background: var(--fire-400);
+        border-color: var(--fire-400);
+        color: #fff;
+        font-weight: 600;
+      }
+      .cta-text.fire:hover { background: var(--fire-300); }
+      .cta-text.success {
+        background: var(--success-500);
+        border-color: var(--success-500);
+        color: #fff;
+        font-weight: 600;
+      }
+      .cta-text.success:hover { filter: brightness(1.1); }
+
+      /* Icon-only buttons (attach, pause, etc) */
+      .icon-btn {
+        width: 30px; height: 30px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        color: var(--s-100);
+        flex-shrink: 0;
+      }
+      .icon-btn:hover { background: rgba(255, 255, 255, 0.08); }
+      .icon-btn i { width: 16px; height: 16px; }
+
+      /* Send / Stop button (right edge) */
+      .send-btn {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        background: var(--fire-400);
+        border: none;
+        color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: background 160ms, transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .send-btn:hover { background: var(--fire-300); }
+      .send-btn:active { transform: scale(0.94); }
+      .send-btn:disabled { background: rgba(255, 255, 255, 0.10); color: rgba(255, 255, 255, 0.30); }
+      .send-btn i { width: 16px; height: 16px; }
+      .send-btn.stop { background: rgba(255, 255, 255, 0.10); color: #fff; }
+      .send-btn.stop:hover { background: rgba(255, 255, 255, 0.16); }
+
+      /* Phase-specific visibility */
+      .bar[data-phase="input"]       .for-progress,
+      .bar[data-phase="input"]       .for-output,
+      .bar[data-phase="in-progress"] .for-input,
+      .bar[data-phase="in-progress"] .for-output,
+      .bar[data-phase="output"]      .for-input,
+      .bar[data-phase="output"]      .for-progress {
+        display: none !important;
+      }
+
+      /* Phase transition animation — fade and slight slide */
+      .bar > * { transition: opacity 220ms ease-out; }
+
+      /* ─── MY TASKS ACCORDION POPOVER ─── */
+      .mytasks-popover {
+        position: fixed;
+        left: 50%;
+        bottom: 96px;
+        transform: translateX(-50%) translateY(8px);
+        width: 360px;
+        background: var(--s-900);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.30), 0 6px 16px rgba(0, 0, 0, 0.18);
+        opacity: 0; pointer-events: none;
+        transition: opacity 220ms ease-out, transform 240ms cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 11;
+        overflow: hidden;
+      }
+      .mytasks-popover[data-open="true"] {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+      }
+      .mp-newtask {
+        display: flex; align-items: center; gap: 8px;
+        padding: 12px 14px;
+        color: #fff;
+        font-size: 13px; font-weight: 600;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+      }
+      .mp-newtask:hover { background: rgba(255, 255, 255, 0.04); }
+      .mp-newtask i { width: 14px; height: 14px; color: var(--fire-400); }
+      .mp-section {
+        padding: 10px 14px 4px;
+        font-size: 10px; font-weight: 700;
+        color: var(--s-400);
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .mp-count {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--s-100);
+        font-size: 10px; font-weight: 600;
+        padding: 1px 6px; border-radius: 999px;
+        line-height: 12px;
+      }
+      .mp-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 14px;
+        color: var(--s-100);
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .mp-row:hover { background: rgba(255, 255, 255, 0.04); }
+      .mp-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .mp-dot.thinking { background: var(--info-400); box-shadow: 0 0 0 2px rgba(9, 117, 215, 0.20); animation: pulse-dot 1.6s ease-in-out infinite; }
+      .mp-dot.needs-you { background: var(--fire-400); box-shadow: 0 0 0 2px rgba(245, 88, 0, 0.25); animation: pulse-dot 1.4s ease-in-out infinite; }
+      .mp-dot.completed { background: var(--success-500); }
+      .mp-dot.stopped { background: var(--danger-500); }
+      .mp-dot.bookmark { background: transparent; border: 1.5px solid var(--s-400); }
+      .mp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mp-meta { font-size: 11px; color: var(--s-400); white-space: nowrap; }
+      .mp-divider { height: 1px; background: rgba(255, 255, 255, 0.06); }
+
+      /* ─── MODE CHANGER POPOVER ─── */
+      .mode-popover {
+        position: absolute;
+        left: 0;
+        bottom: 44px;
+        background: var(--s-900);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 6px;
+        min-width: 220px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.30);
+        opacity: 0; pointer-events: none;
+        transform: translateY(6px);
+        transition: opacity 200ms, transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 12;
+      }
+      .mode-popover[data-open="true"] {
+        opacity: 1; transform: translateY(0); pointer-events: auto;
+      }
+      .mode-item {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 9px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .mode-item:hover { background: rgba(255, 255, 255, 0.04); }
+      .mode-item i { color: var(--s-300); flex-shrink: 0; margin-top: 2px; }
+      .mode-item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .mode-item-title { font-size: 13px; font-weight: 600; color: #fff; line-height: 17px; }
+      .mode-item-sub { font-size: 11px; color: var(--s-400); line-height: 14px; }
+      .mode-item[data-current="true"] { background: rgba(9, 117, 215, 0.15); }
+      .mode-item[data-current="true"] i { color: var(--info-400); }
+
+      /* ─── DEV CYCLER (top of screen, for stakeholder demos) ─── */
+      .dev-cycler {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--white);
+        border: 1px solid var(--s-300);
+        border-radius: 999px;
+        padding: 4px;
+        display: flex; gap: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        z-index: 20;
+      }
+      .dev-cycler button {
+        height: 26px;
+        padding: 0 11px;
+        background: transparent;
+        border: none;
+        border-radius: 999px;
+        font-size: 11px; font-weight: 500;
+        color: var(--s-700);
+      }
+      .dev-cycler button:hover { background: var(--s-100); color: var(--s-900); }
+      .dev-cycler button.active { background: var(--s-900); color: #fff; }
+      .dev-cycler .group-label {
+        font-size: 9px; font-weight: 700;
+        color: var(--s-400);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 0 8px;
+        align-self: center;
+      }
+      .dev-cycler .divider {
+        width: 1px;
+        background: var(--s-200);
+        margin: 4px 2px;
+      }
+
+      /* ─── INFO BUBBLE (top-left hint) ─── */
+      .info-bubble {
+        position: fixed;
+        top: 16px;
+        left: 24px;
+        background: var(--white);
+        border: 1px solid var(--s-300);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 12px;
+        color: var(--s-700);
+        max-width: 280px;
+        line-height: 1.5;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        z-index: 20;
+      }
+      .info-bubble strong { color: var(--s-900); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+
+    <!-- Mock OS / SaaS app behind, so the floating bar reads as "over your real work" -->
+    <div class="mock-os" aria-hidden="true">
+      <div class="mock-app">
+        <div class="mock-side">
+          <div class="mock-side-brand"></div>
+          <div class="mock-side-row active"></div>
+          <div class="mock-side-row"></div>
+          <div class="mock-side-row"></div>
+          <div class="mock-side-row faded"></div>
+          <div class="mock-side-row faded"></div>
+          <div class="mock-side-row faded"></div>
+        </div>
+        <div class="mock-body">
+          <div class="mock-h"></div>
+          <div class="mock-sub"></div>
+          <div style="height: 12px;"></div>
+          <div class="mock-row"></div>
+          <div class="mock-row"></div>
+          <div class="mock-row"></div>
+          <div class="mock-row"></div>
+          <div class="mock-row"></div>
+          <div class="mock-row"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info bubble explaining what to do -->
+    <div class="info-bubble">
+      <strong>Seek Bar — Iteration 3</strong><br>
+      The bar is the entire experience. Cycle the phases + states using the controls above to feel each transition.
+    </div>
+
+    <!-- Dev cycler: switch phase + state for demo -->
+    <div class="dev-cycler">
+      <span class="group-label">Phase</span>
+      <button data-phase-btn="input" class="active">Input</button>
+      <button data-phase-btn="in-progress">In progress</button>
+      <button data-phase-btn="output">Output</button>
+      <span class="divider"></span>
+      <span class="group-label">State</span>
+      <button data-state-btn="idle" class="active">Idle</button>
+      <button data-state-btn="thinking">Thinking</button>
+      <button data-state-btn="taking-action">Action</button>
+      <button data-state-btn="paused">Paused</button>
+      <button data-state-btn="needs-you">Needs you</button>
+      <button data-state-btn="stopped">Stopped</button>
+      <button data-state-btn="completed">Completed</button>
+    </div>
+
+    <!-- THE BAR -->
+    <div class="bar" id="bar" data-phase="input" data-state="idle">
+
+      <!-- Seek mark — the animated centerpiece -->
+      <span class="seek-mark" id="seek-mark" aria-label="Seek">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.9 9.6L22.6 9.6V0.25L3.9 0.25V9.6Z"          fill="#F55800"/>
+          <path d="M13.25 18.9L13.25 0.25L3.9 0.25L3.9 18.9H13.25Z" fill="#FBA450"/>
+          <path d="M31.94 28.3V0.25L22.6 0.25V28.3H31.94Z"          fill="#F55800"/>
+          <path d="M3.9 0.25L13.25 0.25V9.6H3.9L3.9 0.25Z"           fill="#F58923"/>
+          <path d="M13.25 18.9H22.6V28.3H13.25V18.9Z"               fill="#F58923"/>
+          <path d="M22.6 18.9H31.94V28.3H22.6V18.9Z"                fill="#C63D22"/>
+          <path d="M9.7 31.8H0.36V22.5H9.7V31.8Z"                  fill="#F55800"/>
+        </svg>
+      </span>
+
+      <!-- Mode pill (INPUT only) — wraps own popover -->
+      <div class="for-input" style="position: relative;">
+        <button class="mode-pill" id="mode-pill">
+          <i data-lucide="globe" id="mode-icon"></i>
+          <span id="mode-label">Browser</span>
+          <i data-lucide="chevron-down" style="width:11px; height:11px;"></i>
+        </button>
+        <div class="mode-popover" id="mode-popover">
+          <div class="mode-item" data-mode="browser" data-current="true">
+            <i data-lucide="globe" style="width:14px; height:14px;"></i>
+            <div class="mode-item-text">
+              <span class="mode-item-title">Work in browser</span>
+              <span class="mode-item-sub">Opens a Seek tab. You can keep working.</span>
+            </div>
+          </div>
+          <div class="mode-item" data-mode="desktop">
+            <i data-lucide="monitor" style="width:14px; height:14px;"></i>
+            <div class="mode-item-text">
+              <span class="mode-item-title">Work on desktop</span>
+              <span class="mode-item-sub">Seek drives your cursor + keyboard.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bar-divider for-input"></div>
+
+      <!-- Center well -->
+      <div class="bar-center">
+        <!-- INPUT phase -->
+        <input class="bar-input for-input" id="bar-input" placeholder="What can I help you with today?" autocomplete="off">
+
+        <!-- IN PROGRESS phase -->
+        <span class="thinker for-progress">
+          <span class="thinker-dot"></span>
+          <span id="thinker-label">Thinking…</span>
+        </span>
+        <span class="sub-status for-progress" id="sub-status">Verifying cost center CC-1045</span>
+
+        <!-- OUTPUT phase -->
+        <span class="thinker for-output">
+          <span class="thinker-icon"><i data-lucide="check" style="width:13px; height:13px;"></i></span>
+          <span>Task completed</span>
+        </span>
+        <span class="sub-status invitation for-output">Add a follow-up task…</span>
+      </div>
+
+      <!-- Truncated task pill (in-progress + output) -->
+      <button class="task-pill for-progress for-output" id="task-pill">
+        <span>Refund overcharge</span>
+        <i data-lucide="chevron-down"></i>
+      </button>
+
+      <!-- CTAs -->
+      <button class="cta-text for-progress" id="goto-tab-cta">
+        <i data-lucide="external-link"></i>
+        Go to tab
+      </button>
+
+      <button class="cta-text for-output">
+        <i data-lucide="layout-list"></i>
+        Summary
+      </button>
+      <button class="cta-text for-output">
+        <i data-lucide="rotate-cw"></i>
+        Re-run
+      </button>
+      <button class="cta-text primary for-output">
+        Open in Seek
+        <i data-lucide="arrow-up-right"></i>
+      </button>
+
+      <!-- Needs-you inline action buttons (only when state=needs-you) -->
+      <button class="cta-text fire" id="needs-approve" style="display:none;">
+        <i data-lucide="check"></i> Approve
+      </button>
+      <button class="cta-text" id="needs-decline" style="display:none;">
+        <i data-lucide="x"></i> Decline
+      </button>
+
+      <!-- My tasks pill (INPUT only) -->
+      <button class="mytasks-pill for-input" id="mytasks-pill">
+        <span>My tasks</span>
+        <span class="mytasks-badge" id="mytasks-badge" style="display:none;">2</span>
+        <i data-lucide="chevron-down"></i>
+      </button>
+
+      <!-- Attach (input + output) / Pause (in-progress) -->
+      <button class="icon-btn for-input" title="Attach">
+        <i data-lucide="paperclip"></i>
+      </button>
+      <button class="icon-btn for-progress" title="Pause" id="pause-btn">
+        <i data-lucide="pause"></i>
+      </button>
+      <button class="icon-btn for-output" title="Attach">
+        <i data-lucide="paperclip"></i>
+      </button>
+
+      <!-- Send / Stop -->
+      <button class="send-btn for-input" id="send-btn" disabled title="Send · ⌘↵">
+        <i data-lucide="arrow-up"></i>
+      </button>
+      <button class="send-btn stop for-progress" id="stop-btn" title="Stop">
+        <i data-lucide="square" fill="currentColor"></i>
+      </button>
+      <button class="send-btn for-output" id="send-btn-out" title="Send a follow-up">
+        <i data-lucide="arrow-up"></i>
+      </button>
+    </div>
+
+    <!-- My tasks accordion popover (renders above the bar when open) -->
+    <div class="mytasks-popover" id="mytasks-popover">
+      <div class="mp-newtask">
+        <i data-lucide="plus"></i>
+        Start a new task
+      </div>
+      <div class="mp-section">
+        Running <span class="mp-count">2</span>
+      </div>
+      <div class="mp-row">
+        <span class="mp-dot thinking"></span>
+        <span class="mp-name">Refund overcharge for Maria Chen</span>
+        <span class="mp-meta">Thinking</span>
+      </div>
+      <div class="mp-row">
+        <span class="mp-dot needs-you"></span>
+        <span class="mp-name">Triage VIP Zendesk queue</span>
+        <span class="mp-meta">Needs you</span>
+      </div>
+      <div class="mp-divider"></div>
+      <div class="mp-section">Recent</div>
+      <div class="mp-row">
+        <span class="mp-dot completed"></span>
+        <span class="mp-name">Export pipeline report</span>
+        <span class="mp-meta">1m 24s</span>
+      </div>
+      <div class="mp-row">
+        <span class="mp-dot completed"></span>
+        <span class="mp-name">Add 3 users to Okta</span>
+        <span class="mp-meta">52s</span>
+      </div>
+      <div class="mp-row">
+        <span class="mp-dot stopped"></span>
+        <span class="mp-name">Send Q4 renewal reminders</span>
+        <span class="mp-meta">Stopped</span>
+      </div>
+      <div class="mp-divider"></div>
+      <div class="mp-section">Bookmarks</div>
+      <div class="mp-row">
+        <span class="mp-dot bookmark"></span>
+        <span class="mp-name">Weekly Pipeline Review</span>
+        <span class="mp-meta">Salesforce</span>
+      </div>
+      <div class="mp-row">
+        <span class="mp-dot bookmark"></span>
+        <span class="mp-name">Daily Stripe Reconciliation</span>
+        <span class="mp-meta">Stripe</span>
+      </div>
+    </div>
+
+    <script>
+      lucide.createIcons();
+
+      const bar = document.getElementById("bar");
+      const barInput = document.getElementById("bar-input");
+      const sendBtn = document.getElementById("send-btn");
+
+      // ─── Dev cycler ───────────────────────────────────────
+      document.querySelectorAll("[data-phase-btn]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          bar.dataset.phase = btn.dataset.phaseBtn;
+          // Sensible state defaults per phase
+          if (btn.dataset.phaseBtn === "input") setState("idle");
+          else if (btn.dataset.phaseBtn === "in-progress") setState("thinking");
+          else if (btn.dataset.phaseBtn === "output") setState("completed");
+        });
+      });
+      document.querySelectorAll("[data-state-btn]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setState(btn.dataset.stateBtn);
+        });
+      });
+      function setState(s) {
+        bar.dataset.state = s;
+        document.querySelectorAll("[data-state-btn]").forEach((b) => b.classList.toggle("active", b.dataset.stateBtn === s));
+        // Show/hide Needs-you inline buttons + tuck Go-to-tab into accordion when needed
+        const approve = document.getElementById("needs-approve");
+        const decline = document.getElementById("needs-decline");
+        const gotoTab = document.getElementById("goto-tab-cta");
+        const pauseBtn = document.getElementById("pause-btn");
+        if (s === "needs-you" && bar.dataset.phase === "in-progress") {
+          approve.style.display = "inline-flex";
+          decline.style.display = "inline-flex";
+          gotoTab.style.display = "none";
+          pauseBtn.style.display = "none";
+        } else {
+          approve.style.display = "none";
+          decline.style.display = "none";
+          if (bar.dataset.phase === "in-progress") {
+            gotoTab.style.display = "inline-flex";
+            pauseBtn.style.display = "inline-flex";
+          }
+        }
+        // Update thinker label per state
+        const t = document.getElementById("thinker-label");
+        if (s === "thinking") t.textContent = "Thinking…";
+        else if (s === "taking-action") t.textContent = "Taking action";
+        else if (s === "paused") t.textContent = "Paused";
+        else if (s === "stopped") t.textContent = "Stopped";
+        else if (s === "needs-you") t.textContent = "Needs you";
+        else if (s === "completed") t.textContent = "Done";
+      }
+
+      // ─── Send button enables when user types ─────────────────
+      barInput.addEventListener("input", () => {
+        sendBtn.disabled = !barInput.value.trim();
+      });
+      barInput.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          if (!sendBtn.disabled) sendBtn.click();
+        }
+      });
+      sendBtn.addEventListener("click", () => {
+        if (sendBtn.disabled) return;
+        // Demo: transition input → in-progress → ... → output, all animated
+        const prompt = barInput.value || "New task";
+        document.querySelector(".task-pill span").textContent = prompt.slice(0, 32);
+        document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
+        document.querySelector('[data-phase-btn="in-progress"]').classList.add("active");
+        bar.dataset.phase = "in-progress";
+        setState("thinking");
+        // After ~3.5s flip to taking-action, sub-status rotates
+        setTimeout(() => setState("taking-action"), 3500);
+        // After ~9s complete the task
+        setTimeout(() => {
+          document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
+          document.querySelector('[data-phase-btn="output"]').classList.add("active");
+          bar.dataset.phase = "output";
+          setState("completed");
+          // Auto-decay back to input after 6s of dwell
+          setTimeout(() => {
+            document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
+            document.querySelector('[data-phase-btn="input"]').classList.add("active");
+            bar.dataset.phase = "input";
+            setState("idle");
+            barInput.value = "";
+            sendBtn.disabled = true;
+          }, 6000);
+        }, 9000);
+      });
+
+      // ─── Sub-status rotation while in In Progress ─────────────
+      const subStatuses = [
+        "Looking up invoice INV-08213",
+        "Verifying cost center CC-1045",
+        "Auditing line items against contract clause 4.2",
+        "Confirming refund window",
+        "Drafting confirmation email",
+      ];
+      let subIdx = 0;
+      setInterval(() => {
+        if (bar.dataset.phase !== "in-progress") return;
+        if (bar.dataset.state !== "thinking" && bar.dataset.state !== "taking-action") return;
+        subIdx = (subIdx + 1) % subStatuses.length;
+        const el = document.getElementById("sub-status");
+        el.style.opacity = "0";
+        el.style.transform = "translateY(-4px)";
+        setTimeout(() => {
+          el.textContent = subStatuses[subIdx];
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, 200);
+      }, 3400);
+
+      // ─── My tasks accordion popover ───────────────────────────
+      const mytasksPill = document.getElementById("mytasks-pill");
+      const mytasksPopover = document.getElementById("mytasks-popover");
+      mytasksPill.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = mytasksPopover.dataset.open === "true";
+        mytasksPopover.dataset.open = open ? "false" : "true";
+      });
+      // Task pill (in-progress / output) also opens the popover
+      document.getElementById("task-pill").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = mytasksPopover.dataset.open === "true";
+        mytasksPopover.dataset.open = open ? "false" : "true";
+      });
+      document.addEventListener("click", (e) => {
+        if (mytasksPopover.contains(e.target)) return;
+        mytasksPopover.dataset.open = "false";
+      });
+
+      // ─── Mode changer popover ────────────────────────────────
+      const modePill = document.getElementById("mode-pill");
+      const modePopover = document.getElementById("mode-popover");
+      modePill.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = modePopover.dataset.open === "true";
+        modePopover.dataset.open = open ? "false" : "true";
+      });
+      modePopover.querySelectorAll(".mode-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          modePopover.querySelectorAll(".mode-item").forEach((m) => m.removeAttribute("data-current"));
+          item.dataset.current = "true";
+          const mode = item.dataset.mode;
+          document.getElementById("mode-label").textContent = mode === "browser" ? "Browser" : "Desktop";
+          const old = document.getElementById("mode-icon");
+          const next = document.createElement("i");
+          next.id = "mode-icon";
+          next.setAttribute("data-lucide", mode === "browser" ? "globe" : "monitor");
+          old.replaceWith(next);
+          lucide.createIcons();
+          modePopover.dataset.open = "false";
+        });
+      });
+      document.addEventListener("click", (e) => {
+        if (modePopover.contains(e.target) || modePill.contains(e.target)) return;
+        modePopover.dataset.open = "false";
+      });
+
+      // Update tasks badge based on accordion content
+      document.getElementById("mytasks-badge").style.display = "inline-flex";
+
+      // Auto-focus the input
+      barInput.focus();
+    </script>
+  </body>
+</html>
