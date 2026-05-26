@@ -695,6 +695,8 @@
       .flow-chip-icon i { width: 12px; height: 12px; }
       .flow-chip.prompt { border-color: var(--info-400); }
       .flow-chip.prompt .flow-chip-icon { background: var(--info-400); }
+      .flow-chip.context { border-color: rgba(255, 255, 255, 0.18); }
+      .flow-chip.context .flow-chip-icon { background: var(--s-700); }
       .flow-chip-label {
         font-size: 11px;
         color: var(--s-400);
@@ -1107,7 +1109,7 @@
           <span class="thinker-icon"><i data-lucide="check" style="width:13px; height:13px;"></i></span>
           <span>Task completed</span>
         </span>
-        <span class="sub-status invitation for-output">Add a follow-up task…</span>
+        <button class="sub-status invitation for-output" id="followup-invite" type="button" style="background:transparent;border:none;cursor:pointer;text-align:left;font:inherit;">Add a follow-up task…</button>
       </div>
 
       <!-- Truncated task pill (in-progress + output) -->
@@ -1360,32 +1362,26 @@
       });
       sendBtn.addEventListener("click", () => {
         if (sendBtn.disabled) return;
-        // Demo: transition input → in-progress → ... → output, all animated
+        // Demo: transition input → in-progress → output. No auto-decay back
+        // to input — the user decides what to do next (follow-up, re-run,
+        // open Seek, see summary, or start a new task).
         const prompt = barInput.value || "New task";
+        lastPrompt = prompt;
         document.querySelector(".task-pill span").textContent = prompt.slice(0, 32);
         document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
         document.querySelector('[data-phase-btn="in-progress"]').classList.add("active");
         bar.dataset.phase = "in-progress";
         setState("thinking");
-        // After ~3.5s flip to taking-action, sub-status rotates
         setTimeout(() => setState("taking-action"), 3500);
-        // After ~9s complete the task
         setTimeout(() => {
           document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
           document.querySelector('[data-phase-btn="output"]').classList.add("active");
           bar.dataset.phase = "output";
           setState("completed");
-          // Auto-decay back to input after 6s of dwell
-          setTimeout(() => {
-            document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
-            document.querySelector('[data-phase-btn="input"]').classList.add("active");
-            bar.dataset.phase = "input";
-            setState("idle");
-            barInput.value = "";
-            sendBtn.disabled = true;
-          }, 6000);
+          // Bar stays in Output until the user takes an action.
         }, 9000);
       });
+      let lastPrompt = "";
 
       // ─── Sub-status rotation while in In Progress ─────────────
       const subStatuses = [
@@ -1518,10 +1514,11 @@
       const attachTray = document.getElementById("attach-tray");
       let attachedFlow = null;   // { name, app, icon, template }
       let attachedPrompt = null; // { name, app, icon, desc }
+      let followupContext = null; // { name } — set when transitioning Output → Input
       const attachedDocs = [];
 
       function refreshTray() {
-        const hasAny = attachedFlow || attachedPrompt || attachedDocs.length > 0;
+        const hasAny = attachedFlow || attachedPrompt || attachedDocs.length > 0 || followupContext;
         attachTray.dataset.on = hasAny ? "true" : "false";
         // Anchor the tray to the bar's left + bottom edges
         const barRect = bar.getBoundingClientRect();
@@ -1530,6 +1527,17 @@
         attachTray.style.bottom = (window.innerHeight - barRect.top + 12) + "px";
         // Render contents
         let html = "";
+        if (followupContext) {
+          html += `
+            <div class="flow-chip context">
+              <span class="flow-chip-icon"><i data-lucide="corner-down-right"></i></span>
+              <span class="flow-chip-label">Following up on:</span>
+              <span class="flow-chip-name">${followupContext.name}</span>
+              <button class="flow-chip-close" data-remove-context aria-label="Detach">
+                <i data-lucide="x"></i>
+              </button>
+            </div>`;
+        }
         attachedDocs.forEach((d, i) => {
           html += `
             <div class="doc-chip" data-doc-idx="${i}">
@@ -1591,6 +1599,13 @@
           attachedPrompt = null;
           refreshTray();
           refreshSendEnabled();
+          barInput.placeholder = "What can I help you with today?";
+        });
+        const removeContext = attachTray.querySelector("[data-remove-context]");
+        if (removeContext) removeContext.addEventListener("click", (e) => {
+          e.stopPropagation();
+          followupContext = null;
+          refreshTray();
           barInput.placeholder = "What can I help you with today?";
         });
       }
@@ -1781,6 +1796,60 @@
         if (e.key !== "Escape") return;
         if (flowModal.dataset.open === "true") closeFlowModal();
         if (promptModal.dataset.open === "true") closePromptModal();
+      });
+
+      // ─── Output → Input exits ─────────────────────────────────────
+      // Four ways the user leaves Output. Each transitions the bar back to
+      // Input phase with the right context preserved (or cleared).
+      function goToInput({ withContext, prefillPrompt, placeholder } = {}) {
+        document.querySelectorAll("[data-phase-btn]").forEach((b) => b.classList.remove("active"));
+        document.querySelector('[data-phase-btn="input"]').classList.add("active");
+        bar.dataset.phase = "input";
+        setState("idle");
+        if (withContext) {
+          const taskName = document.querySelector(".task-pill span").textContent;
+          followupContext = { name: taskName };
+        } else {
+          followupContext = null;
+        }
+        barInput.value = prefillPrompt || "";
+        if (placeholder) {
+          barInput.placeholder = placeholder;
+        } else if (withContext) {
+          barInput.placeholder = "What's next? (Seek has the prior task's context)";
+        } else {
+          barInput.placeholder = "What can I help you with today?";
+        }
+        refreshTray();
+        refreshSendEnabled();
+        barInput.focus();
+      }
+
+      // 1) "Add a follow-up task…" invitation → Input with context preserved
+      document.getElementById("followup-invite").addEventListener("click", () => {
+        if (bar.dataset.phase !== "output") return;
+        goToInput({ withContext: true });
+      });
+
+      // 2) Send button in Output → same as the invitation (follow-up flow)
+      document.getElementById("send-btn-out").addEventListener("click", () => {
+        goToInput({ withContext: true });
+      });
+
+      // 3) Re-run CTA → Input with the same prompt pre-loaded, no context chip
+      document.querySelector('.cta-text.for-output:nth-of-type(2)').addEventListener("click", () => {
+        // The "Re-run" button — load lastPrompt back into the composer
+        goToInput({ withContext: false, prefillPrompt: lastPrompt, placeholder: "Tweak the prompt or send as-is" });
+      });
+
+      // 4) Accordion's "Start a new task" → fresh Input, clear all context + attachments
+      document.querySelector(".mp-newtask").addEventListener("click", () => {
+        attachedFlow = null;
+        attachedPrompt = null;
+        attachedDocs.length = 0;
+        followupContext = null;
+        mytasksPopover.dataset.open = "false";
+        goToInput({ withContext: false });
       });
 
       // Auto-focus the input
