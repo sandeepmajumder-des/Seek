@@ -1184,15 +1184,15 @@
         Go to tab
       </button>
 
-      <button class="cta-text for-output">
+      <button class="cta-text for-output" id="output-summary-cta">
         <i data-lucide="layout-list"></i>
         Summary
       </button>
-      <button class="cta-text for-output">
+      <button class="cta-text for-output" id="output-rerun-cta">
         <i data-lucide="rotate-cw"></i>
         Re-run
       </button>
-      <button class="cta-text primary for-output">
+      <button class="cta-text primary for-output" id="output-openseek-cta">
         Open in Seek
         <i data-lucide="arrow-up-right"></i>
       </button>
@@ -1422,22 +1422,28 @@
           outIconWrap.innerHTML = `<i data-lucide="${name}" style="width:13px; height:13px;"></i>`;
           lucide.createIcons();
         };
+        const summaryCta = document.getElementById("output-summary-cta");
         if (s === "stopped") {
           outLabel.textContent = "Task stopped";
           setOutIcon("octagon-x");
           outInfo.style.display = "inline-flex";
           outTooltip.dataset.shown = "true";   // open by default — user can see why
+          // No summary on a stopped task — the decision trail is what matters,
+          // not a success digest.
+          summaryCta.style.display = "none";
         } else if (s === "paused") {
           outLabel.textContent = "Task paused";
           setOutIcon("pause");
           outInfo.style.display = "none";
           outTooltip.dataset.shown = "false";
+          summaryCta.style.display = "";
         } else {
           // Default: completed (also covers thinking/taking-action if shown in Output)
           outLabel.textContent = "Task completed";
           setOutIcon("check");
           outInfo.style.display = "none";
           outTooltip.dataset.shown = "false";
+          summaryCta.style.display = "";
         }
       }
 
@@ -1938,8 +1944,7 @@
       });
 
       // 3) Re-run CTA → Input with the same prompt pre-loaded, no context chip
-      document.querySelector('.cta-text.for-output:nth-of-type(2)').addEventListener("click", () => {
-        // The "Re-run" button — load lastPrompt back into the composer
+      document.getElementById("output-rerun-cta").addEventListener("click", () => {
         goToInput({ withContext: false, prefillPrompt: lastPrompt, placeholder: "Tweak the prompt or send as-is" });
       });
 
