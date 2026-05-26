@@ -1179,9 +1179,9 @@
       </button>
 
       <!-- CTAs -->
-      <button class="cta-text for-progress" id="goto-tab-cta">
-        <i data-lucide="external-link"></i>
-        Go to tab
+      <button class="cta-text for-progress" id="progress-openseek-cta">
+        Open in Seek
+        <i data-lucide="arrow-up-right"></i>
       </button>
 
       <button class="cta-text for-output" id="output-summary-cta">
@@ -1384,21 +1384,21 @@
         if (s === "thinking")            document.body.dataset.barActive = "thinking";
         else if (s === "taking-action")  document.body.dataset.barActive = "taking-action";
         else                              document.body.dataset.barActive = "";
-        // Show/hide Needs-you inline buttons + tuck Go-to-tab into accordion when needed
+        // Show/hide Needs-you inline buttons + tuck Open-in-Seek aside when needed
         const approve = document.getElementById("needs-approve");
         const decline = document.getElementById("needs-decline");
-        const gotoTab = document.getElementById("goto-tab-cta");
+        const openSeekProgress = document.getElementById("progress-openseek-cta");
         const pauseBtn = document.getElementById("pause-btn");
         if (s === "needs-you" && bar.dataset.phase === "in-progress") {
           approve.style.display = "inline-flex";
           decline.style.display = "inline-flex";
-          gotoTab.style.display = "none";
+          openSeekProgress.style.display = "none";
           pauseBtn.style.display = "none";
         } else {
           approve.style.display = "none";
           decline.style.display = "none";
           if (bar.dataset.phase === "in-progress") {
-            gotoTab.style.display = "inline-flex";
+            openSeekProgress.style.display = "inline-flex";
             pauseBtn.style.display = "inline-flex";
           }
         }
