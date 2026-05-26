@@ -905,6 +905,36 @@
       .mode-item[data-current="true"] { background: rgba(9, 117, 215, 0.15); }
       .mode-item[data-current="true"] i { color: var(--info-400); }
 
+      /* ─── VIEWPORT GLOW (active when Seek is thinking / taking action) ─── */
+      /* Soft Whatfix-orange halo bleeding in from the viewport edges. Pulses
+         in sync with Seek's working rhythm so the user senses "Seek is at it"
+         from anywhere on the screen. Layered insets give the effect depth. */
+      .viewport-glow {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 6;
+        opacity: 0;
+        transition: opacity 360ms ease-out;
+        box-shadow:
+          inset 0 0 60px 0   rgba(245, 88, 0, 0.30),
+          inset 0 0 180px 40px rgba(245, 88, 0, 0.18),
+          inset 0 0 380px 60px rgba(245, 88, 0, 0.10);
+      }
+      body[data-bar-active="thinking"] .viewport-glow,
+      body[data-bar-active="taking-action"] .viewport-glow {
+        opacity: 1;
+        animation: viewport-glow-pulse 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      }
+      /* Taking-action pulses faster — matches the seek-mark heartbeat tempo */
+      body[data-bar-active="taking-action"] .viewport-glow {
+        animation-duration: 1.6s;
+      }
+      @keyframes viewport-glow-pulse {
+        0%, 100% { opacity: 0.55; }
+        50%      { opacity: 1.00; }
+      }
+
       /* ─── DEV CYCLER (top of screen, for stakeholder demos) ─── */
       .dev-cycler {
         position: fixed;
@@ -990,6 +1020,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Pulsating Whatfix-orange viewport glow (active during thinking / taking action) -->
+    <div class="viewport-glow" aria-hidden="true"></div>
 
     <!-- Info bubble explaining what to do -->
     <div class="info-bubble">
@@ -1281,6 +1314,12 @@
       function setState(s) {
         bar.dataset.state = s;
         document.querySelectorAll("[data-state-btn]").forEach((b) => b.classList.toggle("active", b.dataset.stateBtn === s));
+        // Toggle the pulsating viewport glow for active work states only.
+        // Uses a body-level attribute so the CSS can also vary the pulse
+        // tempo for taking-action (faster) vs thinking (slower).
+        if (s === "thinking")            document.body.dataset.barActive = "thinking";
+        else if (s === "taking-action")  document.body.dataset.barActive = "taking-action";
+        else                              document.body.dataset.barActive = "";
         // Show/hide Needs-you inline buttons + tuck Go-to-tab into accordion when needed
         const approve = document.getElementById("needs-approve");
         const decline = document.getElementById("needs-decline");
