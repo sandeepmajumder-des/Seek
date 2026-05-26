@@ -15,6 +15,10 @@ figma-critique/
 # Tool / agent working directories
 .impeccable/
 
+# Seek Bar (iteration 3) — kept local, not published while still in flux
+Seek-Bar.html
+Seek-Bar-Spec.md
+
 # Logs / temp
 *.log
 .cache/
