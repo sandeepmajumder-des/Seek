@@ -362,6 +362,57 @@
       }
       .thinker-icon i { width: 13px; height: 13px; }
 
+      /* Stop-reason info icon — surfaces alongside the Output thinker when stopped */
+      .info-icon-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .info-icon-btn {
+        width: 22px; height: 22px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--s-100);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: help;
+      }
+      .info-icon-btn:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+      .info-icon-btn i { width: 12px; height: 12px; }
+      .info-tooltip {
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--s-900);
+        color: var(--s-50);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 6px;
+        white-space: nowrap;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.30), 0 2px 4px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 240ms ease-out, transform 240ms cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 15;
+      }
+      .info-tooltip[data-shown="true"],
+      .info-icon-wrap:hover .info-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .info-tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: var(--s-900);
+        margin-top: -1px;
+      }
+
       /* Sub-status (rotating text below/beside thinker — inline here to keep 56px height) */
       .sub-status {
         font-size: 12px;
@@ -1107,9 +1158,16 @@
         <span class="sub-status for-progress" id="sub-status">Verifying cost center CC-1045</span>
 
         <!-- OUTPUT phase -->
-        <span class="thinker for-output">
-          <span class="thinker-icon"><i data-lucide="check" style="width:13px; height:13px;"></i></span>
-          <span>Task completed</span>
+        <span class="thinker for-output" id="output-thinker">
+          <span class="thinker-icon" id="output-thinker-icon"><i data-lucide="check" style="width:13px; height:13px;"></i></span>
+          <span id="output-thinker-label">Task completed</span>
+        </span>
+        <!-- Stop-reason info icon — only shown when state=stopped in Output -->
+        <span class="info-icon-wrap for-output" id="output-info" style="display:none;">
+          <button class="info-icon-btn" id="output-info-btn" aria-describedby="output-tooltip">
+            <i data-lucide="info"></i>
+          </button>
+          <span class="info-tooltip" id="output-tooltip" role="tooltip">Lost connection to Stripe. Sign back in to retry.</span>
         </span>
         <button class="sub-status invitation for-output" id="followup-invite" type="button" style="background:transparent;border:none;cursor:pointer;text-align:left;font:inherit;">Add a follow-up task…</button>
       </div>
@@ -1344,7 +1402,7 @@
             pauseBtn.style.display = "inline-flex";
           }
         }
-        // Update thinker label per state
+        // Update IN-PROGRESS thinker label per state
         const t = document.getElementById("thinker-label");
         if (s === "thinking") t.textContent = "Thinking…";
         else if (s === "taking-action") t.textContent = "Taking action";
@@ -1352,6 +1410,35 @@
         else if (s === "stopped") t.textContent = "Stopped";
         else if (s === "needs-you") t.textContent = "Needs you";
         else if (s === "completed") t.textContent = "Done";
+
+        // Update OUTPUT thinker (label + icon) and the stop-reason tooltip.
+        // The Output area covers terminal states — completed / stopped — and
+        // also reflects paused if the dev cycler is used to demo it.
+        const outLabel = document.getElementById("output-thinker-label");
+        const outIconWrap = document.getElementById("output-thinker-icon");
+        const outInfo = document.getElementById("output-info");
+        const outTooltip = document.getElementById("output-tooltip");
+        const setOutIcon = (name) => {
+          outIconWrap.innerHTML = `<i data-lucide="${name}" style="width:13px; height:13px;"></i>`;
+          lucide.createIcons();
+        };
+        if (s === "stopped") {
+          outLabel.textContent = "Task stopped";
+          setOutIcon("octagon-x");
+          outInfo.style.display = "inline-flex";
+          outTooltip.dataset.shown = "true";   // open by default — user can see why
+        } else if (s === "paused") {
+          outLabel.textContent = "Task paused";
+          setOutIcon("pause");
+          outInfo.style.display = "none";
+          outTooltip.dataset.shown = "false";
+        } else {
+          // Default: completed (also covers thinking/taking-action if shown in Output)
+          outLabel.textContent = "Task completed";
+          setOutIcon("check");
+          outInfo.style.display = "none";
+          outTooltip.dataset.shown = "false";
+        }
       }
 
       // ─── Send button enables when user types ─────────────────
